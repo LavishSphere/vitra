@@ -57,7 +57,7 @@ def test_transcript_uses_each_quote_once():
 
 def test_scoring_policy_unchanged_for_other_sources():
     out = classify_item(NEWS, model_fn=fake_model(RAW))
-    assert out["_meta"]["merge_policy"] == "hybrid-evq-eff"
+    assert out["_meta"]["merge_policy"] == "hybrid-evq-eff2"
     assert out["convenience"] is None and out["access_cost"] is None
 
 

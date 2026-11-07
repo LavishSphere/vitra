@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from pipeline.api import POLICIES, classify_item
-from pipeline.rules import apply_rules, efficacy_cue
+from pipeline.rules import apply_rules, efficacy_cue, safety_anchor
 
 
 @pytest.mark.parametrize(
@@ -118,3 +118,54 @@ def test_model_efficacy_wins_when_its_quote_is_valid() -> None:
 def test_previous_policy_keeps_model_only_efficacy() -> None:
     out = classify_item(ITEM, model_fn=_model(_raw(None)), policy=POLICIES["hybrid-evq"])
     assert out["efficacy"] is None
+
+
+@pytest.mark.parametrize(
+    ("text", "polarity", "span"),
+    [
+        ("Osimertinib had a manageable safety profile.", 1, "a manageable safety profile"),
+        ("Amivantamab was well tolerated in all cohorts.", 1, "well tolerated"),
+        ("Lazertinib showed no new safety signals.", 0, "no new safety signals"),
+        (
+            "Osimertinib safety was consistent with the known safety profile.",
+            0,
+            "consistent with the known safety profile",
+        ),
+    ],
+)
+def test_ruling_8_safety_anchors(text: str, polarity: int, span: str) -> None:
+    assert safety_anchor(text) == (polarity, span)
+
+
+def test_safety_anchor_needs_our_product_and_no_negation() -> None:
+    assert safety_anchor("Docetaxel was well tolerated.") is None
+    assert safety_anchor("Osimertinib was not well tolerated by older patients.") is None
+
+
+SAFE_ITEM = {
+    "item_id": "PM-S",
+    "source": "pubmed",
+    "product": "B",
+    "title": "Amivantamab in practice",
+    "text": (
+        "METHODS: Baseline variables were adjusted using propensity scores. "
+        "RESULTS: Amivantamab did not meet the primary endpoint. Amivantamab showed manageable safety."
+    ),
+}
+
+
+def test_rule_guide_phrases_replace_the_model_quotes_in_eff2() -> None:
+    raw = _raw({"span": "Baseline variables were adjusted using propensity scores", "polarity": 0})
+    raw["safety"] = {
+        "span": "Baseline variables were adjusted using propensity scores",
+        "polarity": 1,
+    }
+    out = classify_item(SAFE_ITEM, model_fn=_model(raw), policy=POLICIES["hybrid-evq-eff2"])
+    assert out["safety"]["span"] == "manageable safety"
+    assert out["safety"]["polarity"] == 1
+    assert out["efficacy"]["polarity"] == -1
+    assert "did not meet" in out["efficacy"]["span"]
+    for a in ("efficacy", "safety"):
+        assert out[a]["span"] in SAFE_ITEM["text"]
+    kept = classify_item(SAFE_ITEM, model_fn=_model(raw), policy=POLICIES["hybrid-evq-eff"])
+    assert kept["safety"]["span"].startswith("Baseline variables")

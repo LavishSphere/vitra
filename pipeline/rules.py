@@ -16,7 +16,7 @@ from typing import Any
 from .schema import ASPECTS, aspect, empty_prediction
 from .spans import sentence_bounds
 
-RULES_VERSION = "r4"
+RULES_VERSION = "r5"
 
 MODEL_SOURCES = frozenset({"pubmed", "press_release", "news", "transcript"})
 # sources where the model names the speaker (the quoted voice); others are fixed by source
@@ -404,6 +404,10 @@ def model_source_rules(item: dict[str, Any]) -> RuleResult:
         if judged is not None:
             pred["efficacy"] = aspect(judged[0], speaker_for(item), judged[1])
             notes.append(f"efficacy judged: {judged[1]!r}")
+        tolerated = safety_anchor(text)
+        if tolerated is not None:
+            pred["safety"] = aspect(tolerated[0], speaker_for(item), tolerated[1])
+            notes.append(f"safety anchor: {tolerated[1]!r}")
     return RuleResult(pred, final=False, notes=notes, hard=hard, lab_study=lab_study)
 
 
@@ -534,6 +538,40 @@ def efficacy_cue(text: str) -> tuple[int, str] | None:
             m = pat.search(text, a, b)
             if m and not _negated(text, m.start()):
                 return pol, phrase_around(text, m, 12)
+    return None
+
+
+# Ruling 8: "no new safety signals" / "consistent with the known safety profile" = safety 0;
+# "manageable" / "well tolerated" = safety +1. Same product check as efficacy.
+
+_SAFETY_ANCHORS = tuple(
+    (pol, re.compile(p, re.I))
+    for pol, p in (
+        (
+            0,
+            r"\bno new safety (?:signals?|concerns?|findings)\b"
+            r"|\bconsistent with (?:the |their )?(?:known|established|previously reported)"
+            r"(?: safety)? profiles?\b",
+        ),
+        (
+            1,
+            r"\b(?:a |an )?(?:manageable|tolerable|acceptable) (?:safety|tolerability)"
+            r"(?: profiles?)?\b|\bwell[- ]tolerated\b",
+        ),
+    )
+)
+
+
+def safety_anchor(text: str) -> tuple[int, str] | None:
+    """(polarity, span) for a ruling 8 safety phrase in a sentence naming our product."""
+    prod = _product_pattern(text)
+    for a, b in sentence_bounds(text):
+        if not prod.search(text, a, b):
+            continue
+        for pol, pat in _SAFETY_ANCHORS:
+            m = pat.search(text, a, b)
+            if m and not _negated(text, m.start()):
+                return pol, m.group(0)
     return None
 
 
