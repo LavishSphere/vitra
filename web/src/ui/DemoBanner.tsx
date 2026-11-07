@@ -18,7 +18,7 @@ export function DemoBanner() {
         interface, so the quotes, trends and cards here are invented for the demo.
       </p>
       <p className="mt-1 text-text-muted">
-        The labeling model doesn't run on this page. The real version runs a 3B model on a laptop with the Wi-Fi off.{" "}
+        The labeling model doesn't run on this page. The real version runs a 3B model on your own computer with the Wi-Fi off.{" "}
         <a
           className="text-accent underline-offset-2 hover:text-accent-hover hover:underline"
           href="https://github.com/LavishSphere/vitra#setup"
