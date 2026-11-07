@@ -126,3 +126,11 @@ mark.span-other {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
 }
+
+/* Quiet chrome on arrival: hints and the filter row ease in instead of popping. */
+@keyframes vitra-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.hint-in { animation: vitra-rise 600ms var(--ease-out-soft) both; }
+.filters-in { animation: vitra-rise 360ms var(--ease-out-soft) both; }

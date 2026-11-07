@@ -162,7 +162,7 @@ export const useVitra = create<VitraState>((set, get) => ({
   cameraFocus: null,
   focusTumor: false,
   view: "3d",
-  railOpen: true,
+  railOpen: false,
   railTab: "trends",
   intakeOpen: false,
   pulses: [],

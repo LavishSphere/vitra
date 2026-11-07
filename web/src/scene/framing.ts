@@ -27,5 +27,5 @@ export const ARRIVAL_START = {
  * the lungs still fit across.
  */
 export function overviewFit(aspect: number): number {
-  return Math.min(1.9, Math.max(1, 1.42 / Math.max(0.3, aspect)));
+  return Math.min(1.75, Math.max(1, 1.2 / Math.max(0.3, aspect)));
 }
