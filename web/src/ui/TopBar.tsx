@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { onInstallReady, promptInstall } from "../pwa.ts";
 import { useVitra } from "../store/useVitra.ts";
 import { IconButton, Segmented, Select } from "./controls.tsx";
 import { PRODUCT_OPTIONS, aspectOptions, signalOptions, sourceOptions, speakerOptions } from "./options.ts";
@@ -14,6 +16,9 @@ export function TopBar() {
   const setIntakeOpen = useVitra((s) => s.setIntakeOpen);
   const sourceKind = useVitra((s) => s.sourceKind);
   const sourceLabel = useVitra((s) => s.sourceLabel);
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => onInstallReady(setCanInstall), []);
 
   const filtered = f.product !== "all" || f.speaker !== "all" || f.aspect !== "all" || f.source !== "all" || f.signalType !== "all"
     || f.weekFrom !== weeks[0] || f.weekTo !== weeks[weeks.length - 1];
@@ -46,6 +51,17 @@ export function TopBar() {
         >
           {sourceLabel}
         </span>
+        {canInstall && (
+          <button
+            type="button"
+            onClick={() => {
+              void promptInstall();
+            }}
+            className="whitespace-nowrap rounded-lg border border-border px-3 py-1.5 text-[13px] text-text-2 transition-colors hover:border-border-strong hover:text-text"
+          >
+            Install app
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setIntakeOpen(true)}
