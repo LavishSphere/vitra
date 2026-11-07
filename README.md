@@ -45,4 +45,8 @@ The model runs through llama.cpp on `127.0.0.1`. Nothing is sent to a cloud mode
 
 The organizer dataset isn't in this repository. It's provided for HACK1984 only, and the package asks teams not to redistribute it. To run Vitra you need your own copy of the package, with the PubMed abstracts filled in by its `rehydrate` step.
 
+## Cost on this machine
+
+Hybrid labeling of the 240-item test set on an Apple M5 (16 GB): **268 wall seconds per 100 items** (644 s total). 149 of 240 items hit the local model at **13.9 model items/min**. Organizer hardware is unknown; expect different times there.
+
 Setup and run instructions are coming.
