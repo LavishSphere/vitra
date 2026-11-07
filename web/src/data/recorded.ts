@@ -1,6 +1,6 @@
 /**
  * The recorded intake result for the sample note. It is a real output of the local pipeline
- * (Llama 3.2 3B, transcript policy) captured on a laptop with Wi-Fi off. The public page replays
+ * (Llama 3.2 3B, transcript policy) captured on a laptop. The public page replays
  * it and says so. Offsets come from indexOf on the note text, then the usual span check.
  */
 import { ASPECTS, type AspectEvidence, type AspectKey, type EvidenceItem, type Polarity, type Product, type SignalType, type Speaker } from "@contract/types.ts";
@@ -21,7 +21,7 @@ interface Recorded {
 export const RECORDED = recordedJson as unknown as Recorded;
 
 export const RECORDED_NOTICE =
-  "Recorded result from the local model on a laptop with Wi-Fi off. This page doesn't run the model.";
+  "Recorded result from the local model on a laptop. This page doesn't run the model.";
 
 export const sampleNote = () => ({ title: RECORDED.transcript.title, text: RECORDED.transcript.text, product: RECORDED.transcript.product });
 

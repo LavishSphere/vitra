@@ -21,8 +21,11 @@ export interface DataSource {
   intake(req: IntakeRequest): Promise<IntakeResult>;
   /** True when this source recomputes insight cards (the local API). Fixture cards are stored. */
   cardsLive: boolean;
-  /** Remove one held transcript on the source side (Undo). */
-  undo(itemId: string): Promise<void>;
+  /**
+   * Remove one held transcript on the source side (Undo). Returns "all" when the source could
+   * only drop every held transcript (an older API without per-transcript delete).
+   */
+  undo(itemId: string): Promise<"one" | "all">;
   /** Drop held transcripts on the source side ("Reset to source data"). */
   reset(): Promise<void>;
   /** The synthetic sample note for the intake card. */

@@ -45,9 +45,11 @@ export function ImpactCard({ session, onUndone, onKeep }: { session: IntakeSessi
     setBusy(true);
     setErr(null);
     try {
-      await undo();
+      const scope = await undo();
       const n = impact.cells.length;
-      onUndone(`Undone. The note is gone and ${n} trend cell${n === 1 ? " is" : "s are"} back to the source data.`);
+      onUndone(scope === "one"
+        ? `Undone. The note is gone and ${n} trend cell${n === 1 ? " is" : "s are"} back to where they were.`
+        : "Undone. This backend can only clear all pasted notes at once, so every pasted note was removed and the numbers were recomputed from the source data.");
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
       setBusy(false);

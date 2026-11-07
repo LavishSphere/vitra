@@ -72,6 +72,7 @@ export const fixtureSource: DataSource = {
   },
   async undo() {
     // Nothing is held outside the store in fixture mode. The store restores its snapshot.
+    return "one" as const;
   },
   async reset() {
     // Nothing is held outside the store in fixture mode.

@@ -19,13 +19,13 @@ afterEach(() => { vi.unstubAllGlobals(); });
 describe("apiSource.undo", () => {
   it("deletes just the one transcript when the API supports it", async () => {
     const calls = stubFetch(() => 200);
-    await apiSource.undo("PT-0003");
+    expect(await apiSource.undo("PT-0003")).toBe("one");
     expect(calls.map((c) => `${c.method} ${c.url.replace(/^https?:\/\/[^/]+/, "")}`)).toEqual(["DELETE /api/intake/PT-0003"]);
   });
 
   it("falls back to reset when the API has no per-transcript delete", async () => {
     const calls = stubFetch((c) => (c.method === "DELETE" ? 404 : 200));
-    await apiSource.undo("PT-0003");
+    expect(await apiSource.undo("PT-0003")).toBe("all");
     expect(calls.map((c) => `${c.method} ${c.url.replace(/^https?:\/\/[^/]+/, "")}`)).toEqual(["DELETE /api/intake/PT-0003", "POST /api/reset"]);
   });
 

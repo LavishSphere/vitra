@@ -1,5 +1,5 @@
 {
- "_note": "Recorded output of the real local pipeline (transcript policy) on a synthetic note, captured on a laptop with Wi-Fi off. The public page replays it. It does not run the model.",
+ "_note": "Recorded output of the real local pipeline (transcript policy) on a synthetic note, captured on a laptop. The public page replays it. It does not run the model.",
  "model": "Llama 3.2 3B Instruct (GGUF, llama-server)",
  "policy": "transcript",
  "transcript": {

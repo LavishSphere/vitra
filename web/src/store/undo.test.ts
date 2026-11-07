@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { useVitra } from "./useVitra.ts";
 import { fixtureSource } from "../data/fixtureSource.ts";
 import { sampleNote } from "../data/recorded.ts";
@@ -41,6 +41,26 @@ describe("intake undo", () => {
     // The restored numbers are also what a fresh recompute gives.
     expect(after.trends).toEqual(computeTrends(after.evidence));
     expect(after.gaps).toEqual(computeGaps(after.evidence, new Set(), 8));
+  });
+
+  it("drops every pasted note and recomputes when the source can only reset", async () => {
+    const baseEvidence = structuredClone(useVitra.getState().evidence);
+    const first = await fixtureSource.intake({ text: sampleNote().text, product: "B" });
+    await useVitra.getState().incorporate(first, { tour: false });
+    useVitra.getState().dismissSession();
+    const second = await fixtureSource.intake({ text: sampleNote().text, product: "B" });
+    second.evidence!.item_id = "SYN-T003";
+    await useVitra.getState().incorporate(second, { tour: false });
+    expect(useVitra.getState().evidence.filter((e) => e.source === "transcript").length).toBe(2);
+
+    const spy = vi.spyOn(fixtureSource, "undo").mockResolvedValue("all");
+    expect(await useVitra.getState().undoIntake()).toBe("all");
+    spy.mockRestore();
+    const s = useVitra.getState();
+    expect(s.evidence).toEqual(baseEvidence);
+    expect(s.trends).toEqual(computeTrends(baseEvidence));
+    expect(s.gaps).toEqual(computeGaps(baseEvidence, new Set(), 8));
+    expect(s.marks.some((m) => m.item.source === "transcript")).toBe(false);
   });
 
   it("refuses to classify other text in fixture mode", async () => {

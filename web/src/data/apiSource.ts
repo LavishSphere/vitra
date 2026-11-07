@@ -55,10 +55,12 @@ export const apiSource: DataSource = {
   async undo(itemId) {
     try {
       await call<unknown>(`/api/intake/${encodeURIComponent(itemId)}`, { method: "DELETE" });
+      return "one";
     } catch (e) {
       // Older backends have no per-transcript delete. Reset drops every held transcript.
-      if (e instanceof HttpError && (e.status === 404 || e.status === 405)) await call<unknown>("/api/reset", { method: "POST" });
-      else throw e;
+      if (!(e instanceof HttpError) || (e.status !== 404 && e.status !== 405)) throw e;
+      await call<unknown>("/api/reset", { method: "POST" });
+      return "all";
     }
   },
   async reset() {

@@ -36,6 +36,29 @@ const LAST_STOP_MS = 2600;
 
 export const stationLabel = (id: string) => STATIONS.find((s) => s.id === id)?.label ?? id;
 
+/**
+ * The card sits just under the report tabs. The demo banner only shows in fixture mode, so the
+ * offset is measured from the page instead of hard-coded.
+ */
+function useTopOffset(active: boolean): number {
+  const [top, setTop] = useState(160);
+  useEffect(() => {
+    if (!active) return;
+    const measure = () => {
+      const tabs = document.querySelector('#report [role="tablist"]');
+      const main = document.querySelector("main");
+      const edge = tabs?.getBoundingClientRect().bottom ?? (main ? main.getBoundingClientRect().top + 42 : 148);
+      setTop(Math.round(edge + 12));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(document.body);
+    window.addEventListener("resize", measure);
+    return () => { ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, [active]);
+  return top;
+}
+
 function useReducedMotion(): boolean {
   const [on, setOn] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   useEffect(() => {
@@ -55,6 +78,7 @@ export function IntakePanel() {
   const view = useVitra((s) => s.view);
   const sourceKind = useVitra((s) => s.sourceKind);
   const reduced = useReducedMotion();
+  const top = useTopOffset(open);
   const [text, setText] = useState("");
   const [product, setProduct] = useState<Product>("B");
   const [phase, setPhase] = useState<Phase>("compose");
@@ -188,7 +212,9 @@ export function IntakePanel() {
   return (
     <section
       aria-labelledby="intake-title"
-      className="panel scroll-thin pointer-events-auto fixed bottom-4 right-3 top-[160px] z-40 flex h-fit max-h-[calc(100vh-176px)] w-[396px] max-w-[calc(100vw-24px)] flex-col overflow-y-auto rounded-xl bg-bg-elevated/95"
+      // Near-opaque: the report rail sits right behind this card and must not show through.
+      style={{ top, maxHeight: `calc(100vh - ${top + 16}px)`, background: "rgb(17 22 31 / 0.97)" }}
+      className="panel scroll-thin pointer-events-auto fixed right-3 z-40 flex h-fit w-[396px] max-w-[calc(100vw-24px)] flex-col overflow-y-auto rounded-xl"
     >
       <p className="sr-only" aria-live="polite" role="status">{announce}</p>
       <header className="flex items-start justify-between gap-3 border-b border-border px-4 pb-3 pt-3.5">
@@ -196,9 +222,9 @@ export function IntakePanel() {
           <h2 id="intake-title" className="text-[15px] font-medium text-text">
             {phase === "impact" ? "What changed" : "Add evidence"}
           </h2>
-          {phase === "compose" && (
+          {phase === "compose" && !fixtures && (
             <p className="mt-0.5 text-[12.5px] leading-relaxed text-text-muted">
-              Paste an advisory board note or a field report. It's analyzed on this machine and held in memory only.
+              Paste an advisory board note or a field report. Sent only to the local API on 127.0.0.1, held in its memory, cleared on reset or exit. Vitra doesn't write it to disk.
             </p>
           )}
         </div>
@@ -217,7 +243,7 @@ export function IntakePanel() {
             {notice && <p className="rise-in mb-3 rounded-lg bg-accent-soft px-3 py-2 text-[12.5px] leading-relaxed text-text">{notice}</p>}
             {fixtures && (
               <p className="mb-3 border-l-2 border-border-strong pl-2.5 text-[12px] leading-relaxed text-text-2">
-                This page can only replay the sample note. Its result was recorded from the local model on a laptop with Wi-Fi off. Quote checks and the recompute still run here for real.
+                This page can only replay the sample note. Its result was recorded from the local model on a laptop. Quote checks and the recompute still run here for real.
               </p>
             )}
             <label htmlFor="intake-text" className="sr-only">Transcript text</label>

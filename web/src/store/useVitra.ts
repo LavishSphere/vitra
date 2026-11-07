@@ -12,6 +12,7 @@ import { weekSpan } from "../data/trends.ts";
 import { weeksBetween } from "../lib/isoWeek.ts";
 import { stationFor, type StationId } from "../data/stations.ts";
 import { gapFocus } from "../lib/gapFocus.ts";
+import { spanIsVerified } from "../data/spans.ts";
 import { diffImpact, type Impact, type Snapshot } from "../lib/impact.ts";
 
 export type ProductFilter = "A" | "B" | "all";
@@ -121,8 +122,11 @@ interface VitraState {
   incorporate(result: IntakeResult, opts?: { tour?: boolean }): Promise<void>;
   /** Finish the station tour now: pulses land at once and the camera goes back to the overview. */
   skipTour(): void;
-  /** Remove the last incorporated transcript and restore the baseline exactly. */
-  undoIntake(): Promise<void>;
+  /**
+   * Remove the last incorporated transcript and restore the baseline exactly. If the source
+   * could only clear every transcript ("all"), every pasted transcript is dropped and recomputed.
+   */
+  undoIntake(): Promise<"one" | "all">;
   /** Keep the transcript and close the session view. */
   dismissSession(): void;
 }
@@ -160,6 +164,8 @@ function buildMarks(evidence: EvidenceItem[], f: Filters, excluded: string[], pr
   for (const item of evidence) {
     const itemOk = matchesItem(item, f);
     for (const a of item.aspects) {
+      // Never draw a quote whose span doesn't sit at its offsets in the source text.
+      if (!spanIsVerified(item.text, a)) continue;
       const key = `${item.item_id}:${a.aspect}`;
       const index = prevIndex.get(key) ?? next++;
       out.push({
@@ -331,9 +337,23 @@ export const useVitra = create<VitraState>((set, get) => ({
   async undoIntake() {
     const s = get();
     const sess = s.session;
-    if (!sess) return;
-    await dataSource.undo(sess.itemId);
+    if (!sess) return "one";
+    const scope = await dataSource.undo(sess.itemId);
     const b = sess.before;
+    if (scope === "all") {
+      // The source dropped every held transcript, so the baseline's earlier transcripts are gone
+      // too. Match the source: drop them here and recompute instead of restoring the snapshot.
+      const evidence = b.evidence.filter((e) => e.source !== "transcript");
+      const span = weekSpan(evidence);
+      const weeks = span ? weeksBetween(span[0], span[1]) : b.weeks;
+      const clamp = (w: string) => (w < weeks[0] ? weeks[0] : w > weeks[weeks.length - 1] ? weeks[weeks.length - 1] : w);
+      const filters = { ...b.filters, weekFrom: clamp(b.filters.weekFrom), weekTo: clamp(b.filters.weekTo) };
+      set({ evidence, weeks, filters, marks: buildMarks(evidence, filters, b.excluded, s.marks), pulses: [], selection: null });
+      await recompute(b.excluded);
+      // The session closes only once the recomputed numbers are on screen.
+      set({ session: null, lastIntake: null, focusStation: null, cameraFocus: null });
+      return scope;
+    }
     set({
       evidence: b.evidence, trends: b.trends, cards: b.cards, gaps: b.gaps,
       weeks: b.weeks, filters: b.filters, excluded: b.excluded,
@@ -342,6 +362,7 @@ export const useVitra = create<VitraState>((set, get) => ({
       selection: s.selection?.itemId === sess.itemId ? null : s.selection,
       session: null, lastIntake: null, focusStation: null, cameraFocus: null,
     });
+    return scope;
   },
 
   dismissSession() { set({ session: null }); },
