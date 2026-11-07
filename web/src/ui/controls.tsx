@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { stepIndex } from "./listbox.ts";
+import { openHighlight, stepIndex } from "./listbox.ts";
 
 export interface Option<T extends string> { value: T; label: string; hint?: string; }
 
@@ -85,10 +85,12 @@ export function Select<T extends string>({
         aria-controls={`${id}-list`}
         onClick={() => (open ? setOpen(false) : openAt(selectedIndex))}
         onKeyDown={(e) => {
-          const next = stepIndex(selectedIndex, e.key, options.length);
-          if (next === null) return;
+          // Once the menu is open the list owns the keys, one label per arrow.
+          if (open) return;
+          const index = openHighlight(selectedIndex, e.key, options.length);
+          if (index === null) return;
           e.preventDefault();
-          openAt(next);
+          openAt(index);
         }}
         className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1 text-[13px] transition-colors ${
           isAll ? "border-border text-text-2 hover:border-border-strong hover:text-text" : "border-accent/50 bg-accent-soft text-text"
@@ -121,7 +123,10 @@ export function Select<T extends string>({
               role="option"
               aria-selected={o.value === value}
               data-active={i === active ? "true" : "false"}
-              onMouseMove={() => { if (activeRef.current !== i) setActive(i); }}
+              onMouseMove={(e) => {
+                if (e.movementX === 0 && e.movementY === 0) return;
+                if (activeRef.current !== i) setActive(i);
+              }}
               onClick={() => choose(i)}
               className={`flex cursor-pointer items-center justify-between gap-4 rounded-md px-2.5 py-1.5 text-[13px] ${
                 i === active ? "bg-bg-hover text-text" : "text-text-2"

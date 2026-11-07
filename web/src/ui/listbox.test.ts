@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { aspectOptions } from "./options.ts";
-import { stepIndex } from "./listbox.ts";
+import { openHighlight, stepIndex } from "./listbox.ts";
 
 describe("listbox keyboard", () => {
   const labels = () => aspectOptions().map((o) => o.label);
@@ -16,6 +16,16 @@ describe("listbox keyboard", () => {
     expect(names[i]).toBe("Efficacy");
     expect(stepIndex(0, "Home", names.length)).toBe(0);
     expect(stepIndex(1, "End", names.length)).toBe(names.length - 1);
+  });
+
+  it("opens on All, so the second ArrowDown is Efficacy", () => {
+    const names = labels();
+    let i = openHighlight(names.indexOf("All aspects"), "ArrowDown", names.length)!;
+    expect(names[i]).toBe("All aspects");
+    i = stepIndex(i, "ArrowDown", names.length)!;
+    expect(names[i]).toBe("Efficacy");
+    i = stepIndex(i, "ArrowDown", names.length)!;
+    expect(names[i]).toBe("Safety");
   });
 
   it("stays on the last label instead of wrapping", () => {
