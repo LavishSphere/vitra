@@ -402,6 +402,7 @@ def _privacy_checks(
             ok=None,
             kind="by_design",
             detail="the API only calls the loopback model URL; confirm with the socket audit in "
-            "`scripts/run_offline.sh --check` (not checkable from inside the process)",
+            "`python -m app.launch --check` (scripts/run_offline.sh or .ps1; "
+            "not checkable from inside the process)",
         ),
     ]
