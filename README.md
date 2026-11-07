@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  Reads public evidence on Tagrisso and Rybrevant, labels the launch signal, and ties every score to an exact quote. A 3B model does the reading, on your laptop, with the Wi-Fi off.
+  Reads public evidence on Tagrisso and Rybrevant, labels the launch signal, and ties every score to an exact quote. A 3B model does the reading on your own computer, with the Wi-Fi off.
 </p>
 
 <p align="center">
