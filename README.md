@@ -19,6 +19,17 @@ Launch teams for Tagrisso (osimertinib) and Rybrevant / Lazcluze (amivantamab, l
 
 Those labels feed week-by-week sentiment trends and insight cards. You can click any score and land on the sentence it came from.
 
+## Results (dev)
+
+Scored with the organizers' `score.py` on the **60-item dev set**. The hidden 240-item test set is judged separately.
+
+| Setup | Composite (dev) |
+|---|---|
+| Rules only (labeling guide code, r2) | 0.842 |
+| Rules + Llama 3.2 3B hybrid (5-fold on pubmed, press, news) | 0.844 |
+
+The hybrid split was picked on dev, so treat 0.844 as an upper bound, not a test score. Signal type and speaker attribution are strong; aspect labels and exact quotes on longer pubmed and press items still drag the score (rules-only aspect F1 **0.328** on the same dev set).
+
 ## How it's put together
 
 ```
