@@ -123,3 +123,20 @@ PKG=starter/hackathon_package_2026-11-05
 ## Network off
 
 `--check` refuses to run while `https://example.com` answers, starts model + API on loopback only, serves the prebuilt web same-origin, runs one SYNTHETIC intake, and audits sockets.
+
+Captured on Nov 7 with Wi-Fi turned off from the menu bar (MacBook Air, Apple M5, 16 GB):
+
+```text
+[vitra    0.0s] offline confirmed: https://example.com is unreachable
+[vitra    0.2s] starting model server: Llama-3.2-3B-Instruct-Q4_K_M.gguf on 127.0.0.1:8080
+[vitra    2.4s] model server ready
+[vitra    3.2s] API ready (2033 items, model server up, Llama-3.2-3B-Instruct-Q4_K_M.gguf)
+[vitra    3.2s] cold start complete (browser would open now)
+[vitra    3.3s] API smoke: token enforced, 2033 evidence items served
+[vitra]         intake status=complete, 2 verified span(s) (classifying 3637 ms)
+[vitra    7.2s] no node process running under the launcher
+[vitra    7.2s] network audit passed: every socket seen was loopback only
+[vitra    7.2s] CHECK PASSED
+```
+
+Cold start to a working app took 3.2 s, and a pasted synthetic transcript came back with verified quotes in 3.6 s, all with no network.
