@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { stepIndex } from "./listbox.ts";
 
 export interface Option<T extends string> { value: T; label: string; hint?: string; }
 
@@ -38,22 +39,38 @@ export function Select<T extends string>({
   const id = useId();
   const btn = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
+  const activeRef = useRef(0);
+  activeRef.current = active;
   const current = options.find((o) => o.value === value) ?? options[0];
   const isAll = value === ("all" as T);
+  const selectedIndex = Math.max(0, options.findIndex((o) => o.value === value));
+
+  const openAt = (index: number) => {
+    setActive(index);
+    setOpen(true);
+  };
 
   useEffect(() => {
     if (!open) return;
-    setActive(Math.max(0, options.findIndex((o) => o.value === value)));
     list.current?.focus();
+    const row = document.getElementById(`${id}-${activeRef.current}`);
+    row?.scrollIntoView({ block: "nearest" });
     const onDoc = (e: MouseEvent) => {
       if (!list.current?.contains(e.target as Node) && !btn.current?.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [open, options, value]);
+  }, [open, id]);
+
+  useEffect(() => {
+    if (!open) return;
+    document.getElementById(`${id}-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [open, active, id]);
 
   const choose = (i: number) => {
-    onChange(options[i].value);
+    const option = options[i];
+    if (!option) return;
+    onChange(option.value);
     setOpen(false);
     btn.current?.focus();
   };
@@ -66,7 +83,13 @@ export function Select<T extends string>({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={`${id}-list`}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (open ? setOpen(false) : openAt(selectedIndex))}
+        onKeyDown={(e) => {
+          const next = stepIndex(selectedIndex, e.key, options.length);
+          if (next === null) return;
+          e.preventDefault();
+          openAt(next);
+        }}
         className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1 text-[13px] transition-colors ${
           isAll ? "border-border text-text-2 hover:border-border-strong hover:text-text" : "border-accent/50 bg-accent-soft text-text"
         }`}
@@ -84,11 +107,9 @@ export function Select<T extends string>({
           aria-label={label}
           aria-activedescendant={`${id}-${active}`}
           onKeyDown={(e) => {
-            if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(options.length - 1, a + 1)); }
-            else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }
-            else if (e.key === "Home") { e.preventDefault(); setActive(0); }
-            else if (e.key === "End") { e.preventDefault(); setActive(options.length - 1); }
-            else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(active); }
+            const next = stepIndex(activeRef.current, e.key, options.length);
+            if (next !== null) { e.preventDefault(); setActive(next); return; }
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(activeRef.current); }
             else if (e.key === "Escape" || e.key === "Tab") { setOpen(false); if (e.key === "Escape") btn.current?.focus(); }
           }}
           className={`scroll-thin absolute top-full z-50 mt-1.5 max-h-80 min-w-48 overflow-auto rounded-lg border border-border bg-bg-elevated p-1 shadow-[var(--shadow-panel)] outline-none ${align === "right" ? "right-0" : "left-0"}`}
@@ -99,7 +120,8 @@ export function Select<T extends string>({
               id={`${id}-${i}`}
               role="option"
               aria-selected={o.value === value}
-              onMouseEnter={() => setActive(i)}
+              data-active={i === active ? "true" : "false"}
+              onMouseMove={() => { if (activeRef.current !== i) setActive(i); }}
               onClick={() => choose(i)}
               className={`flex cursor-pointer items-center justify-between gap-4 rounded-md px-2.5 py-1.5 text-[13px] ${
                 i === active ? "bg-bg-hover text-text" : "text-text-2"
