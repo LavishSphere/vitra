@@ -26,9 +26,9 @@ Scored with the organizers' `score.py` on the **60-item dev set**. The hidden 24
 | Setup | Composite (dev) |
 |---|---|
 | Rules only (labeling guide code, r2) | 0.842 |
-| Rules + Llama 3.2 3B hybrid (5-fold on pubmed, press, news) | 0.844 |
+| Rules + Llama 3.2 3B hybrid (5-fold replay; later-clause span trim) | 0.8466 |
 
-The hybrid split was picked on dev, so treat 0.844 as an upper bound, not a test score. Signal type and speaker attribution are strong; aspect labels and exact quotes on longer pubmed and press items still drag the score (rules-only aspect F1 **0.328** on the same dev set).
+The hybrid split was picked and tuned on dev, so treat 0.8466 as an upper bound, not a test score. Signal type and speaker attribution are strong; aspect labels and exact quotes on longer pubmed and press items still drag the score (rules-only aspect F1 **0.328** on the same dev set).
 
 ## How it's put together
 
@@ -44,9 +44,5 @@ The model runs through llama.cpp on `127.0.0.1`. Nothing is sent to a cloud mode
 ## Data
 
 The organizer dataset isn't in this repository. It's provided for HACK1984 only, and the package asks teams not to redistribute it. To run Vitra you need your own copy of the package, with the PubMed abstracts filled in by its `rehydrate` step.
-
-## Cost on this machine
-
-Hybrid labeling of the 240-item test set on an Apple M5 (16 GB): **268 wall seconds per 100 items** (644 s total). 149 of 240 items hit the local model at **13.9 model items/min**. Organizer hardware is unknown; expect different times there.
 
 Setup and run instructions are coming.
