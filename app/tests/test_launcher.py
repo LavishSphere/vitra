@@ -140,7 +140,38 @@ def test_audit_flags_a_real_non_loopback_socket() -> None:
 
 
 def test_audit_ignores_a_real_loopback_socket() -> None:
-    assert _audit_real_child("127.0.0.1") == []
+    findings = _audit_real_child("127.0.0.1")
+    if IS_WINDOWS:
+        # Windows lists a connected UDP socket as 0.0.0.0:port with no remote address, so
+        # the audit cannot prove it is loopback and flags it. Failing safe is intended.
+        assert findings and all(" UDP 0.0.0.0:" in f for f in findings), findings
+    else:
+        assert findings == []
+
+
+def test_audit_ignores_a_real_loopback_tcp_connection() -> None:
+    """The case Vitra actually uses: TCP between two loopback sockets, on every OS."""
+    with socket.socket() as srv:
+        srv.bind(("127.0.0.1", 0))
+        srv.listen()
+        code = (
+            "import socket, sys, time\n"
+            "s = socket.create_connection(('127.0.0.1', int(sys.argv[1])))\n"
+            "print('ready', flush=True)\n"
+            "time.sleep(30)\n"
+        )
+        holder = subprocess.Popen(
+            [sys.executable, "-c", code, str(srv.getsockname()[1])],
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        try:
+            assert holder.stdout is not None and holder.stdout.readline().strip() == "ready"
+            findings, _ = launch.non_loopback_sockets(launch.process_tree([holder.pid]))
+        finally:
+            holder.kill()
+            holder.wait()
+    assert findings == []
 
 
 def test_process_tree_includes_descendants() -> None:

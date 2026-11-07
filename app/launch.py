@@ -25,9 +25,14 @@ launcher stops (exit 3), unless --warn-only (or VITRA_OFFLINE_WARN_ONLY=1) is gi
 While running, every proxy variable points at a closed loopback port, so any tool
 that honors them fails fast instead of reaching out. A socket audit samples every
 0.3 s, with psutil, each process in the launcher's tree (plus a reused model server)
-and flags any socket that is not loopback-to-loopback, including UDP. A sample can
-miss a socket that opens and closes between two polls; the proxy sinkhole covers most
-of those. Any non-loopback socket fails the run (exit 4).
+and flags any socket that is not loopback-to-loopback, including UDP. Any non-loopback
+socket fails the run (exit 4). Limits: a sample can miss a socket that opens and closes
+between two polls (the proxy sinkhole covers most of those). DNS lookups through the
+system resolver run in a system service (mDNSResponder on macOS, the DNS Client on
+Windows, often systemd-resolved on Linux), outside the audited tree; a connection to
+the resolved address is inside it. Windows reports no remote address for UDP and lists
+a connected UDP socket as 0.0.0.0:port, so on Windows every UDP socket is flagged, even
+one that only talks to loopback. That errs toward failing the run.
 
 Ctrl+C stops everything this launcher started. Each stage prints its timing.
 """
