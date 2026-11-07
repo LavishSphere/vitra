@@ -10,7 +10,7 @@ import { polarityColor, theme } from "./colors.ts";
 import { haloMaterial } from "./materials.ts";
 
 const CAPACITY = 1024;
-const BASE = 0.074;
+const BASE = 0.085;
 
 interface Layout { positions: Float32Array; count: number; }
 
