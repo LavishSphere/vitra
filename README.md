@@ -98,11 +98,11 @@ contracts/  shared shapes
 
 ## Setup and run (local, offline)
 
-Needs ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server`, and the organizer package under `starter/` (gitignored; PubMed rehydrated). A GPU runs the model fastest; CPU-only machines work too, just slower.
+Needs ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server`, and the organizer package under `starter/` (gitignored; PubMed rehydrated).
 
 ### macOS and Linux
 
-Same steps on both. Get `llama-server` with `brew install llama.cpp` on macOS (Apple Silicon or Intel), or a Linux build from [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases).
+Install `llama-server` with `brew install llama.cpp`, or download a build from [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases).
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -118,7 +118,7 @@ scripts/run_offline.sh serve
 
 ### Windows
 
-Same launcher, same flags. In PowerShell from the repo root:
+In PowerShell from the repo root:
 
 ```powershell
 py -3 -m venv .venv
@@ -136,9 +136,8 @@ scripts\run_offline.ps1 --check
 scripts\run_offline.ps1 serve
 ```
 
-If PowerShell blocks local scripts, use `scripts\run_offline.cmd --check` with the same arguments. Ctrl+C stops the model server and the API. WSL2 also works: follow the Linux steps inside a WSL shell, and if no browser opens, paste the printed URL into your Windows browser.
+If PowerShell blocks local scripts, use `scripts\run_offline.cmd --check` with the same arguments. Ctrl+C stops the model server and the API.
 
-All three entry points (`run_offline.sh`, `.ps1`, `.cmd`) run `python -m app.launch`, so the checks and the socket audit are the same code on every OS.
 
 ```bash
 PKG=starter/hackathon_package_2026-11-05
