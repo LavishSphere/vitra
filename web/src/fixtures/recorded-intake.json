@@ -1,0 +1,22 @@
+{
+ "_note": "Recorded output of the real local pipeline (transcript policy) on a synthetic note, captured on a laptop with Wi-Fi off. The public page replays it. It does not run the model.",
+ "model": "Llama 3.2 3B Instruct (GGUF, llama-server)",
+ "policy": "transcript",
+ "transcript": {
+  "title": "Synthetic advisory board note",
+  "text": "Synthetic advisory board note. Thoracic oncologist: The subcutaneous version of amivantamab cuts chair time from hours to minutes, and our infusion center will love that. The rash is still a real concern for my patients and needs proactive management. Payer representative: prior authorization for the combination has been slow in our region.",
+  "product": "B",
+  "published": "2025-10-23"
+ },
+ "prediction": {
+  "item_id": "SYN-T002",
+  "signal_type": "none",
+  "actionable": "no",
+  "efficacy": null,
+  "safety": {"polarity": -1, "speaker": "hcp", "span": "still a real concern for my patients"},
+  "convenience": {"polarity": 1, "speaker": "hcp", "span": "cuts chair time from hours to minutes"},
+  "access_cost": null,
+  "evidence_quality": null
+ },
+ "recorded_stages_ms": {"classifying": 7012}
+}
