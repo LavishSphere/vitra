@@ -21,7 +21,7 @@ export function DemoBanner() {
         The labeling model doesn't run on this page. The real version runs a 3B model on a laptop with the Wi-Fi off.{" "}
         <a
           className="text-accent underline-offset-2 hover:text-accent-hover hover:underline"
-          href="https://github.com/LavishSphere/vitra#setup-and-run-local-offline"
+          href="https://github.com/LavishSphere/vitra#setup"
           target="_blank"
           rel="noreferrer"
         >
