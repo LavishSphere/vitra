@@ -130,6 +130,8 @@ INERT_URL_PATTERNS = [
     r"https://example\.org/synthetic/SYN-\d{4}",
 ]
 INERT_URLS = {
+    # Link in the public demo banner to the README setup steps; opened by a person, never fetched.
+    "https://github.com/LavishSphere/vitra#setup-and-run-local-offline",
     # @react-three/fiber's package.json metadata, bundled as plain strings.
     "https://github.com/pmndrs/react-three-fiber#readme",
     "https://github.com/pmndrs/react-three-fiber/issues",

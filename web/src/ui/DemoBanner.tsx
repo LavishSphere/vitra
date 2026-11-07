@@ -1,5 +1,5 @@
 /**
- * Shown on the public synthetic build so judges know what is real vs planned.
+ * Shown on the public synthetic build so visitors know the evidence is invented and the model runs locally.
  * Hidden when talking to the local API (laptop demo with the 3B model).
  */
 import { useVitra } from "../store/useVitra.ts";
@@ -14,12 +14,19 @@ export function DemoBanner() {
       aria-label="About this demo build"
     >
       <p>
-        <span className="font-medium text-text">Fake data on purpose.</span> This page is invented evidence so you can
-        poke the UI. Anyone can clone the repo, drop in a Llama 3.2 3B GGUF, and run the real stack on their own
-        machine with no Wi-Fi. README has the steps.
+        <span className="font-medium text-text">This page uses made-up evidence.</span> It's a public preview of the
+        interface, so the quotes, trends and cards here are invented for the demo.
       </p>
       <p className="mt-1 text-text-muted">
-        No model in the browser yet. A ~0.5B on-device build is still later work.
+        The labeling model doesn't run on this page. The real version runs a 3B model on a laptop with the Wi-Fi off.{" "}
+        <a
+          className="text-accent underline-offset-2 hover:text-accent-hover hover:underline"
+          href="https://github.com/LavishSphere/vitra#setup-and-run-local-offline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          See how to run it
+        </a>
       </p>
     </aside>
   );
