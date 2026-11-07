@@ -125,9 +125,14 @@ export function Timeline() {
           );
         })}
         <div className="num pointer-events-none absolute inset-x-0 -bottom-1.5 h-3 text-[10px] text-text-muted" aria-hidden>
-          {weeks.map((w, i) => (i % tickStep === 0 ? (
-            <span key={w} className={`absolute whitespace-nowrap ${i === 0 ? "" : "-translate-x-1/2"}`} style={{ left: `${pct(i)}%` }}>{w.endsWith("W01") ? w.slice(0, 4) : shortWeek(w)}</span>
-          ) : null))}
+          {weeks.map((w, i) => {
+            const yearBreak = i > 0 && w.slice(0, 4) !== weeks[i - 1].slice(0, 4);
+            if (i % tickStep !== 0 && !yearBreak) return null;
+            const label = yearBreak || w.endsWith("W01") ? w.slice(0, 4) : shortWeek(w);
+            return (
+              <span key={w} className={`absolute whitespace-nowrap ${i === 0 ? "" : "-translate-x-1/2"}`} style={{ left: `${pct(i)}%` }}>{label}</span>
+            );
+          })}
         </div>
       </div>
     </section>
