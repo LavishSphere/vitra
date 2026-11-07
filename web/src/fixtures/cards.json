@@ -1,0 +1,250 @@
+[
+ {
+  "id": "card-SYN-0019",
+  "headline": "Tagrisso label revision adds respiratory symptom evaluation",
+  "signal_type": "regulatory",
+  "product": "A",
+  "week": "2025-W40",
+  "actionable": true,
+  "why_it_matters": "Label change with clinical meaning. Route to messaging and medical-information review.",
+  "citations": [
+   {
+    "item_id": "SYN-0019",
+    "aspect": "safety",
+    "span": "The revision adds a recommendation to evaluate patients promptly for new respiratory symptoms.",
+    "span_start": 72,
+    "span_end": 166,
+    "url": "urn:vitra:synthetic:SYN-0019"
+   },
+   {
+    "item_id": "SYN-0003",
+    "aspect": "safety",
+    "span": "The revised section adds monitoring language for a cardiac adverse reaction.",
+    "span_start": 59,
+    "span_end": 135,
+    "url": "urn:vitra:synthetic:SYN-0003"
+   }
+  ],
+  "confidence": {
+   "level": "medium",
+   "method": "rule",
+   "span_verified": true,
+   "source_authority": "regulator",
+   "corroborating_items": 1,
+   "notes": [
+    "Rubric points 3 from the strongest cited source and 2 cited item(s)."
+   ]
+  },
+  "fact": "A synthetic label revision for Tagrisso adds a recommendation to evaluate new respiratory symptoms promptly.",
+  "observed_sentiment": "Regulator safety polarity is −1 in both cited label items.",
+  "interpretation": "Field materials may need the updated warning language."
+ },
+ {
+  "id": "card-SYN-0017",
+  "headline": "Payer friction on Tagrisso: specialty copays and prior authorization",
+  "signal_type": "access_pricing",
+  "product": "A",
+  "week": "2025-W38",
+  "actionable": true,
+  "why_it_matters": "Coverage or cost change. Route to access planning.",
+  "citations": [
+   {
+    "item_id": "SYN-0017",
+    "aspect": "access_cost",
+    "span": "said specialty tier copays will rise next year for several oral cancer drugs, Tagrisso among them",
+    "span_start": 53,
+    "span_end": 150,
+    "url": "urn:vitra:synthetic:SYN-0017"
+   },
+   {
+    "item_id": "SYN-0005",
+    "aspect": "access_cost",
+    "span": "A plan pharmacist said the extra step could add days before a first fill.",
+    "span_start": 163,
+    "span_end": 236,
+    "url": "urn:vitra:synthetic:SYN-0005"
+   }
+  ],
+  "confidence": {
+   "level": "low",
+   "method": "model",
+   "span_verified": true,
+   "source_authority": "news",
+   "corroborating_items": 1,
+   "notes": [
+    "Rubric points 0 from the strongest cited source and 2 cited item(s)."
+   ]
+  },
+  "fact": "A fictional benefits manager says specialty tier copays will rise for oral cancer drugs including Tagrisso.",
+  "observed_sentiment": "Payer access polarity is −1 in W20 and W38, with one +1 item in W28.",
+  "interpretation": "Watch for patient support program demand."
+ },
+ {
+  "id": "card-SYN-0036",
+  "headline": "Rybrevant patients describe shorter clinic visits",
+  "signal_type": "none",
+  "product": "B",
+  "week": "2025-W40",
+  "actionable": false,
+  "why_it_matters": "Patient voice on treatment burden. Useful context for nurse education and patient materials.",
+  "citations": [
+   {
+    "item_id": "SYN-0036",
+    "aspect": "convenience",
+    "span": "Priya writes that her Rybrevant visits are much shorter now than in the first weeks.",
+    "span_start": 30,
+    "span_end": 114,
+    "url": "urn:vitra:synthetic:SYN-0036"
+   },
+   {
+    "item_id": "SYN-0039",
+    "aspect": "convenience",
+    "span": "Several members said the shorter clinic visits made the schedule easier to manage.",
+    "span_start": 102,
+    "span_end": 184,
+    "url": "urn:vitra:synthetic:SYN-0039"
+   },
+   {
+    "item_id": "SYN-0030",
+    "aspect": "convenience",
+    "span": "Priya says the first dose was split over two days and she spent most of both in the clinic.",
+    "span_start": 88,
+    "span_end": 179,
+    "url": "urn:vitra:synthetic:SYN-0030"
+   }
+  ],
+  "confidence": {
+   "level": "low",
+   "method": "model",
+   "span_verified": true,
+   "source_authority": "news",
+   "corroborating_items": 2,
+   "notes": [
+    "Rubric points 1 from the strongest cited source and 3 cited item(s)."
+   ]
+  },
+  "fact": "Two synthetic patient sources in W39 and W40 describe shorter Rybrevant clinic visits.",
+  "observed_sentiment": "Patient convenience moved from −1 in W26 to +1 in W39 and W40.",
+  "interpretation": "The first weeks of treatment look like the burden point."
+ },
+ {
+  "id": "card-SYN-0040",
+  "headline": "Clinicians frame Rybrevant with Lazcluze as a first-line option",
+  "signal_type": "expert_opinion",
+  "product": "B",
+  "week": "2025-W41",
+  "actionable": true,
+  "why_it_matters": "Shift in clinician framing. Medical affairs may want to hear it firsthand at an advisory board.",
+  "citations": [
+   {
+    "item_id": "SYN-0040",
+    "aspect": "efficacy",
+    "span": "said the longer follow-up for Rybrevant with Lazcluze has changed how she frames first-line options",
+    "span_start": 53,
+    "span_end": 152,
+    "url": "urn:vitra:synthetic:SYN-0040"
+   },
+   {
+    "item_id": "SYN-0037",
+    "aspect": "efficacy",
+    "span": "One said the combination of Rybrevant and Lazcluze has become a real option for her fit first-line patients.",
+    "span_start": 104,
+    "span_end": 212,
+    "url": "urn:vitra:synthetic:SYN-0037"
+   }
+  ],
+  "confidence": {
+   "level": "low",
+   "method": "model",
+   "span_verified": true,
+   "source_authority": "news",
+   "corroborating_items": 1,
+   "notes": [
+    "Rubric points 0 from the strongest cited source and 2 cited item(s)."
+   ]
+  },
+  "fact": "Two fictional oncologists in W40 and W41 describe the combination as a first-line option.",
+  "observed_sentiment": "Clinician efficacy polarity is +1 in both weeks.",
+  "interpretation": "Two voices is thin. Treat this as a lead to follow up."
+ },
+ {
+  "id": "card-SYN-0033",
+  "headline": "Rybrevant label revision adds thromboembolic prevention guidance",
+  "signal_type": "regulatory",
+  "product": "B",
+  "week": "2025-W32",
+  "actionable": true,
+  "why_it_matters": "Label change with clinical meaning. Route to messaging and medical-information review.",
+  "citations": [
+   {
+    "item_id": "SYN-0033",
+    "aspect": "safety",
+    "span": "adds guidance on preventing venous thromboembolic events in the first months of combination treatment",
+    "span_start": 29,
+    "span_end": 130,
+    "url": "urn:vitra:synthetic:SYN-0033"
+   }
+  ],
+  "confidence": {
+   "level": "medium",
+   "method": "rule",
+   "span_verified": true,
+   "source_authority": "regulator",
+   "corroborating_items": 0,
+   "notes": [
+    "Rubric points 3 from the strongest cited source and 1 cited item(s)."
+   ]
+  },
+  "fact": "A synthetic label revision adds guidance on preventing venous thromboembolic events early in combination treatment.",
+  "observed_sentiment": "Regulator safety polarity is −1.",
+  "interpretation": "Expect related questions from infusion nurses."
+ },
+ {
+  "id": "card-SYN-0022",
+  "headline": "Tagrisso researcher efficacy signals hold across W39 to W41",
+  "signal_type": "efficacy",
+  "product": "A",
+  "week": "2025-W41",
+  "actionable": true,
+  "why_it_matters": "New efficacy evidence. Route to medical affairs for review against current messaging.",
+  "citations": [
+   {
+    "item_id": "SYN-0022",
+    "aspect": "efficacy",
+    "span": "Benefit was observed in both variant groups in this fictional dataset.",
+    "span_start": 66,
+    "span_end": 136,
+    "url": "urn:vitra:synthetic:SYN-0022"
+   },
+   {
+    "item_id": "SYN-0020",
+    "aspect": "efficacy",
+    "span": "Median time on treatment was longer than at the first interim look.",
+    "span_start": 94,
+    "span_end": 161,
+    "url": "urn:vitra:synthetic:SYN-0020"
+   },
+   {
+    "item_id": "SYN-0018",
+    "aspect": "efficacy",
+    "span": "Intracranial disease control was reported in a majority of evaluable participants.",
+    "span_start": 84,
+    "span_end": 166,
+    "url": "urn:vitra:synthetic:SYN-0018"
+   }
+  ],
+  "confidence": {
+   "level": "medium",
+   "method": "model",
+   "span_verified": true,
+   "source_authority": "peer_reviewed",
+   "corroborating_items": 2,
+   "notes": [
+    "Rubric points 2 from the strongest cited source and 3 cited item(s)."
+   ]
+  },
+  "fact": "Three synthetic research items in consecutive weeks report disease control or longer time on treatment.",
+  "observed_sentiment": "Researcher efficacy polarity is +1, +1 and +2.",
+  "interpretation": "Consistent direction, small N. All three come from invented cohorts."
+ }
+]
