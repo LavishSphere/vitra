@@ -267,10 +267,13 @@ def jaccard_similarity(query: dict[str, Any], docs: Sequence[dict[str, Any]]) ->
     return {d["item_id"]: len(w & _words(d)) / (len(w | _words(d)) or 1) for d in docs}
 
 
+DEFAULT_FEWSHOT_METHOD = "jaccard"
+
+
 def fewshot_method() -> str:
-    """Example ranking: 'tfidf' (same source first, then cosine) or 'jaccard' (overlap first)."""
-    m = os.environ.get("VITRA_FEWSHOT_METHOD", "tfidf")
-    return m if m in FEWSHOT_METHODS else "tfidf"
+    """Example ranking from VITRA_FEWSHOT_METHOD; unknown values fall back to the default."""
+    m = os.environ.get("VITRA_FEWSHOT_METHOD", DEFAULT_FEWSHOT_METHOD)
+    return m if m in FEWSHOT_METHODS else DEFAULT_FEWSHOT_METHOD
 
 
 def fewshot_k(source: str | None) -> int:
@@ -288,8 +291,9 @@ def select_fewshot(
 ) -> list[dict[str, Any]]:
     """Most similar labeled examples of a compatible source, at most 2 per signal type.
 
-    'tfidf' ranks the item's own source first, then TF-IDF cosine; 'jaccard' ranks by
-    word-set overlap and uses source only to break ties. Deterministic (final tie-break on
+    'jaccard' (default) ranks by word-set overlap and uses source only to break ties;
+    'tfidf' ranks the item's own source first, then TF-IDF cosine; 'tfidf-mixed' ranks by
+    TF-IDF cosine and uses source only to break ties. Deterministic (final tie-break on
     item_id). The item itself is always skipped; in evaluation the caller removes its fold.
     """
     method = method or fewshot_method()
