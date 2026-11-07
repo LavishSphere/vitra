@@ -66,8 +66,15 @@ jobs:
           if [ -n "$hits" ]; then echo "::error::Em or en dashes found"; echo "$hits"; exit 1; fi
 
   python:
-    name: Python tests
-    runs-on: ubuntu-latest
+    name: Python tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
       - id: present
