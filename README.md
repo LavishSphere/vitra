@@ -86,7 +86,7 @@ PKG=starter/hackathon_package_2026-11-05
   --items "$PKG/data/dev.full.jsonl"
 ```
 
-Cost on this laptop (Apple M5, 16 GB): **268.3 wall seconds per 100 items** on the hybrid test run logged in the repo notes. Organizer hardware is unknown.
+Measured cost on an Apple M5 MacBook Air (16 GB): **268.3 wall seconds per 100 items** on the hybrid test run (logged). Organizer judging hardware is unknown; expect different times there.
 
 ## Network off
 
