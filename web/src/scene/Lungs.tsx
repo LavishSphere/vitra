@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BufferAttribute, BufferGeometry, Color, Group } from "three";
 import { airwayGeometry, airwayTree, flowPaths, lungGeometry, samplePath } from "./anatomy.ts";
-import { airwayMaterial, flowMaterial, glassMaterial } from "./materials.ts";
+import { airwayMaterial, flowMaterial, glassMaterial, haloMaterial } from "./materials.ts";
+import { Billboard } from "@react-three/drei";
 import { theme } from "./colors.ts";
 import { useVitra } from "../store/useVitra.ts";
 import { Tumor } from "./Tumor.tsx";
@@ -47,6 +48,8 @@ export function Lungs({ surface, animate }: LungsProps) {
   const glass = useMemo(() => glassMaterial(startAccent), [startAccent]);
   const airMat = useMemo(() => airwayMaterial(startAccent), [startAccent]);
   const flowMat = useMemo(() => flowMaterial(new Color("#BFFBF3").multiplyScalar(1.6), 0.085), []);
+  // A faint light inside each lung, so the glass reads as a lit volume.
+  const innerGlow = useMemo(() => haloMaterial(startAccent, 0.16), [startAccent]);
 
   // Airflow particles: each rides a root-to-leaf airway path and moves in and out with the breath.
   const flow = useMemo(() => {
@@ -71,8 +74,8 @@ export function Lungs({ surface, animate }: LungsProps) {
 
   useEffect(() => () => {
     right.dispose(); left.dispose(); airways.dispose(); flow.geo.dispose();
-    glass.dispose(); airMat.dispose(); flowMat.dispose();
-  }, [right, left, airways, flow, glass, airMat, flowMat]);
+    glass.dispose(); airMat.dispose(); flowMat.dispose(); innerGlow.dispose();
+  }, [right, left, airways, flow, glass, airMat, flowMat, innerGlow]);
 
   const target = useRef(new Color());
   const dim = useRef(0);
@@ -90,6 +93,9 @@ export function Lungs({ surface, animate }: LungsProps) {
     const k = 1 - Math.exp(-dt * 3);
     (glass.uniforms.uAccent.value as Color).lerp(target.current, k);
     (airMat.uniforms.uAccent.value as Color).lerp(target.current, k);
+    (innerGlow.uniforms.uColor.value as Color).lerp(target.current, k);
+    glass.uniforms.uBreath.value = b;
+    innerGlow.uniforms.uStrength.value = (0.13 + 0.05 * b) * (1 - 0.6 * dim.current);
     dim.current += ((focusStation ? 1 : 0) - dim.current) * k;
     glass.uniforms.uFocus.value = dim.current;
     airMat.uniforms.uOpacity.value = 1 - 0.4 * dim.current;
@@ -114,6 +120,12 @@ export function Lungs({ surface, animate }: LungsProps) {
           <mesh geometry={left} material={glass} renderOrder={2} />
         </>
       )}
+      <Billboard position={[-1.2, -0.35, -0.1]}>
+        <mesh material={innerGlow} renderOrder={0}><planeGeometry args={[4.6, 5.6]} /></mesh>
+      </Billboard>
+      <Billboard position={[1.2, -0.35, -0.1]}>
+        <mesh material={innerGlow} renderOrder={0}><planeGeometry args={[4.6, 5.6]} /></mesh>
+      </Billboard>
       <mesh geometry={airways} material={airMat} renderOrder={1} />
       <points geometry={flow.geo} material={flowMat} renderOrder={3} frustumCulled={false} />
       <Tumor animate={animate} />

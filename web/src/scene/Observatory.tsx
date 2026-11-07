@@ -4,12 +4,14 @@ import { AdaptiveDpr, Line, OrbitControls, PerformanceMonitor } from "@react-thr
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import { Vector3 } from "three";
 import { Lungs } from "./Lungs.tsx";
+import { Floor } from "./Stage.tsx";
 import { Stations } from "./Stations.tsx";
 import { Evidence } from "./Evidence.tsx";
 import { CameraRig } from "./CameraRig.tsx";
 import { Pulses } from "./Pulses.tsx";
 import { LabelProjector } from "./LabelProjector.tsx";
-import { OVERVIEW, PANEL, STATION_FRAMES } from "./layout.ts";
+import { PANEL, STATION_FRAMES } from "./layout.ts";
+import { ARRIVAL_START, HERO } from "./framing.ts";
 import { useVitra } from "../store/useVitra.ts";
 
 /** Reports frames per second to window.__vitraFps (read by the perf check script). */
@@ -48,7 +50,7 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
     <Canvas
       dpr={[1, Math.min(2, dpr)]}
       gl={{ antialias: false, powerPreference: "high-performance", alpha: false, stencil: false }}
-      camera={{ fov: 34, near: 0.1, far: 120, position: OVERVIEW.position.toArray() }}
+      camera={{ fov: 34, near: 0.1, far: 120, position: (animate ? ARRIVAL_START : HERO).position.toArray() }}
       frameloop="always"
       onPointerMissed={() => deselect(false)}
       aria-label="Interactive 3D lung observatory"
@@ -62,14 +64,15 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
         enableDamping
         dampingFactor={0.08}
         minDistance={3.2}
-        maxDistance={28}
+        maxDistance={34}
         minPolarAngle={0.25}
         maxPolarAngle={Math.PI * 0.62}
-        target={OVERVIEW.target.toArray()}
+        target={HERO.target.toArray()}
         rotateSpeed={0.6}
         zoomSpeed={0.8}
       />
       <CameraRig animate={animate} railPx={railPx} />
+      <Floor animate={animate} />
       <Lungs animate={animate} />
       <Stations />
       <JourneyPath />

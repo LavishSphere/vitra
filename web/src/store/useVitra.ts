@@ -41,6 +41,9 @@ export interface Selection { itemId: string; aspect?: AspectKey; }
 export interface Pulse { id: number; itemId: string; station: StationId; week: string; polarity: number; startedAt: number; }
 
 export type RailTab = "trends" | "cards" | "gaps" | "evidence";
+
+/** Where the camera should be. "intake" moves come from a classified transcript, "user" from a click or key. */
+export interface CameraFocus { stationId: StationId; reason: "intake" | "user"; }
 export type ViewMode = "3d" | "2d";
 
 interface VitraState {
@@ -61,6 +64,8 @@ interface VitraState {
   selection: Selection | null;
   hovered: string | null; // mark key
   focusStation: StationId | null;
+  /** Camera target. Kept in step with focusStation; the rig flies here. */
+  cameraFocus: CameraFocus | null;
   focusTumor: boolean;
   view: ViewMode;
   railOpen: boolean;
@@ -79,6 +84,10 @@ interface VitraState {
   select(sel: Selection | null): void;
   hover(key: string | null): void;
   setFocusStation(s: StationId | null): void;
+  /** Fly the camera to a station. Intake moves leave the rail tab alone. */
+  focusCameraOn(id: StationId, reason?: CameraFocus["reason"]): void;
+  /** Back to the overview. */
+  clearFocus(): void;
   setFocusTumor(on: boolean): void;
   setView(v: ViewMode): void;
   setRail(open: boolean, tab?: RailTab): void;
@@ -150,6 +159,7 @@ export const useVitra = create<VitraState>((set, get) => ({
   selection: null,
   hovered: null,
   focusStation: null,
+  cameraFocus: null,
   focusTumor: false,
   view: "3d",
   railOpen: true,
@@ -183,6 +193,7 @@ export const useVitra = create<VitraState>((set, get) => ({
       filters,
       marks: buildMarks(get().evidence, filters, get().excluded, get().marks),
       focusStation: stationFor(gap.aspect, gap.speaker),
+      cameraFocus: { stationId: stationFor(gap.aspect, gap.speaker), reason: "user" },
       focusTumor: false,
       selection: null,
     });
@@ -201,8 +212,17 @@ export const useVitra = create<VitraState>((set, get) => ({
 
   select(sel) { set({ selection: sel }); },
   hover(key) { if (get().hovered !== key) set({ hovered: key }); },
-  setFocusStation(s) { set({ focusStation: s, focusTumor: false, ...(s ? { railTab: "evidence" as RailTab } : {}) }); },
-  setFocusTumor(on) { set({ focusTumor: on, focusStation: on ? null : get().focusStation }); },
+  setFocusStation(s) {
+    set({ focusStation: s, cameraFocus: s ? { stationId: s, reason: "user" } : null, focusTumor: false, ...(s ? { railTab: "evidence" as RailTab } : {}) });
+  },
+  focusCameraOn(id, reason = "user") {
+    set({ focusStation: id, cameraFocus: { stationId: id, reason }, focusTumor: false, ...(reason === "user" ? { railTab: "evidence" as RailTab } : {}) });
+  },
+  clearFocus() { set({ focusStation: null, cameraFocus: null, focusTumor: false }); },
+  setFocusTumor(on) {
+    const keep = on ? null : get().focusStation;
+    set({ focusTumor: on, focusStation: keep, cameraFocus: keep ? get().cameraFocus : null });
+  },
   setView(v) { set({ view: v }); },
   setRail(open, tab) { set({ railOpen: open, railTab: tab ?? get().railTab }); },
   setIntakeOpen(open) { set({ intakeOpen: open }); },
