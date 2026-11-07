@@ -20,6 +20,8 @@ PROMPT_VERSION = "p2"
 MAX_ITEM_CHARS = 5000
 MAX_EXAMPLE_CHARS = 1400
 N_FEWSHOT = 3
+# A pasted transcript pays the example cost on every call. Scored sources stay at N_FEWSHOT.
+N_FEWSHOT_TRANSCRIPT = 1
 
 _P1_SYSTEM = [
     "You label public evidence about two lung cancer drugs for a pharma launch team.",
@@ -226,6 +228,13 @@ def _words(item: dict[str, Any]) -> set[str]:
     return set(_WORD.findall(f"{item.get('title') or ''} {(item.get('text') or '')[:600]}".lower()))
 
 
+def fewshot_k(source: str | None) -> int:
+    """How many labeled examples to place before this item."""
+    if source == "transcript":
+        return N_FEWSHOT_TRANSCRIPT
+    return N_FEWSHOT
+
+
 def select_fewshot(
     item: dict[str, Any], pool: Sequence[dict[str, Any]], k: int = N_FEWSHOT
 ) -> list[dict[str, Any]]:
@@ -270,7 +279,7 @@ def build_messages(
     system = system_prompt(version, source, no_think)
     msgs: list[dict[str, str]] = [{"role": "system", "content": system}]
     # examples are presented most-similar-last (closest to the query)
-    for ex in reversed(select_fewshot(item, pool or [])):
+    for ex in reversed(select_fewshot(item, pool or [], fewshot_k(source))):
         spans = [ex[a]["span"] for a in ASPECTS if ex.get(a)]
         ex_text = excerpt(ex["text"], spans, MAX_EXAMPLE_CHARS)
         msgs.append({"role": "user", "content": user_message(ex, ex_text)})
