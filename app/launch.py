@@ -10,6 +10,12 @@
         the web page and every asset it references, one SYNTHETIC transcript intake),
         audit every socket the whole time, stop everything, and exit non-zero if any
         step touched the network or a node process appeared
+    python -m app.launch --audit-only [--api-port N] [--llm-port N]
+        read-only: find a running Vitra stack (listeners on the API and model ports,
+        plus llama-server / vitra / python -m app processes) and audit their sockets
+        with psutil. Exit 0 when every socket is loopback, or when no stack is found.
+        Exit 4 when a non-loopback socket is seen. Does not start or stop anything.
+        Replaces scripts/check_loopback.sh (that script needed lsof and failed on Windows).
     python -m app.launch [--warn-only] predict <dev|test|unlabeled> [--no-model] [--workers N] [--out PATH]
         run the pipeline predict CLI on a package split; dev is also scored
     python -m app.launch local [--dev-web | --no-web] [--no-browser] [--predictions SETS] [model.gguf]
@@ -209,6 +215,64 @@ def process_tree(root_pids: Iterable[int]) -> list[Any]:
         for q in [p, *kids]:
             seen.setdefault(q.pid, q)
     return list(seen.values())
+
+
+def _is_vitra_stack_process(name: str, cmdline: Sequence[str]) -> bool:
+    """True for llama-server, a vitra binary, or a python -m app / app.launch process."""
+    base = Path(name).name.lower()
+    if base.startswith("llama") or base.startswith("vitra"):
+        return True
+    # Windows may report python.exe; match the module flag in the command line.
+    joined = " ".join(cmdline).lower()
+    return (
+        " -m app.launch" in f" {joined}"
+        or " -m app " in f" {joined}"
+        or joined.endswith(" -m app")
+        or "app\\launch.py" in joined
+        or "app/launch.py" in joined
+    )
+
+
+def stack_root_pids(api_port: int, llm_port: int) -> list[int]:
+    """Pids that look like a running Vitra stack (API, model server, or launcher).
+
+    Combines listeners on the configured API and LLM ports with name/cmdline matches
+    for llama-server, vitra, and `python -m app`. Does not include arbitrary python
+    processes. Read only.
+    """
+    found: dict[int, None] = {}
+    for port in (api_port, llm_port):
+        pid = listener_pid(port)
+        if pid is not None:
+            found[pid] = None
+    try:
+        iterator = psutil.process_iter(["pid", "name", "cmdline"])
+    except (psutil.AccessDenied, OSError):
+        return list(found)
+    for p in iterator:
+        try:
+            info = p.info
+            name = info.get("name") or ""
+            cmdline = info.get("cmdline") or []
+            pid = int(info["pid"])
+        except (psutil.NoSuchProcess, psutil.AccessDenied, KeyError, TypeError, ValueError):
+            continue
+        if _is_vitra_stack_process(name, cmdline):
+            found[pid] = None
+    return list(found)
+
+
+def audit_running_stack(api_port: int = 8000, llm_port: int = 8080) -> tuple[list[str], list[int], list[int]]:
+    """One-shot socket audit of a running Vitra stack.
+
+    Returns (findings, unaudited_pids, root_pids). findings empty and root_pids empty
+    means no Vitra stack was found (treated as a pass by --audit-only).
+    """
+    roots = stack_root_pids(api_port, llm_port)
+    if not roots:
+        return [], [], []
+    findings, unaudited = non_loopback_sockets(process_tree(roots))
+    return findings, unaudited, roots
 
 
 def listener_pid(port: int) -> int | None:
@@ -438,7 +502,7 @@ class SocketAudit:
 
 @dataclass
 class Options:
-    mode: str = "serve"  # serve | check | predict | local
+    mode: str = "serve"  # serve | check | predict | local | audit
     warn_only: bool = False
     browser: bool = True
     intake: bool = True
@@ -602,6 +666,29 @@ class Launcher:
             return False
         self.stage("network audit passed: every socket seen was loopback only")
         return True
+
+    def audit_only(self) -> int:
+        """Read-only one-shot audit of a running stack. Does not start or stop processes."""
+        findings, unaudited, roots = audit_running_stack(self.opts.api_port, self.opts.llm_port)
+        if not roots:
+            self.stage(
+                f"no Vitra stack found on ports {self.opts.api_port}/{self.opts.llm_port} "
+                "(or by process name); nothing to audit"
+            )
+            return 0
+        self.stage(f"auditing {len(roots)} stack root pid(s): {', '.join(str(p) for p in sorted(roots))}")
+        if unaudited:
+            pids = ", ".join(str(p) for p in sorted(unaudited))
+            self.stage(
+                f"WARNING: no permission to audit pid(s) {pids}; their sockets were not checked"
+            )
+        if findings:
+            self.stage("NETWORK AUDIT FAILED: non-loopback sockets seen:")
+            for line in sorted(findings):
+                print(f"    {line}", flush=True)
+            return EXIT_AUDIT
+        self.stage("network audit passed: every socket seen was loopback only")
+        return 0
 
     def ensure_llm(self) -> None:
         if http(self.llm_url + "/health", timeout=2).ok:
@@ -909,6 +996,8 @@ class Launcher:
     def run(self) -> int:
         o = self.opts
         self.load_env()
+        if o.mode == "audit":
+            return self.audit_only()
         if o.mode == "local":
             self.choose_web_mode(o.web)
             self.ensure_llm()
@@ -985,6 +1074,8 @@ def parse_args(argv: Sequence[str], env: dict[str, str] | None = None) -> Option
             o.warn_only = True
         elif a == "--check":
             o.mode = "check"
+        elif a == "--audit-only":
+            o.mode = "audit"
         elif a == "--no-browser":
             o.browser = False
         elif a == "--no-intake":
