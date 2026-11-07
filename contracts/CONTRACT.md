@@ -1,4 +1,4 @@
-# Vitra data contract (v1)
+# Vitra data contract (v1.1)
 
 This is the shared shape between `pipeline/` (Python), `app/` (FastAPI) and `web/` (React). Changing it means bumping the version here and noting it in the change log at the bottom. `contracts/types.ts` mirrors this file for the frontend.
 
@@ -52,7 +52,7 @@ Model server: llama-server at `http://127.0.0.1:8080`, owned by `pipeline/`. Con
     "level": "high | medium | low",
     "method": "rule | model | mixed | gold",
     "span_verified": true,
-    "source_authority": "regulator | registry | peer_reviewed | company | news",
+    "source_authority": "regulator | registry | peer_reviewed | company | news | private",
     "corroborating_items": 3,
     "notes": ["..."]
   }
@@ -73,7 +73,8 @@ Model server: llama-server at `http://127.0.0.1:8080`, owned by `pipeline/`. Con
 {"id": "card-PM-0012", "headline": "...", "signal_type": "efficacy", "product": "A",
  "week": "2025-W23", "actionable": true,
  "why_it_matters": "...",
- "citations": [{"item_id": "PM-0012", "aspect": "efficacy", "span": "...", "url": "..."}],
+ "citations": [{"item_id": "PM-0012", "aspect": "efficacy", "span": "...", "url": "...",
+                "span_start": 120, "span_end": 168}],
  "confidence": {"level": "medium", "method": "model", "span_verified": true,
                 "source_authority": "peer_reviewed", "corroborating_items": 1, "notes": []},
  "fact": "...", "observed_sentiment": "...", "interpretation": "..."}
@@ -92,8 +93,9 @@ If the cell was never seen, `last_seen_week` is null.
  "stages": [{"name": "received_locally", "ms": 1}, {"name": "classifying", "ms": 2400},
             {"name": "validating_quotes", "ms": 3}, {"name": "incorporating", "ms": 12}],
  "evidence": "<EvidenceItem | null>", "rejected_spans": [{"aspect": "...", "span": "...", "reason": "..."}],
- "error": null}
+ "reason": null, "error": null}
 ```
+`reason` explains an `abstained` result in plain words (e.g. "no aspect judged in the text").
 The transcript is kept in memory only. It is never written to disk or logs.
 
 ## 8. HTTP API (`app/`, binds 127.0.0.1:8000; `web/` dev server on 127.0.0.1:5173)
@@ -104,9 +106,10 @@ The transcript is kept in memory only. It is never written to disk or logs.
 | GET | `/api/evidence/{item_id}` | `EvidenceItem` (full text) |
 | GET | `/api/trends?product=&aspect=&speaker=&excluded=ID,ID` | `TrendCell[]` |
 | GET | `/api/insights?product=&excluded=` | `InsightCard[]` |
-| GET | `/api/gaps?window_weeks=8` | `EvidenceGap[]` |
-| POST | `/api/whatif` `{excluded_ids: []}` | `{trends: TrendCell[], insights: InsightCard[]}` |
+| GET | `/api/gaps?window_weeks=8&max_items=1` | `EvidenceGap[]` (`max_items`: cells with at most this many items count as gaps; default 0) |
+| POST | `/api/whatif` `{excluded_ids: [], product?, aspect?, speaker?}` | `{trends: TrendCell[], insights: InsightCard[]}` |
 | POST | `/api/intake` `{text, title?, product?}` | `IntakeResult` |
+| POST | `/api/reset` | `{ok: true}`. Clears held transcripts and exclusions |
 | GET | `/api/privacy/status` | `{bind_host, llm_url, outbound_allowed: false, transcripts_persisted: false, checks: [...]}` (facts only) |
 
 - Auth: header `X-Vitra-Token` must match the per-launch token, which the backend prints at startup and the dev web reads from `VITE_VITRA_TOKEN`. `/api/health` is open.
@@ -117,3 +120,4 @@ The transcript is kept in memory only. It is never written to disk or logs.
 
 ## Change log
 - v1 (2026-11-07 11:00 ET): initial.
+- v1.1 (2026-11-07 11:50 ET), additive: `Citation.span_start/span_end`, `IntakeResult.reason`, whatif filters, `max_items` on gaps, `POST /api/reset`, and `source_authority: "private"` for pasted transcripts.

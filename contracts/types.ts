@@ -1,4 +1,4 @@
-// Vitra data contract v1. Mirrors contracts/CONTRACT.md. Keep in sync.
+// Vitra data contract v1.1. Mirrors contracts/CONTRACT.md. Keep in sync.
 
 export type Product = "A" | "B" | "both";
 export type Source =
@@ -28,7 +28,7 @@ export interface Confidence {
   level: "high" | "medium" | "low";
   method: "rule" | "model" | "mixed" | "gold";
   span_verified: boolean;
-  source_authority: "regulator" | "registry" | "peer_reviewed" | "company" | "news";
+  source_authority: "regulator" | "registry" | "peer_reviewed" | "company" | "news" | "private";
   corroborating_items: number;
   notes: string[];
 }
@@ -60,7 +60,14 @@ export interface TrendCell {
   item_ids: string[];
 }
 
-export interface Citation { item_id: string; aspect: AspectKey; span: string; url: string; }
+export interface Citation {
+  item_id: string;
+  aspect: AspectKey;
+  span: string;
+  url: string;
+  span_start: number;
+  span_end: number;
+}
 
 export interface InsightCard {
   id: string;
@@ -92,5 +99,6 @@ export interface IntakeResult {
   stages: { name: IntakeStageName; ms: number }[];
   evidence: EvidenceItem | null;
   rejected_spans: { aspect: AspectKey; span: string; reason: string }[];
+  reason: string | null;
   error: string | null;
 }
