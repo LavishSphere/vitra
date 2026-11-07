@@ -1,0 +1,59 @@
+{
+ "status": "complete",
+ "stages": [],
+ "evidence": {
+  "item_id": "SYN-T001",
+  "source": "transcript",
+  "url": "urn:vitra:transcript:SYN-T001",
+  "published": "2025-10-23",
+  "iso_week": "2025-W43",
+  "product": "B",
+  "title": "SYNTHETIC advisory board note (demo)",
+  "text": "SYNTHETIC DEMO TRANSCRIPT. Fictional advisory board, community oncology, October. Moderator asked about first-line combination therapy. A fictional oncologist said her infusion center now books Rybrevant patients in the afternoon block because visits after the first month are shorter. She said the prior authorization paperwork is still the slowest step for her clinic. Another participant said nurses want a one-page skin care handout.",
+  "signal_type": "expert_opinion",
+  "actionable": "no",
+  "origin": "synthetic_demo",
+  "aspects": [
+   {
+    "aspect": "convenience",
+    "polarity": 1,
+    "speaker": "hcp",
+    "span": "visits after the first month are shorter",
+    "span_start": 244,
+    "span_end": 284
+   },
+   {
+    "aspect": "access_cost",
+    "polarity": -1,
+    "speaker": "hcp",
+    "span": "She said the prior authorization paperwork is still the slowest step for her clinic.",
+    "span_start": 286,
+    "span_end": 370
+   }
+  ],
+  "confidence": {
+   "level": "low",
+   "method": "model",
+   "span_verified": true,
+   "source_authority": "private",
+   "corroborating_items": 0,
+   "notes": [
+    "Stored SYNTHETIC result for fixture mode. Not a live model run."
+   ]
+  }
+ },
+ "rejected_spans": [
+  {
+   "aspect": "safety",
+   "span": "nurses want a two-page skin care handout",
+   "reason": "not an exact substring of the transcript"
+  }
+ ],
+ "reason": null,
+ "error": null,
+ "transcript": {
+  "title": "SYNTHETIC advisory board note (demo)",
+  "text": "SYNTHETIC DEMO TRANSCRIPT. Fictional advisory board, community oncology, October. Moderator asked about first-line combination therapy. A fictional oncologist said her infusion center now books Rybrevant patients in the afternoon block because visits after the first month are shorter. She said the prior authorization paperwork is still the slowest step for her clinic. Another participant said nurses want a one-page skin care handout.",
+  "product": "B"
+ }
+}

@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/geist-latin-wght.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geist-mono-latin-wght.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/instrument-serif-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/*
+ * Design tokens, defined once. Scene code reads them through src/theme.ts.
+ * UI chrome: slate surfaces with an indigo accent for anything you can click.
+ * Data: cyan (positive) and magenta (negative) carry polarity and nothing else, plus the
+ * scene glow (cyan for Tagrisso, clinical blue for Rybrevant).
+ */
+@theme static {
+  --color-bg: #0a0e17;
+  --color-bg-elevated: #11161f;
+  --color-bg-hover: #171d29;
+  --color-border: #232b3a;
+  --color-border-strong: #334155;
+  --color-text: #f1f5f9;
+  --color-text-2: #cbd5e1;
+  --color-text-muted: #7c8aa5;
+  --color-accent: #818cf8;
+  --color-accent-hover: #a5b4fc;
+  --color-accent-soft: rgb(129 140 248 / 0.12);
+  --color-link-hover: #f472b6;
+
+  --color-ink: #07111b;
+  --color-ink-2: #0a1320;
+  --color-cyan: #42e8d3;
+  --color-blue: #66b8ff;
+  --color-magenta: #f16c91;
+  --color-ivory: #f2f7fa;
+  --color-muted: #99acbf;
+
+  --color-sp-researcher: #4c8fe8;
+  --color-sp-patient: #c2801f;
+  --color-sp-hcp: #1ba394;
+  --color-sp-payer: #e06a5c;
+  --color-sp-company: #8f78ee;
+  --color-sp-regulator: #5fa84a;
+  --color-sp-media: #c866b0;
+
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+
+  --shadow-panel: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+::selection { background: rgb(129 140 248 / 0.35); }
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.panel {
+  background: rgb(17 22 31 / 0.86);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-panel);
+}
+
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.scroll-thin { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+
+/* The quoted span inside its source text. Color follows the aspect's polarity. */
+mark.span-hit {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--mark-color) 22%, transparent);
+  box-shadow: inset 0 -2px 0 var(--mark-color);
+  border-radius: 2px;
+  padding: 1px 0;
+}
+mark.span-other {
+  color: inherit;
+  background: transparent;
+  box-shadow: inset 0 -1px 0 var(--color-border-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}

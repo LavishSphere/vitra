@@ -1,0 +1,34 @@
+[
+ {
+  "product": "A",
+  "speaker": "patient",
+  "aspect": "convenience",
+  "window_weeks": 8,
+  "n_items_in_window": 0,
+  "last_seen_week": null
+ },
+ {
+  "product": "B",
+  "speaker": "payer",
+  "aspect": "access_cost",
+  "window_weeks": 8,
+  "n_items_in_window": 0,
+  "last_seen_week": "2025-W30"
+ },
+ {
+  "product": "B",
+  "speaker": "hcp",
+  "aspect": "safety",
+  "window_weeks": 8,
+  "n_items_in_window": 0,
+  "last_seen_week": "2025-W33"
+ },
+ {
+  "product": "B",
+  "speaker": "researcher",
+  "aspect": "evidence_quality",
+  "window_weeks": 8,
+  "n_items_in_window": 0,
+  "last_seen_week": "2025-W34"
+ }
+]
