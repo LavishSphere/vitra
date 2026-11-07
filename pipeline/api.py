@@ -92,6 +92,16 @@ POLICIES: dict[str, MergePolicy] = {
         shorten_words=12,
         rule_aspects=frozenset({"evidence_quality"}),
     ),
+    # hybrid-evq plus rule efficacy for pubmed when the model leaves it empty or its quote
+    # is not in the text (guide efficacy cues in a sentence that names our product)
+    "hybrid-evq-eff": MergePolicy(
+        "hybrid-evq-eff",
+        signal_sources=frozenset(),
+        actionable_sources=_TEXT_SOURCES,
+        aspects=frozenset({"efficacy", "safety"}),
+        shorten_words=12,
+        rule_aspects=frozenset({"evidence_quality", "efficacy"}),
+    ),
     # pasted transcripts (advisory boards, field notes): every aspect counts, since convenience
     # and access are what a launch team listens for; one aspect per quote
     "transcript": MergePolicy(
@@ -127,7 +137,7 @@ POLICIES: dict[str, MergePolicy] = {
         max_span_words=20,
     ),
 }
-DEFAULT_POLICY = "hybrid-evq"
+DEFAULT_POLICY = "hybrid-evq-eff"
 TRANSCRIPT_POLICY = "transcript"
 
 

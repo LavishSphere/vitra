@@ -16,7 +16,7 @@ from typing import Any
 from .schema import ASPECTS, aspect, empty_prediction
 from .spans import sentence_bounds
 
-RULES_VERSION = "r3"
+RULES_VERSION = "r4"
 
 MODEL_SOURCES = frozenset({"pubmed", "press_release", "news", "transcript"})
 # sources where the model names the speaker (the quoted voice); others are fixed by source
@@ -400,6 +400,10 @@ def model_source_rules(item: dict[str, Any]) -> RuleResult:
         if caveat is not None:
             pred["evidence_quality"] = aspect(caveat[0], speaker_for(item), caveat[1])
             notes.append(f"evidence judged: {caveat[1]!r}")
+        judged = efficacy_cue(text)
+        if judged is not None:
+            pred["efficacy"] = aspect(judged[0], speaker_for(item), judged[1])
+            notes.append(f"efficacy judged: {judged[1]!r}")
     return RuleResult(pred, final=False, notes=notes, hard=hard, lab_study=lab_study)
 
 
@@ -465,6 +469,71 @@ def evidence_caveat(text: str) -> tuple[int, str] | None:
     m = _DESIGN_STRENGTH.search(text)
     if m and _own_caveat(text, m):
         return 1, m.group(0)
+    return None
+
+
+# --------------------------------------------------------------------------- efficacy
+# Guide, efficacy: "prolonged PFS", "improved OS", "did not meet endpoint"; polarity +2 for
+# "significantly prolonged", "statistically significant and clinically meaningful",
+# "practice-changing"; -2 for "failed". Only a sentence that names our product (or an
+# abbreviation the text defines for a regimen with our product) can judge it. The authors'
+# conclusions are read first; background sections describe earlier work and are skipped.
+# Order is priority.
+
+_EFFICACY_CUES = tuple(
+    (pol, re.compile(p, re.I))
+    for pol, p in (
+        (2, r"\bsignificantly (?:improved|prolonged|longer|extended)\b"),
+        (2, r"\bstatistically significant and clinically meaningful\b"),
+        (2, r"\bpractice[- ]changing\b"),
+        (
+            1,
+            r"\b(?:superior|improved) efficacy\b|\bwas superior to\b"
+            r"|\bdemonstrated (?:clinical )?efficacy\b"
+            r"|\bclinical benefit\b[^.;]{0,60}\bdemonstrated\b"
+            r"|\bencouraging (?:efficacy|activity|results)\b",
+        ),
+        (-2, r"\bfailed to (?:improve|meet|demonstrate)\b"),
+        (-1, r"\bdid not meet\b|\bnot warranted\b"),
+    )
+)
+_BACKGROUND = re.compile(r"\s*(?:BACKGROUND|INTRODUCTION|PURPOSE|OBJECTIVES?|AIMS?)\b")
+_CONCLUSION = re.compile(r"\b(?:CONCLUSIONS?|INTERPRETATION)\s*:")
+_ABBREV = re.compile(r"\(([A-Z][A-Za-z0-9+-]{1,9})\)")
+
+
+def _product_pattern(text: str) -> re.Pattern[str]:
+    """Our product names plus abbreviations defined right after a phrase that names one."""
+    found = {
+        m.group(1)
+        for m in _ABBREV.finditer(text)
+        if OUR_PRODUCTS.search(text, max(0, m.start() - 80), m.start())
+    }
+    if not found:
+        return OUR_PRODUCTS
+    extra = "|".join(re.escape(a) for a in sorted(found))
+    return re.compile(OUR_PRODUCTS.pattern + rf"|\b(?:{extra})\b")
+
+
+def efficacy_cue(text: str) -> tuple[int, str] | None:
+    """(polarity, span) for the first sentence that judges our product's efficacy, else None.
+
+    The span is an exact substring of `text` inside one sentence.
+    """
+    prod = _product_pattern(text)
+    concl = _CONCLUSION.search(text)
+    bounds = sentence_bounds(text)
+    if concl:  # conclusions first, then the rest in reading order
+        bounds = [x for x in bounds if x[1] > concl.start()] + [
+            x for x in bounds if x[1] <= concl.start()
+        ]
+    for a, b in bounds:
+        if _BACKGROUND.match(text, a) or not prod.search(text, a, b):
+            continue
+        for pol, pat in _EFFICACY_CUES:
+            m = pat.search(text, a, b)
+            if m and not _negated(text, m.start()):
+                return pol, phrase_around(text, m, 12)
     return None
 
 
