@@ -153,7 +153,8 @@ def remote_urls_in_bundle(dist: Path) -> dict[str, set[str]]:
     for f in dist.rglob("*"):
         if not f.is_file() or f.suffix not in {".js", ".html", ".css", ".json", ".svg", ".txt"}:
             continue
-        if f.suffix == ".txt" and "licen" in f.name.lower():
+        # License texts (e.g. the bundled font OFL files) are read by people, never fetched.
+        if f.suffix == ".txt" and ("licen" in f.name.lower() or f.name.upper().startswith("OFL")):
             continue
         text = f.read_text(errors="ignore")
         found = set(re.findall(r"https?://[^\s\"'`)<>,;]+", text))
