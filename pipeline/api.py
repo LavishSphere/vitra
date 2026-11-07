@@ -23,7 +23,13 @@ from .schema import (
     empty_prediction,
     prediction_errors,
 )
-from .spans import locate_span, locate_span_detail, shorten_span, trim_numeric_tail
+from .spans import (
+    locate_span,
+    locate_span_detail,
+    shift_later_clause,
+    shorten_span,
+    trim_numeric_tail,
+)
 
 __all__ = ["classify_item", "locate_span", "merge_model_output", "MergePolicy", "POLICIES"]
 
@@ -165,6 +171,7 @@ def merge_model_output(
         s0, e0 = trim_numeric_tail(text, hit[0], hit[1]) if policy.trim_numeric else hit[:2]
         if policy.shorten_words:
             s0, e0 = shorten_span(text, s0, e0, policy.shorten_words)
+        s0, e0 = shift_later_clause(text, hit[0], hit[1], s0, e0)
         snapped = text[s0:e0]
         if hit[2] not in policy.span_methods or len(snapped.split()) > policy.max_span_words:
             dropped.append(
