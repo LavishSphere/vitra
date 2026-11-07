@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useVitra } from "../store/useVitra.ts";
+import { missingCellMessage } from "../lib/gapFocus.ts";
 import { BIO_FACTS, verifiedFacts } from "../data/biomedical.ts";
 import { STATIONS } from "../data/stations.ts";
 
@@ -13,12 +14,12 @@ export function SceneOverlay({ is3d }: { is3d: boolean }) {
 
   return (
     <>
-      <div className="pointer-events-auto absolute left-1/2 top-4 z-10 flex -translate-x-1/2 flex-col items-center gap-1.5">
+      <div className="pointer-events-none absolute left-1/2 top-4 z-10 flex -translate-x-1/2 flex-col items-center gap-1.5">
         {is3d && focused && (
           <button
             type="button"
             onClick={() => { setFocusStation(null); setFocusTumor(false); }}
-            className="flex items-center gap-1.5 rounded-lg border border-border bg-bg/80 px-2.5 py-1 text-[13px] text-text-2 backdrop-blur-md hover:border-border-strong hover:text-text"
+            className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-border bg-bg/80 px-2.5 py-1 text-[13px] text-text-2 backdrop-blur-md hover:border-border-strong hover:text-text"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden><path d="M7.5 2.5L4 6l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg>
             Back to overview
@@ -26,11 +27,26 @@ export function SceneOverlay({ is3d }: { is3d: boolean }) {
           </button>
         )}
         {is3d && station && <span className="text-[13px] text-text-muted">{station.rule}</span>}
+        <MissingCellNote />
       </div>
       {focusTumor && <TumorCard onClose={() => setFocusTumor(false)} />}
       <Legend is3d={is3d} />
       {is3d && <FirstHint />}
     </>
+  );
+}
+
+/** An empty focused cell is missing evidence. A blank scene is that absence. */
+function MissingCellNote() {
+  const speaker = useVitra((s) => s.filters.speaker);
+  const aspect = useVitra((s) => s.filters.aspect);
+  const visible = useVitra((s) => s.marks.reduce((n, m) => n + (m.visible && !m.excluded ? 1 : 0), 0));
+  const msg = missingCellMessage(visible, { speaker, aspect });
+  if (!msg) return null;
+  return (
+    <p role="status" className="pointer-events-none max-w-md rounded-lg border border-border bg-bg/85 px-3 py-1.5 text-center text-[12.5px] leading-snug text-text-2 backdrop-blur-md">
+      {msg}
+    </p>
   );
 }
 
