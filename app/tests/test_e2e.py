@@ -24,7 +24,8 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[2]
 PKG = Path(os.environ.get("VITRA_PACKAGE_DIR", REPO / "starter" / "hackathon_package_2026-11-05"))
-EVAL_LOG = REPO / "docs" / "eval-log.md"
+# Path to the team's local results log (markdown table); not part of the repo.
+EVAL_LOG = Path(os.environ["VITRA_EVAL_LOG"]) if os.environ.get("VITRA_EVAL_LOG") else None
 CANARY = "HACK1984-T1-" + "CANARY"  # split so this file never contains the literal string
 
 
@@ -114,23 +115,66 @@ def test_live_server_health_auth_and_loopback_sockets(live_server) -> None:
     assert checks["this_request_on_loopback"]["ok"] is True
 
 
+# Remote URL strings the bundle may contain because nothing ever fetches them.
+# Exact strings, reviewed by hand: anything new fails the test until someone looks at it.
+INERT_URL_PATTERNS = [
+    # XML namespace identifiers: the DOM compares them as strings.
+    r"http://www\.w3\.org/[\w/.#-]*",
+    # React's minified error messages embed this decoder link as text.
+    r"https://react\.dev/errors/",
+    # Synthetic fixture citation links. example.org is reserved (RFC 2606) and only
+    # opens if a person clicks it; the page never requests it.
+    r"https://example\.org/synthetic/SYN-\d{4}",
+]
+INERT_URLS = {
+    # @react-three/fiber's package.json metadata, bundled as plain strings.
+    "https://github.com/pmndrs/react-three-fiber#readme",
+    "https://github.com/pmndrs/react-three-fiber/issues",
+    "https://github.com/pmndrs/react-three-fiber.git",
+    "https://opencollective.com/react-three-fiber",
+    "https://github.com/drcmda",
+    "https://github.com/codyjasonbennett",
+    "https://github.com/joshuaellis",
+    "https://github.com/krispya",
+    # A comment-like hint string inside react-use-measure's error text.
+    "https://github.com/react-spring/react-use-measure/#resize-observer-polyfills",
+}
+LOCAL_URL = re.compile(r"^https?://(127\.0\.0\.1|localhost|\[::1\])([:/]|$)")
+# Protocol-relative references in markup or CSS would load from the network too.
+PROTOCOL_RELATIVE = re.compile(r"""(?:src|href)\s*=\s*["']//|url\(\s*["']?//""")
+
+
+def remote_urls_in_bundle(dist: Path) -> dict[str, set[str]]:
+    inert = re.compile("^(?:" + "|".join(INERT_URL_PATTERNS) + ")$")
+    hits: dict[str, set[str]] = {}
+    for f in dist.rglob("*"):
+        if not f.is_file() or f.suffix not in {".js", ".html", ".css", ".json", ".svg", ".txt"}:
+            continue
+        if f.suffix == ".txt" and "licen" in f.name.lower():
+            continue
+        text = f.read_text(errors="ignore")
+        found = set(re.findall(r"https?://[^\s\"'`)<>,;]+", text))
+        bad = {u for u in found if not (LOCAL_URL.match(u) or u in INERT_URLS or inert.match(u))}
+        bad |= {f"protocol-relative: {m}" for m in PROTOCOL_RELATIVE.findall(text)}
+        if bad:
+            hits[str(f.relative_to(dist))] = bad
+    return hits
+
+
 def test_frontend_bundle_has_no_remote_urls() -> None:
     dist = REPO / "web" / "dist"
     if not dist.is_dir():
         pytest.skip("web/dist not built")
-    # XML namespace identifiers are compared as strings by the DOM and never fetched.
-    allowed = re.compile(
-        r"^https?://(127\.0\.0\.1|localhost|\[::1\])([:/]|$)|^http://www\.w3\.org/"
-    )
-    hits: dict[str, set[str]] = {}
-    for f in dist.rglob("*"):
-        if f.is_file() and f.suffix in {".js", ".html", ".css", ".json", ".map", ".svg", ".txt"}:
-            if f.suffix == ".txt" and "licen" in f.name.lower():
-                continue
-            for url in re.findall(r"https?://[^\s\"'`)<>]+", f.read_text(errors="ignore")):
-                if not allowed.match(url):
-                    hits.setdefault(str(f.relative_to(REPO)), set()).add(url)
+    hits = remote_urls_in_bundle(dist)
     assert not hits, {k: sorted(v)[:10] for k, v in hits.items()}
+
+
+def test_bundle_check_catches_a_remote_font(tmp_path: Path) -> None:
+    (tmp_path / "a.css").write_text("@import url(https://fonts.googleapis.com/css2?family=Inter);")
+    (tmp_path / "b.html").write_text('<script src="//cdn.example.net/x.js"></script>')
+    (tmp_path / "c.js").write_text('x="https://react.dev/errors/";y="http://www.w3.org/2000/svg"')
+    hits = remote_urls_in_bundle(tmp_path)
+    assert set(hits) == {"a.css", "b.html"}
 
 
 def _git(*args: str) -> list[str]:
@@ -184,7 +228,7 @@ def test_git_tracks_no_package_data() -> None:
 
 def _logged_rules_composite(rules_version: str) -> float | None:
     """Latest eval-log row for a rules-only run (no model) of this rules version."""
-    if not EVAL_LOG.exists():
+    if EVAL_LOG is None or not EVAL_LOG.exists():
         return None
     found = None
     for line in EVAL_LOG.read_text().splitlines():
@@ -208,7 +252,10 @@ def test_predict_cli_on_dev_matches_logged_rules_run(tmp_path: Path) -> None:
     rules = pytest.importorskip("pipeline.rules")
     logged = _logged_rules_composite(rules.RULES_VERSION)
     if logged is None:
-        pytest.skip(f"no logged rules-only run for rules {rules.RULES_VERSION}")
+        pytest.skip(
+            "set VITRA_EVAL_LOG to the results log with a rules-only row for "
+            f"rules {rules.RULES_VERSION} to compare against"
+        )
     out = tmp_path / "dev_pred.jsonl"
     subprocess.run(
         [

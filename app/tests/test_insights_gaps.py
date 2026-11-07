@@ -62,7 +62,10 @@ def test_insights_product_filter(evidence: list[EvidenceItem]) -> None:
 
 
 def test_gaps(evidence: list[EvidenceItem]) -> None:
-    gaps = {(g.product, g.speaker, g.aspect): g for g in compute_gaps(evidence, window_weeks=2)}
+    # Default (contract v1.1): only empty cells are gaps.
+    assert all(g.n_items_in_window == 0 for g in compute_gaps(evidence, window_weeks=2))
+    thin = compute_gaps(evidence, window_weeks=2, max_items=1)
+    gaps = {(g.product, g.speaker, g.aspect): g for g in thin}
     # Window = W13..W14. SYN-0104 ("both") gives payer access_cost one item for A and for B.
     assert gaps[("B", "payer", "access_cost")].n_items_in_window == 1
     assert gaps[("A", "payer", "access_cost")].last_seen_week == "2025-W14"
@@ -72,7 +75,7 @@ def test_gaps(evidence: list[EvidenceItem]) -> None:
     assert gaps[("A", "researcher", "efficacy")].n_items_in_window == 0
     assert gaps[("A", "researcher", "efficacy")].last_seen_week == "2025-W11"
     # Emptiest first.
-    ns = [g.n_items_in_window for g in compute_gaps(evidence, window_weeks=2)]
+    ns = [g.n_items_in_window for g in thin]
     assert ns == sorted(ns)
 
 

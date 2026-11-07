@@ -28,7 +28,7 @@ def compute_gaps(
     excluded: Collection[str] = (),
     *,
     window_weeks: int = 8,
-    max_items: int = 1,
+    max_items: int = 0,
 ) -> list[EvidenceGap]:
     if window_weeks < 1:
         raise ValueError("window_weeks must be >= 1")

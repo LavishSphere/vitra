@@ -20,8 +20,8 @@ Four components are reported as-is, so the UI can show them instead of a badge:
 3. source_authority, from the item source:
    fda_label, fda_notice -> regulator (+2); ctgov -> registry (+2);
    pubmed -> peer_reviewed (+1); press_release -> company (+0);
-   news, fda_event -> news (+0); transcript -> news (+0, lowest tier, with a note,
-   because a private transcript is unpublished).
+   news, fda_event -> news (+0); transcript -> private (+0, ranked below news
+   because a pasted transcript is unpublished and unreviewed).
    fda_event is spontaneous adverse-event reporting (FAERS), so it is not ranked
    as a regulator statement.
 4. corroborating_items: the number of OTHER items in the same evidence set that
@@ -60,7 +60,7 @@ SOURCE_AUTHORITY: dict[str, str] = {
     "press_release": "company",
     "news": "news",
     "fda_event": "news",
-    "transcript": "news",
+    "transcript": "private",
 }
 AUTHORITY_POINTS: dict[str, int] = {
     "regulator": 2,
@@ -68,6 +68,7 @@ AUTHORITY_POINTS: dict[str, int] = {
     "peer_reviewed": 1,
     "company": 0,
     "news": 0,
+    "private": 0,
 }
 METHOD_POINTS: dict[str, int] = {"gold": 2, "rule": 1, "mixed": 1, "model": 0}
 AUTHORITY_RANK: dict[str, int] = {
@@ -76,6 +77,7 @@ AUTHORITY_RANK: dict[str, int] = {
     "peer_reviewed": 2,
     "company": 1,
     "news": 0,
+    "private": -1,
 }
 CORROBORATION_WINDOW_WEEKS = 2
 CORROBORATION_MIN = 2
@@ -172,7 +174,7 @@ def build_item(
         notes.append("no aspect is judged in this item, so there is no quote to verify")
     authority = SOURCE_AUTHORITY.get(item["source"], "news")
     if item["source"] == "transcript":
-        notes.append("private transcript: unpublished, ranked at the lowest authority tier")
+        notes.append("private transcript: unpublished and unreviewed, lowest authority tier")
     confidence = Confidence(
         level="low",
         method=method,
@@ -272,4 +274,4 @@ def annotate(items: list[EvidenceItem]) -> list[EvidenceItem]:
 
 
 def strongest_authority(authorities: Iterable[str]) -> str:
-    return max(authorities, key=lambda a: AUTHORITY_RANK[a], default="news")
+    return max(authorities, key=lambda a: AUTHORITY_RANK[a], default="private")

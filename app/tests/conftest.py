@@ -217,8 +217,12 @@ def synthetic_settings(tmp_path: Path) -> Settings:
     preds = tmp_path / "predictions"
     _write_jsonl(preds / "unlabeled.jsonl", PREDICTIONS)
     return Settings(
-        package_dir=pkg, predictions_dir=preds, token=TEST_TOKEN, llm_url="http://127.0.0.1:1"
-    )  # port 1: nothing listens, so health says model_loaded false
+        package_dir=pkg,
+        predictions_dir=preds,
+        token=TEST_TOKEN,
+        llm_url="http://127.0.0.1:1",  # port 1: nothing listens, so model_loaded is false
+        web_dist=tmp_path / "no-web-build",
+    )
 
 
 @pytest.fixture()
