@@ -127,7 +127,7 @@ cd web
 npm ci
 npm run build
 cd ..
-# models\Llama-3.2-3B-Instruct-Q4_K_M.gguf
+# Model: Llama-3.2-3B-Instruct-Q4_K_M.gguf from huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF into models\
 # llama-server.exe: unzip a build from github.com/ggml-org/llama.cpp/releases (cpu-x64, cuda or vulkan),
 # then put its folder on PATH or:
 $env:VITRA_LLAMA_SERVER = "C:\llama.cpp\llama-server.exe"
@@ -138,6 +138,9 @@ scripts\run_offline.ps1 serve
 
 If PowerShell blocks local scripts, use `scripts\run_offline.cmd --check` with the same arguments. Ctrl+C stops the model server and the API.
 
+### Label and score the dev set
+
+On Windows, use `.venv\Scripts\python.exe` in place of `.venv/bin/python`.
 
 ```bash
 PKG=starter/hackathon_package_2026-11-05
