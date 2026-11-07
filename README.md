@@ -100,7 +100,7 @@ contracts/  shared shapes
 
 Needs ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server`, and the organizer package under `starter/` (gitignored; PubMed rehydrated).
 
-### macOS and Linux
+### Linux / macOS
 
 Install `llama-server` with `brew install llama.cpp`, or download a build from [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases).
 
@@ -128,8 +128,8 @@ npm ci
 npm run build
 cd ..
 # models\Llama-3.2-3B-Instruct-Q4_K_M.gguf
-# llama-server.exe: unzip a Windows build from github.com/ggml-org/llama.cpp/releases
-# (the cpu-x64 build needs no GPU; cuda and vulkan builds use one), then put its folder on PATH or:
+# llama-server.exe: unzip a build from github.com/ggml-org/llama.cpp/releases (cpu-x64, cuda or vulkan),
+# then put its folder on PATH or:
 $env:VITRA_LLAMA_SERVER = "C:\llama.cpp\llama-server.exe"
 
 scripts\run_offline.ps1 --check
