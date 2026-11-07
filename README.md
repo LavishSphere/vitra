@@ -113,6 +113,7 @@ scripts/run_offline.sh serve
 
 ```bash
 PKG=starter/hackathon_package_2026-11-05
+.venv/bin/python -m pipeline.predict --items "$PKG/data/dev.full.jsonl" --out data/derived/dev_pred.jsonl
 .venv/bin/python -m pipeline.predict --items "$PKG/data/unlabeled.full.jsonl" --out data/derived/predictions/unlabeled.jsonl
 .venv/bin/python -I "$PKG/scoring/score.py" \
   --gold "$PKG/data/dev.jsonl" \
