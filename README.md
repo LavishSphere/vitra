@@ -146,4 +146,4 @@ PKG=starter/hackathon_package_2026-11-05
 
 ## Network off
 
-`--check` refuses to run while `example.com:443` accepts a connection, starts model + API on loopback only, serves the prebuilt web same-origin, runs one SYNTHETIC intake, and audits every socket of every Vitra process with psutil. Any socket that isn't loopback fails the run with exit code 4.
+`--check` refuses to run while `example.com:443` accepts a connection, starts model + API on loopback only, serves the prebuilt web same-origin, runs one SYNTHETIC intake, and checks the sockets of every Vitra process with psutil every 0.3 s. Any socket it sees that isn't loopback fails the run with exit code 4. On Windows it flags every UDP socket, because Windows doesn't report where UDP traffic goes.
