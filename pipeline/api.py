@@ -128,10 +128,18 @@ POLICIES: dict[str, MergePolicy] = {
     ),
 }
 DEFAULT_POLICY = "hybrid-evq"
+TRANSCRIPT_POLICY = "transcript"
 
 
 def get_policy(name: str | None = None) -> MergePolicy:
     return POLICIES[name or os.environ.get("VITRA_MERGE_POLICY") or DEFAULT_POLICY]
+
+
+def policy_for(item: dict[str, Any]) -> MergePolicy:
+    """Pasted transcripts get every aspect; everything else uses the scoring policy."""
+    if item.get("source") == "transcript":
+        return POLICIES[TRANSCRIPT_POLICY]
+    return get_policy()
 
 
 def merge_model_output(
@@ -306,8 +314,9 @@ def classify_item(
             meta["model"] = info.get("model")
             meta["prompt_version"] = info.get("prompt_version")
             meta["model_latency_ms"] = info.get("latency_ms")
-            merged, dropped, overrode = merge_model_output(item, rule, raw, policy or get_policy())
-            meta["merge_policy"] = (policy or get_policy()).name
+            chosen = policy or policy_for(item)
+            merged, dropped, overrode = merge_model_output(item, rule, raw, chosen)
+            meta["merge_policy"] = chosen.name
             pred = merged
             meta["dropped_spans"].extend(dropped)
             meta["method"] = "mixed" if overrode else "model"
