@@ -98,9 +98,13 @@ function TumorCard({ onClose }: { onClose: () => void }) {
 }
 
 function Legend({ is3d }: { is3d: boolean }) {
-  const [want, setOpen] = useState(true);
+  const [open, setOpen] = useState(true);
   const focused = useVitra((s) => s.focusStation !== null || s.focusTumor);
-  const open = want && !(is3d && focused);
+  // Collapse once when you fly into a station or the tumor so the view stays clear.
+  // Clicking the chip must still reopen it (the old `open && !focused` gate ignored that click).
+  useEffect(() => {
+    if (is3d && focused) setOpen(false);
+  }, [is3d, focused]);
   return (
     <div className="pointer-events-auto absolute left-4 top-4 z-10 max-md:hidden">
       {open ? (
