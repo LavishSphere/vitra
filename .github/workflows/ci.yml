@@ -38,7 +38,7 @@ jobs:
           check "Model weights, archives or raw data dumps are tracked" \
             "$(echo "$files" | grep -E '\.(gguf|safetensors|bin|zip|jsonl)$' | grep -v '/fixtures/' || true)"
           check "Organizer data paths are tracked" \
-            "$(echo "$files" | grep -E '^(starter|data/derived|data/private)/' | grep -v '\.gitkeep$' || true)"
+            "$(echo "$files" | grep -E '^(starter|data/derived|data/private)(/|$)' | grep -v '\.gitkeep$' || true)"
           big=$(git ls-files -z | xargs -0 -I{} sh -c 'test -f "{}" && [ $(wc -c < "{}") -gt 5242880 ] && echo "{}"' || true)
           check "Files over 5 MB are tracked" "$big"
           exit $fail
