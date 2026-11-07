@@ -44,18 +44,18 @@ An EGFR NSCLC launch-intel or medical-affairs lead. They need week-over-week sen
 
 Official `score.py` on the **60-item** labeled dev set (5-fold). Hidden test is 240 items, scored by organizers.
 
-| | Rules only (r2) | Rules + Llama 3.2 3B hybrid |
+| | Rules only | Rules + Llama 3.2 3B |
 |---|---|---|
-| **Composite** | 0.842 | **0.8466** |
-| Signal macro-F1 | | 0.806 |
-| Actionable F1 | | 0.917 |
-| Aspect F1 | | 0.703 |
-| Polarity QWK | | 0.917 |
-| Speaker accuracy | | **1.000** |
-| Span F1 | | 0.583 |
-| Citation validity | | **1.000** |
+| **Composite** | 0.842 | **0.865** |
+| Signal macro-F1 | 0.806 | 0.806 |
+| Actionable F1 | 0.870 | 0.917 |
+| Aspect F1 | 0.328 | 0.784 |
+| Polarity QWK | 1.000 | 0.928 |
+| Speaker accuracy | 1.000 | 1.000 |
+| Span F1 | 0.892 | 0.623 |
+| Citation validity | 1.000 | **1.000** |
 
-Hybrid was tuned on dev, so 0.8466 is an upper bound. Weak spot: aspects and quotes on long PubMed / press (rules-only aspect F1 **0.328**). Cost on an Apple M5 MacBook Air (16 GB): **268.3 s per 100 items** (logged hybrid test run). Organizer hardware unknown.
+Both columns were tuned on dev, so treat them as optimistic. Using only the caveat phrases the labeling guide lists, the model column scores 0.859, which is the more honest estimate. Rules alone score high on polarity and quotes because they only fill the few aspects they're sure of; the model finds far more aspects (aspect F1 0.328 to 0.784) at the cost of looser quotes. Weak spot: efficacy on long PubMed abstracts. The latest full test run took 569 s for 240 items on an Apple M5 MacBook Air (16 GB), about 2.4 s per item. Organizer hardware unknown.
 
 ## One public item, end to end
 
