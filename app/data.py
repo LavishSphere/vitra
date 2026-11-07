@@ -15,7 +15,8 @@ are only present there). Prediction lines whose item_id is unknown are skipped
 and counted. Nothing here logs item text.
 
 Private transcripts are held in a process-local list only. They are never
-written anywhere, and are cleared by `reset_transcripts()` and at shutdown.
+written anywhere. `remove_transcript()` drops one (undo), `reset_transcripts()`
+drops all, and shutdown clears them.
 """
 
 from __future__ import annotations
@@ -228,10 +229,26 @@ class EvidenceStore:
             self._transcript_seq += 1
             return f"PT-{self._transcript_seq:04d}"
 
+    def remove_transcript(self, item_id: str) -> bool:
+        """Drop one held transcript (undo). False if no held transcript has that id.
+
+        Only ids in the transcript list match, so base evidence can never be removed here.
+        """
+        with self._lock:
+            kept = [t for t in self._transcripts if t.item_id != item_id]
+            if len(kept) == len(self._transcripts):
+                return False
+            self._transcripts = kept
+            self._annotated = None
+            self._by_id = {}  # drop the stale index as well, so nothing references the text
+            self.version += 1
+            return True
+
     def reset_transcripts(self) -> int:
         with self._lock:
             n = len(self._transcripts)
             self._transcripts.clear()
             self._annotated = None
+            self._by_id = {}
             self.version += 1
             return n

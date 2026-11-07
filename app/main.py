@@ -110,6 +110,12 @@ class ResultCache:
                 self._data.popitem(last=False)
         return value
 
+    def clear(self) -> None:
+        """Drop every entry. Old-version entries are unreachable anyway; this also
+        frees results derived from a transcript that is no longer held."""
+        with self._lock:
+            self._data.clear()
+
 
 def _ids(raw: str | None) -> set[str]:
     return {v.strip() for v in (raw or "").split(",") if v.strip()}
@@ -328,6 +334,18 @@ def create_app(
     def intake(body: IntakeRequest) -> IntakeResult:
         return run_intake(body, store, settings, loader=pipeline_loader)
 
+    @api.delete("/intake/{item_id}")
+    def intake_undo(item_id: str) -> dict[str, bool | str]:
+        """Undo one pasted transcript: drop it from memory and report whether the
+        unfiltered trends moved. Every view is recomputed from the remaining evidence,
+        so the result equals the state before that transcript was added."""
+        before = _trends(set(), None, None, None)
+        if not store.remove_transcript(item_id):
+            raise HTTPException(404, "no held transcript with that id")
+        cache.clear()
+        after = _trends(set(), None, None, None)
+        return {"ok": True, "removed": item_id, "trends_changed": before != after}
+
     @api.post("/reset")
     def reset() -> dict[str, bool | int]:
         """Back to source data: drop every held transcript result.
@@ -335,7 +353,9 @@ def create_app(
         Exclusions are never stored server side (each request passes its own), so
         clearing them is the client's half of the reset.
         """
-        return {"ok": True, "transcripts_cleared": store.reset_transcripts()}
+        n = store.reset_transcripts()
+        cache.clear()
+        return {"ok": True, "transcripts_cleared": n}
 
     @api.get("/privacy/status", response_model=PrivacyStatus)
     def privacy_status(request: Request) -> PrivacyStatus:
@@ -421,7 +441,8 @@ def _privacy_checks(
             ok=None,
             kind="by_design",
             detail=f"{store.n_transcripts} transcript result(s) held in process memory, cleared on "
-            "POST /api/reset and at exit; logs record only length and a sha256 prefix "
+            "POST /api/reset, one at a time on DELETE /api/intake/{id}, and at exit; "
+            "logs record only length and a sha256 prefix "
             "(tested in app/tests/test_intake.py; not checkable at runtime)",
         ),
         PrivacyCheck(

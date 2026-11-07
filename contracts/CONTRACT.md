@@ -1,4 +1,4 @@
-# Vitra data contract (v1.1)
+# Vitra data contract (v1.2)
 
 This is the shared shape between `pipeline/` (Python), `app/` (FastAPI) and `web/` (React). Changing it means bumping the version here and noting it in the change log at the bottom. `contracts/types.ts` mirrors this file for the frontend.
 
@@ -97,6 +97,7 @@ If the cell was never seen, `last_seen_week` is null.
 ```
 `reason` explains an `abstained` result in plain words (e.g. "no aspect judged in the text").
 The transcript is kept in memory only. It is never written to disk or logs.
+On `complete`, `evidence.item_id` (e.g. `PT-0001`) is the id to pass to `DELETE /api/intake/{item_id}` to undo it. Ids are never reused within a process.
 
 ## 8. HTTP API (`app/`, binds 127.0.0.1:8000; `web/` dev server on 127.0.0.1:5173)
 | Method | Path | Returns |
@@ -109,6 +110,7 @@ The transcript is kept in memory only. It is never written to disk or logs.
 | GET | `/api/gaps?window_weeks=8&max_items=1` | `EvidenceGap[]` (`max_items`: cells with at most this many items count as gaps; default 0) |
 | POST | `/api/whatif` `{excluded_ids: [], product?, aspect?, speaker?}` | `{trends: TrendCell[], insights: InsightCard[]}` |
 | POST | `/api/intake` `{text, title?, product?}` | `IntakeResult` |
+| DELETE | `/api/intake/{item_id}` | `{ok: true, removed: item_id, trends_changed: bool}`. Removes one held transcript from memory; every view then equals the state before it was added. 404 `{detail: "no held transcript with that id"}` for any other id, including base evidence |
 | POST | `/api/reset` | `{ok: true}`. Clears held transcripts and exclusions |
 | GET | `/api/privacy/status` | `{bind_host, llm_url, outbound_allowed: false, transcripts_persisted: false, checks: [...]}` (facts only) |
 
@@ -121,3 +123,4 @@ The transcript is kept in memory only. It is never written to disk or logs.
 ## Change log
 - v1 (2026-11-07 11:00 ET): initial.
 - v1.1 (2026-11-07 11:50 ET), additive: `Citation.span_start/span_end`, `IntakeResult.reason`, whatif filters, `max_items` on gaps, `POST /api/reset`, and `source_authority: "private"` for pasted transcripts.
+- v1.2 (2026-11-07 17:55 ET), additive: `DELETE /api/intake/{item_id}` to undo one pasted transcript (`IntakeUndoResult`), and CORS allows DELETE.

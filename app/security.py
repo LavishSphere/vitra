@@ -99,7 +99,7 @@ def install(app: FastAPI, settings: Settings) -> None:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.allowed_origins),
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
         allow_headers=[TOKEN_HEADER, "Content-Type"],
         allow_credentials=False,
         max_age=600,

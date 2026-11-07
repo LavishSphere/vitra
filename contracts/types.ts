@@ -1,4 +1,4 @@
-// Vitra data contract v1.1. Mirrors contracts/CONTRACT.md. Keep in sync.
+// Vitra data contract v1.2. Mirrors contracts/CONTRACT.md. Keep in sync.
 
 export type Product = "A" | "B" | "both";
 export type Source =
@@ -101,4 +101,12 @@ export interface IntakeResult {
   rejected_spans: { aspect: AspectKey; span: string; reason: string }[];
   reason: string | null;
   error: string | null;
+}
+
+// DELETE /api/intake/{item_id} (v1.2). item_id is IntakeResult.evidence.item_id.
+// Unknown id: HTTP 404 with { detail: "no held transcript with that id" }.
+export interface IntakeUndoResult {
+  ok: true;
+  removed: string;
+  trends_changed: boolean;
 }
