@@ -50,6 +50,16 @@ jobs:
           gen=$(echo "$msgs" | grep -iE 'generated (with|by) ' || true)
           if [ -n "$bad$gen" ]; then echo "::error::Commit messages carry tool attribution"; echo "$bad"; echo "$gen"; exit 1; fi
 
+      - name: No tool attribution in the PR body
+        if: github.event_name == 'pull_request'
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$BODY" | grep -qiE 'made with[[:space:]]*(\[)?cursor|cursor\.com\)|generated (with|by)|co-authored-by:'; then
+            echo "::error::PR body carries tool attribution"
+            exit 1
+          fi
+
       - name: No em or en dashes in markdown
         run: |
           hits=$(git ls-files '*.md' | xargs -r grep -nP '[\x{2013}\x{2014}]' || true)
