@@ -47,15 +47,15 @@ Official `score.py` on the **60-item** labeled dev set (5-fold). Hidden test is 
 | | Rules only (r2) | Rules + Llama 3.2 3B hybrid |
 |---|---|---|
 | **Composite** | 0.842 | **0.8466** |
-| Signal macro-F1 | 0.806 | 0.806 |
-| Actionable F1 | 0.870 | 0.917 |
-| Aspect F1 | 0.328 | 0.703 |
-| Polarity QWK | 1.000 | 0.917 |
-| Speaker accuracy | 1.000 | **1.000** |
-| Span F1 | 0.892 | 0.583 |
-| Citation validity | 1.000 | **1.000** |
+| Signal macro-F1 | | 0.806 |
+| Actionable F1 | | 0.917 |
+| Aspect F1 | | 0.703 |
+| Polarity QWK | | 0.917 |
+| Speaker accuracy | | **1.000** |
+| Span F1 | | 0.583 |
+| Citation validity | | **1.000** |
 
-Both columns were tuned on dev, so treat them as optimistic. Rules alone score high on polarity and quotes because they only fill the few aspects they're sure of (aspect F1 0.328); the model finds far more aspects (0.703) at the cost of looser quotes. Weak spot: aspects and quotes on long PubMed abstracts and press releases. Cost on an Apple M5 MacBook Air (16 GB): **268.3 s per 100 items** (logged hybrid test run). Organizer hardware unknown.
+Hybrid was tuned on dev, so 0.8466 is an upper bound. Weak spot: aspects and quotes on long PubMed / press (rules-only aspect F1 **0.328**). Cost on an Apple M5 MacBook Air (16 GB): **268.3 s per 100 items** (logged hybrid test run). Organizer hardware unknown.
 
 ## One public item, end to end
 
@@ -98,13 +98,12 @@ contracts/  shared shapes
 
 ## Setup and run (local, offline)
 
-Needs Apple Silicon or Linux, ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server` on PATH, organizer package under `starter/` (gitignored; PubMed rehydrated).
+Needs macOS (Apple Silicon), Linux or Windows, ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server` on PATH, organizer package under `starter/` (gitignored; PubMed rehydrated).
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 (cd web && npm ci && npm run build)
-# Model: Llama-3.2-3B-Instruct-Q4_K_M.gguf from huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF into models/
-# sha256 6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff
+# models/Llama-3.2-3B-Instruct-Q4_K_M.gguf
 
 scripts/run_offline.sh --check
 scripts/run_offline.sh serve
@@ -112,10 +111,33 @@ scripts/run_offline.sh serve
 
 `serve` prints `X-Vitra-Token for this launch: …` and opens `http://127.0.0.1:8000/#t=…`. No signup. No fixed token in the repo.
 
+### Windows
+
+Same launcher, same flags. In PowerShell from the repo root:
+
+```powershell
+py -3 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+cd web
+npm ci
+npm run build
+cd ..
+# models\Llama-3.2-3B-Instruct-Q4_K_M.gguf
+# llama-server.exe: unzip a Windows build from github.com/ggml-org/llama.cpp/releases
+# (the cpu-x64 build needs no GPU; cuda and vulkan builds use one), then put its folder on PATH or:
+$env:VITRA_LLAMA_SERVER = "C:\llama.cpp\llama-server.exe"
+
+scripts\run_offline.ps1 --check
+scripts\run_offline.ps1 serve
+```
+
+If PowerShell blocks local scripts, use `scripts\run_offline.cmd --check` with the same arguments. Ctrl+C stops the model server and the API. WSL2 also works: follow the Linux steps inside a WSL shell, and if no browser opens, paste the printed URL into your Windows browser.
+
+All three entry points (`run_offline.sh`, `.ps1`, `.cmd`) run `python -m app.launch`, so the checks and the socket audit are the same code on every OS.
+
 ```bash
+.venv/bin/python -m pipeline.predict --split unlabeled --out data/derived/predictions/unlabeled.jsonl
 PKG=starter/hackathon_package_2026-11-05
-.venv/bin/python -m pipeline.predict --items "$PKG/data/dev.full.jsonl" --out data/derived/dev_pred.jsonl
-.venv/bin/python -m pipeline.predict --items "$PKG/data/unlabeled.full.jsonl" --out data/derived/predictions/unlabeled.jsonl
 .venv/bin/python -I "$PKG/scoring/score.py" \
   --gold "$PKG/data/dev.jsonl" \
   --pred data/derived/dev_pred.jsonl \
@@ -124,21 +146,4 @@ PKG=starter/hackathon_package_2026-11-05
 
 ## Network off
 
-`--check` refuses to run while `https://example.com` answers, starts model + API on loopback only, serves the prebuilt web same-origin, runs one SYNTHETIC intake, and audits sockets.
-
-Captured on Nov 7 with Wi-Fi turned off from the menu bar (MacBook Air, Apple M5, 16 GB):
-
-```text
-[vitra    0.0s] offline confirmed: https://example.com is unreachable
-[vitra    0.2s] starting model server: Llama-3.2-3B-Instruct-Q4_K_M.gguf on 127.0.0.1:8080
-[vitra    2.4s] model server ready
-[vitra    3.2s] API ready (2033 items, model server up, Llama-3.2-3B-Instruct-Q4_K_M.gguf)
-[vitra    3.2s] cold start complete (browser would open now)
-[vitra    3.3s] API smoke: token enforced, 2033 evidence items served
-[vitra]         intake status=complete, 2 verified span(s) (classifying 3637 ms)
-[vitra    7.2s] no node process running under the launcher
-[vitra    7.2s] network audit passed: every socket seen was loopback only
-[vitra    7.2s] CHECK PASSED
-```
-
-Cold start to a working app took 3.2 s, and a pasted synthetic transcript came back with verified quotes in 3.6 s, all with no network.
+`--check` refuses to run while `example.com:443` accepts a connection, starts model + API on loopback only, serves the prebuilt web same-origin, runs one SYNTHETIC intake, and checks the sockets of every Vitra process with psutil every 0.3 s. Any socket it sees that isn't loopback fails the run with exit code 4. On Windows it flags every UDP socket, because Windows doesn't report where UDP traffic goes.

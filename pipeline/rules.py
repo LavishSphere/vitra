@@ -16,7 +16,7 @@ from typing import Any
 from .schema import ASPECTS, aspect, empty_prediction
 from .spans import sentence_bounds
 
-RULES_VERSION = "r2"
+RULES_VERSION = "r3"
 
 MODEL_SOURCES = frozenset({"pubmed", "press_release", "news", "transcript"})
 # sources where the model names the speaker (the quoted voice); others are fixed by source
@@ -395,7 +395,77 @@ def model_source_rules(item: dict[str, Any]) -> RuleResult:
             lab_study = True
     for k, v in hard.items():
         pred[k] = v
+    if source == "pubmed" and not lab_study:
+        caveat = evidence_caveat(text)
+        if caveat is not None:
+            pred["evidence_quality"] = aspect(caveat[0], speaker_for(item), caveat[1])
+            notes.append(f"evidence judged: {caveat[1]!r}")
     return RuleResult(pred, final=False, notes=notes, hard=hard, lab_study=lab_study)
+
+
+# --------------------------------------------------------------------------- evidence quality
+# Guide, pubmed: author caveats ("retrospective", "small sample", "further studies needed")
+# = evidence_quality -1; a randomized phase 3 is +1 only when the text stresses design
+# strength. Each pattern matches the shortest phrase that carries the judgment. Order is
+# priority: study design, then limits on the results, then calls for more work.
+
+_CAVEAT_PHRASES = tuple(
+    re.compile(p, re.I)
+    for p in (
+        r"\bretrospective(?:,? (?:multi-?cent(?:er|re)|single[- ]cent(?:er|re)|observational"
+        r"|real-world|cohort|chart|case-control|database|claims))*"
+        r" (?:cohort study|study|analysis|review|cohort|design)\b",
+        r"\bretrospectively (?:analy[sz]ed|reviewed|collected|evaluated|identified|assessed"
+        r"|included|enrolled)\b",
+        r"\bsingle[- ](?:cent(?:er|re)|institution(?:al)?)(?: (?:retrospective|observational))?"
+        r" (?:study|analysis|cohort|experience|series)\b",
+        r"\b(?:small|limited) (?:sample size|sample|number of (?:patients|cases)|cohort size)\b",
+        r"\b(?:(?:possibly|likely|probably) )?(?:due to |because of |given )?(?:the )?immature"
+        r" (?:data|os|overall survival(?: data)?|survival data|follow-up)\b",
+        r"\b(?:was|were|is|are) limited by (?:the |its |a |their )?(?:small|short|retrospective"
+        r"|limited|lack|sample|single|selection|heterogeneity)\w*(?: \w+){0,2}",
+        r"\bshould be interpreted with caution\b",
+        r"\blonger follow-up (?:is |are |will be )?(?:needed|required|warranted|necessary)\b",
+        r"\bfurther (?:(?:prospective|large[- ]scale|larger|randomi[sz]ed|well-designed) )*"
+        r"(?:studies|trials|research|investigation|validation)(?: (?:is|are))?"
+        r" (?:needed|required|warranted|necessary)\b",
+        r"\bwarrant(?:s|ing)? further (?:investigation|study|studies|research|validation)\b",
+    )
+)
+# Cues whose judgment needs the surrounding clause ("X precluded a meaningful assessment").
+_CAVEAT_CLAUSE = re.compile(
+    r"(?i)\bprecluded\b|\bprevented (?:them |us |the authors )?(?:from )?demonstrating\b"
+)
+_DESIGN_STRENGTH = re.compile(
+    r"(?i)\b(?:high[- ]quality|robust|strong|level (?:1|I)) evidence\b|\bwell[- ]designed"
+    r" (?:randomi[sz]ed|phase (?:3|III))\b|\bmethodologically rigorous\b"
+)
+_PRIOR_WORK = re.compile(r"(?i)\b(?:previous|prior|earlier|existing|past)\b[^.;]{0,40}$")
+_NEAR_NEGATION = re.compile(r"(?i)\b(?:not|no|non|without)[- ](?:\w+ )?$")
+
+
+def _own_caveat(text: str, m: re.Match[str]) -> bool:
+    """False when the cue is negated right before it or describes earlier studies."""
+    head = text[max(0, m.start() - 60) : m.start()]
+    return not _NEAR_NEGATION.search(head) and not _PRIOR_WORK.search(head)
+
+
+def evidence_caveat(text: str) -> tuple[int, str] | None:
+    """(polarity, span) when the text judges its own evidence, else None.
+
+    The span is an exact substring of `text` inside one sentence.
+    """
+    for pat in _CAVEAT_PHRASES:
+        for m in pat.finditer(text):
+            if _own_caveat(text, m):
+                return -1, m.group(0)
+    for m in _CAVEAT_CLAUSE.finditer(text):
+        if _own_caveat(text, m):
+            return -1, phrase_around(text, m, 12)
+    m = _DESIGN_STRENGTH.search(text)
+    if m and _own_caveat(text, m):
+        return 1, m.group(0)
+    return None
 
 
 # --------------------------------------------------------------------------- entry point

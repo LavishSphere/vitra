@@ -64,6 +64,8 @@ class MergePolicy:
     trim_numeric: bool = True
     shorten_words: int = 0  # 0 = off; else cut spans longer than this at a clause boundary
     anchors: bool = True  # guide polarity anchors + lab-study and placeholder checks
+    # aspects the rules fill when the model leaves them empty (e.g. pubmed author caveats)
+    rule_aspects: frozenset[str] = frozenset()
     extra: dict[str, Any] = field(default_factory=dict, compare=False)
 
 
@@ -78,6 +80,15 @@ POLICIES: dict[str, MergePolicy] = {
         actionable_sources=_TEXT_SOURCES,
         aspects=frozenset({"efficacy", "safety"}),
         shorten_words=12,
+    ),
+    # hybrid plus the rule-based evidence_quality for pubmed author caveats
+    "hybrid-evq": MergePolicy(
+        "hybrid-evq",
+        signal_sources=frozenset(),
+        actionable_sources=_TEXT_SOURCES,
+        aspects=frozenset({"efficacy", "safety"}),
+        shorten_words=12,
+        rule_aspects=frozenset({"evidence_quality"}),
     ),
     "full": MergePolicy("full"),
     "full-notrim": MergePolicy("full-notrim", trim_numeric=False),
@@ -104,7 +115,7 @@ POLICIES: dict[str, MergePolicy] = {
         max_span_words=20,
     ),
 }
-DEFAULT_POLICY = "hybrid"
+DEFAULT_POLICY = "hybrid-evq"
 
 
 def get_policy(name: str | None = None) -> MergePolicy:
@@ -193,6 +204,9 @@ def merge_model_output(
         if fixed_speaker and v.get("speaker") not in (None, fixed_speaker):
             overrode = True
         pred[a] = aspect(pol, speaker, snapped)
+    for a in policy.rule_aspects:
+        if pred.get(a) is None and rule.prediction.get(a) is not None:
+            pred[a] = rule.prediction[a]
     return pred, dropped, overrode
 
 

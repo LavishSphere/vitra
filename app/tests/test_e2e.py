@@ -36,15 +36,18 @@ def _free_port() -> int:
 
 
 def _listening_addrs(pid: int) -> list[str] | None:
-    lsof = shutil.which("lsof")
-    if not lsof:
+    """TCP addresses the process listens on, from psutil (works on Windows too)."""
+    psutil = pytest.importorskip("psutil")
+    try:
+        conns = psutil.Process(pid).net_connections(kind="tcp")
+    except psutil.AccessDenied:
         return None
-    out = subprocess.run(
-        [lsof, "-nP", "-a", "-p", str(pid), "-iTCP", "-sTCP:LISTEN", "-Fn"],
-        capture_output=True,
-        text=True,
-    ).stdout
-    return sorted({ln[1:] for ln in out.splitlines() if ln.startswith("n")})
+    out = set()
+    for c in conns:
+        if c.status == psutil.CONN_LISTEN and c.laddr:
+            ip, port = c.laddr[0], c.laddr[1]
+            out.add(f"[{ip}]:{port}" if ":" in ip else f"{ip}:{port}")
+    return sorted(out)
 
 
 @pytest.fixture()
@@ -107,7 +110,7 @@ def test_live_server_health_auth_and_loopback_sockets(live_server) -> None:
     assert all((c["mean_polarity"] is None) == (c["n_items"] == 0) for c in r.json())
     addrs = _listening_addrs(proc.pid)
     if addrs is None:
-        pytest.skip("lsof not available")
+        pytest.skip("no permission to list the server's sockets")
     assert addrs and all(a.startswith(("127.0.0.1:", "[::1]:")) for a in addrs), addrs
     status = httpx.get(base + "/api/privacy/status", headers={"X-Vitra-Token": token}).json()
     checks = {c["name"]: c for c in status["checks"]}
@@ -127,6 +130,8 @@ INERT_URL_PATTERNS = [
     r"https://example\.org/synthetic/SYN-\d{4}",
 ]
 INERT_URLS = {
+    # Link in the public demo banner to the README setup steps; opened by a person, never fetched.
+    "https://github.com/LavishSphere/vitra#setup-and-run-local-offline",
     # @react-three/fiber's package.json metadata, bundled as plain strings.
     "https://github.com/pmndrs/react-three-fiber#readme",
     "https://github.com/pmndrs/react-three-fiber/issues",
@@ -150,7 +155,8 @@ def remote_urls_in_bundle(dist: Path) -> dict[str, set[str]]:
     for f in dist.rglob("*"):
         if not f.is_file() or f.suffix not in {".js", ".html", ".css", ".json", ".svg", ".txt"}:
             continue
-        if f.suffix == ".txt" and "licen" in f.name.lower():
+        # License texts (e.g. the bundled font OFL files) are read by people, never fetched.
+        if f.suffix == ".txt" and ("licen" in f.name.lower() or f.name.upper().startswith("OFL")):
             continue
         text = f.read_text(errors="ignore")
         found = set(re.findall(r"https?://[^\s\"'`)<>,;]+", text))
