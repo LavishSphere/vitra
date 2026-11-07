@@ -41,6 +41,8 @@ contracts/   the data shapes shared by all three
 
 The model runs through llama.cpp on `127.0.0.1`. Nothing is sent to a cloud model.
 
+Built with Llama. The model is Llama 3.2 3B Instruct (Q4_K_M), used under the Llama 3.2 Community License. Its weights aren't in this repository. Vitra's code is MIT; third-party licenses are listed in `LICENSES.md`.
+
 ## Data
 
 The organizer dataset isn't in this repository. It's provided for HACK1984 only, and the package asks teams not to redistribute it. To run Vitra you need your own copy of the package, with the PubMed abstracts filled in by its `rehydrate` step.
