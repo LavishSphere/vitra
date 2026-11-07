@@ -11,9 +11,12 @@ import os
 import re
 import shutil
 import subprocess
+import threading
+from collections import OrderedDict
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any, TypeVar
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.routing import APIRoute
@@ -40,8 +43,10 @@ from .models import (
     WhatIfRequest,
     WhatIfResponse,
 )
+from .static import CSP, install_static, web_available
 from .trends import ALL, compute_trends
 
+T = TypeVar("T")
 LIST_TEXT_CHARS = 400
 WEEK_RE = re.compile(r"^\d{4}-W\d{2}$")
 SOURCES = (
@@ -78,6 +83,32 @@ def _csv(raw: str | None, allowed: tuple[str, ...], name: str) -> set[str] | Non
             400, f"unknown {name} value(s): {', '.join(bad)}; allowed: {', '.join(allowed)}"
         )
     return vals
+
+
+def _key(values: set[str] | None) -> tuple[str, ...] | None:
+    return None if values is None else tuple(sorted(values))
+
+
+class ResultCache:
+    """Small LRU for derived results. Keys include the store version, so any change
+    to the evidence (a held transcript, a reset) makes old entries unreachable."""
+
+    def __init__(self, maxsize: int) -> None:
+        self._data: OrderedDict[tuple[Any, ...], Any] = OrderedDict()
+        self._max = maxsize
+        self._lock = threading.Lock()
+
+    def get_or_compute(self, key: tuple[Any, ...], compute: Callable[[], T]) -> T:
+        with self._lock:
+            if key in self._data:
+                self._data.move_to_end(key)
+                return self._data[key]
+        value = compute()
+        with self._lock:
+            self._data[key] = value
+            while len(self._data) > self._max:
+                self._data.popitem(last=False)
+        return value
 
 
 def _ids(raw: str | None) -> set[str]:
@@ -205,19 +236,35 @@ def create_app(
             raise HTTPException(404, "no such item")
         return e
 
+    cache = ResultCache(maxsize=64)
+
     def _trends(
         excluded: set[str], product: str | None, aspect: str | None, speaker: str | None
     ) -> list[TrendCell]:
-        return compute_trends(
-            store.raw(),
-            excluded,
-            products=_csv(product, PRODUCTS, "product"),
-            aspects=_csv(aspect, (*ASPECTS, ALL), "aspect"),
-            speakers=_csv(speaker, (*SPEAKERS, ALL), "speaker"),
+        products = _csv(product, PRODUCTS, "product")
+        aspects = _csv(aspect, (*ASPECTS, ALL), "aspect")
+        speakers = _csv(speaker, (*SPEAKERS, ALL), "speaker")
+        key = (
+            "trends",
+            store.version,
+            frozenset(excluded),
+            _key(products),
+            _key(aspects),
+            _key(speakers),
+        )
+        return cache.get_or_compute(
+            key,
+            lambda: compute_trends(
+                store.raw(), excluded, products=products, aspects=aspects, speakers=speakers
+            ),
         )
 
     def _insights(excluded: set[str], product: str | None) -> list[InsightCard]:
-        return build_insights(store.raw(), excluded, products=_csv(product, PRODUCTS, "product"))
+        products = _csv(product, PRODUCTS, "product")
+        key = ("insights", store.version, frozenset(excluded), _key(products))
+        return cache.get_or_compute(
+            key, lambda: build_insights(store.raw(), excluded, products=products)
+        )
 
     @api.get("/trends", response_model=list[TrendCell])
     def trends(
@@ -235,7 +282,7 @@ def create_app(
     @api.get("/gaps", response_model=list[EvidenceGap])
     def gaps(
         window_weeks: int = Query(8, ge=1, le=104),
-        max_items: int = Query(1, ge=0, le=100),
+        max_items: int = Query(0, ge=0, le=100),
         excluded: str | None = None,
     ) -> list[EvidenceGap]:
         return compute_gaps(
@@ -255,9 +302,13 @@ def create_app(
         return run_intake(body, store, settings, loader=pipeline_loader)
 
     @api.post("/reset")
-    def reset() -> dict[str, int]:
-        """Drop every transcript result held in memory (the UI's "Reset to source data")."""
-        return {"transcripts_cleared": store.reset_transcripts()}
+    def reset() -> dict[str, bool | int]:
+        """Back to source data: drop every held transcript result.
+
+        Exclusions are never stored server side (each request passes its own), so
+        clearing them is the client's half of the reset.
+        """
+        return {"ok": True, "transcripts_cleared": store.reset_transcripts()}
 
     @api.get("/privacy/status", response_model=PrivacyStatus)
     def privacy_status(request: Request) -> PrivacyStatus:
@@ -271,6 +322,7 @@ def create_app(
 
     app.include_router(open_api)
     app.include_router(api)
+    install_static(app, settings.web_dist)  # last: the catch-all must not shadow /api
     return app
 
 
@@ -282,6 +334,7 @@ def _privacy_checks(
         r.path
         for r in app.routes
         if isinstance(r, APIRoute)
+        and r.path.startswith("/api/")
         and r.path not in security.OPEN_PATHS
         and not any(d.dependency is require_token for d in r.dependant.dependencies)
     ]
@@ -327,6 +380,14 @@ def _privacy_checks(
             detail="every route except /api/health requires X-Vitra-Token"
             if not unguarded
             else "routes without the token check: " + ", ".join(unguarded),
+        ),
+        PrivacyCheck(
+            name="web_app_same_origin_csp",
+            ok=web_available(settings.web_dist) or None,
+            kind="runtime_check",
+            detail=f"web app served from this origin with Content-Security-Policy: {CSP}"
+            if web_available(settings.web_dist)
+            else "web/dist not built; the API is serving no web app",
         ),
         PrivacyCheck(
             name="transcripts_memory_only",

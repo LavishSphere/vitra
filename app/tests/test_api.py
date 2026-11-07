@@ -151,3 +151,31 @@ def test_privacy_status_flags_remote_llm(synthetic_settings: Settings) -> None:
         health = c.get("/api/health").json()
     assert {c["name"]: c for c in body["checks"]}["llm_url_is_loopback"]["ok"] is False
     assert health["model_loaded"] is False  # a non-loopback model URL is never probed
+
+
+def test_cached_results_follow_evidence_changes(client: TestClient) -> None:
+    from app.evidence import build_item
+
+    params = {"product": "B", "aspect": "efficacy", "speaker": "all"}
+    first = client.get("/api/trends", params=params).json()
+    assert client.get("/api/trends", params=params).json() == first  # served from cache
+    store = client.app.state.store
+    item = {
+        "item_id": "PT-9001",
+        "source": "transcript",
+        "url": "",
+        "published": "2025-03-31",
+        "product": "B",
+        "title": "SYNTHETIC",
+        "text": "SYNTHETIC: it worked.",
+    }
+    label = {
+        "signal_type": "efficacy",
+        "actionable": "no",
+        "efficacy": {"polarity": 1, "speaker": "hcp", "span": "it worked"},
+    }
+    store.add_transcript(build_item(item, label, origin="private_transcript", method="model"))
+    after = client.get("/api/trends", params=params).json()
+    assert any("PT-9001" in c["item_ids"] for c in after)
+    client.post("/api/reset")
+    assert client.get("/api/trends", params=params).json() == first

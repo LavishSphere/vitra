@@ -25,7 +25,7 @@ AspectKey = Literal["efficacy", "safety", "convenience", "access_cost", "evidenc
 Speaker = Literal["researcher", "hcp", "patient", "company", "regulator", "payer", "media"]
 Origin = Literal["gold_dev", "predicted", "rule", "private_transcript", "synthetic_demo"]
 Method = Literal["rule", "model", "mixed", "gold"]
-Authority = Literal["regulator", "registry", "peer_reviewed", "company", "news"]
+Authority = Literal["regulator", "registry", "peer_reviewed", "company", "news", "private"]
 Level = Literal["high", "medium", "low"]
 
 ASPECTS: tuple[str, ...] = ("efficacy", "safety", "convenience", "access_cost", "evidence_quality")

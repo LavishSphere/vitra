@@ -110,6 +110,7 @@ def test_complete_returns_verified_spans_and_rejections(synthetic_settings: Sett
             and ev["source"] == "transcript"
             and ev["product"] == "B"
         )
+        assert ev["confidence"]["source_authority"] == "private"
         assert [a["aspect"] for a in ev["aspects"]] == ["convenience"]
         a = ev["aspects"][0]
         assert TRANSCRIPT[a["span_start"] : a["span_end"]] == a["span"]
@@ -125,7 +126,7 @@ def test_complete_returns_verified_spans_and_rejections(synthetic_settings: Sett
         assert c.get(f"/api/evidence/{iid}").status_code == 200
         assert c.get("/api/health").json()["n_items"] == 11
         # Reset drops it everywhere.
-        assert c.post("/api/reset").json() == {"transcripts_cleared": 1}
+        assert c.post("/api/reset").json() == {"ok": True, "transcripts_cleared": 1}
         assert c.get(f"/api/evidence/{iid}").status_code == 404
         assert c.get("/api/health").json()["n_items"] == 10
         # Ids are not reused after a reset.

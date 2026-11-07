@@ -19,6 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_PACKAGE_DIR = REPO_ROOT / "starter" / "hackathon_package_2026-11-05"
 DEFAULT_PREDICTIONS_DIR = REPO_ROOT / "data" / "derived" / "predictions"
+DEFAULT_WEB_DIST = REPO_ROOT / "web" / "dist"
 DEFAULT_ALLOWED_ORIGINS: tuple[str, ...] = ("http://127.0.0.1:5173", "http://localhost:5173")
 
 
@@ -52,6 +53,29 @@ def assert_loopback_bind(host: str) -> None:
         )
 
 
+def parse_prediction_sets(raw: str) -> tuple[str, ...] | None:
+    """ "all" (or empty) -> None (everything); "none" -> (); else a comma list."""
+    raw = raw.strip()
+    if raw in ("", "all"):
+        return None
+    if raw == "none":
+        return ()
+    return tuple(v.strip() for v in raw.split(",") if v.strip())
+
+
+def prediction_files(settings: Settings) -> list[Path]:
+    """Resolve the selected prediction sets to files (missing ones included, to be reported)."""
+    d = settings.predictions_dir
+    if settings.predictions is None:
+        found = sorted(d.glob("*.jsonl")) if d.is_dir() else []
+        return [p for p in found if not p.name.endswith(".meta.jsonl")]
+    out = []
+    for v in settings.predictions:
+        p = Path(v)
+        out.append(p if p.suffix == ".jsonl" else d / f"{v}.jsonl")
+    return out
+
+
 def _env_int(name: str, default: int) -> int:
     raw = os.environ.get(name)
     return int(raw) if raw else default
@@ -66,6 +90,11 @@ class Settings:
     prompt_version: str | None = None
     package_dir: Path = DEFAULT_PACKAGE_DIR
     predictions_dir: Path = DEFAULT_PREDICTIONS_DIR
+    # Which prediction sets to load: None = every *.jsonl in predictions_dir;
+    # () = none; otherwise names ("test" -> <dir>/test.jsonl) or .jsonl paths, in order.
+    predictions: tuple[str, ...] | None = None
+    # Prebuilt web app served at / (same origin as the API). Missing = API only.
+    web_dist: Path = DEFAULT_WEB_DIST
     allowed_origins: tuple[str, ...] = DEFAULT_ALLOWED_ORIGINS
     # Per-launch secret. A launcher script may pass one in (so it can hand the
     # same value to the web dev server); otherwise a fresh one is generated.
@@ -97,7 +126,10 @@ class Settings:
             "predictions_dir": Path(
                 os.environ.get("VITRA_PREDICTIONS_DIR", DEFAULT_PREDICTIONS_DIR)
             ),
+            "web_dist": Path(os.environ.get("VITRA_WEB_DIST", DEFAULT_WEB_DIST)),
         }
+        if "VITRA_PREDICTIONS" in os.environ:
+            kwargs["predictions"] = parse_prediction_sets(os.environ["VITRA_PREDICTIONS"])
         token = os.environ.get("VITRA_API_TOKEN")
         if token:
             kwargs["token"] = token

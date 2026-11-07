@@ -2,8 +2,10 @@
 
 Label sources, in priority order (the first one that covers an item wins):
 1. Dev gold (`<package>/data/dev.jsonl`) -> origin "gold_dev", method "gold".
-2. Every `*.jsonl` in the predictions directory (default data/derived/predictions/),
-   read in name order, except `*.meta.jsonl` sidecars -> origin "predicted".
+2. Prediction files -> origin "predicted". By default every `*.jsonl` in the
+   predictions directory (data/derived/predictions/) in name order, except
+   `*.meta.jsonl` sidecars; `--predictions` / VITRA_PREDICTIONS picks the sets
+   (e.g. "test,unlabeled", "none", or .jsonl paths), and earlier sets win.
    The method comes from the line's `_meta.method`, else from the sidecar
    `<name>.meta.jsonl` that `python -m pipeline.predict` writes next to its
    output, when it is rule|model|mixed; otherwise "model" with a note.
@@ -26,7 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .config import Settings
+from .config import Settings, prediction_files
 from .evidence import annotate, build_item
 from .models import EvidenceItem
 
@@ -95,9 +97,10 @@ def load_evidence(settings: Settings) -> tuple[list[EvidenceItem], LoadReport]:
     else:
         report.missing_files.append(str(gold_path))
 
-    pred_dir = settings.predictions_dir
-    pred_files = sorted(pred_dir.glob("*.jsonl")) if pred_dir.is_dir() else []
-    for path in [p for p in pred_files if not p.name.endswith(".meta.jsonl")]:
+    for path in prediction_files(settings):
+        if not path.exists():
+            report.missing_files.append(str(path))
+            continue
         sidecar = _sidecar_methods(path.with_suffix(".meta.jsonl"), report)
         n = 0
         for row in _iter_jsonl(path, report):
@@ -165,6 +168,8 @@ class EvidenceStore:
         self._annotated: list[EvidenceItem] | None = None
         self._by_id: dict[str, EvidenceItem] = {}
         self._transcript_seq = 0
+        # Bumped whenever the evidence set changes, so derived results can be cached safely.
+        self.version = 0
 
     def load(self) -> None:
         with self._lock:
@@ -211,6 +216,7 @@ class EvidenceStore:
         with self._lock:
             self._transcripts.append(item)
             self._annotated = None
+            self.version += 1
 
     @property
     def n_transcripts(self) -> int:
@@ -227,4 +233,5 @@ class EvidenceStore:
             n = len(self._transcripts)
             self._transcripts.clear()
             self._annotated = None
+            self.version += 1
             return n

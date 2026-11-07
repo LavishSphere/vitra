@@ -111,3 +111,43 @@ def test_predict_cli_sidecar_supplies_method(synthetic_settings) -> None:
     [e] = [e for e in evidence if e.item_id == "SYN-0103"]
     assert e.confidence.method == "rule"
     assert report.predicted_labels == {"extra.jsonl": 1}  # the sidecar is not read as predictions
+
+
+def test_prediction_set_selection(synthetic_settings) -> None:
+    import json
+    from dataclasses import replace
+
+    from app.config import parse_prediction_sets
+    from app.data import load_evidence
+
+    assert parse_prediction_sets("all") is None and parse_prediction_sets("") is None
+    assert parse_prediction_sets("none") == ()
+    assert parse_prediction_sets(" test, unlabeled ") == ("test", "unlabeled")
+
+    only_gold, r = load_evidence(replace(synthetic_settings, predictions=()))
+    assert {e.origin for e in only_gold} == {"gold_dev"} and r.predicted_labels == {}
+
+    preds = synthetic_settings.predictions_dir
+    row = {
+        "item_id": "SYN-0101",
+        "signal_type": "none",
+        "actionable": "no",
+        "efficacy": None,
+        "safety": None,
+        "convenience": None,
+        "access_cost": None,
+        "evidence_quality": None,
+    }
+    (preds / "other.jsonl").write_text(json.dumps(row) + "\n")
+    # Earlier sets win: "other" first means SYN-0101 has no aspects.
+    ev, r = load_evidence(
+        replace(synthetic_settings, predictions=("other", "unlabeled", "missing"))
+    )
+    by = {e.item_id: e for e in ev}
+    assert by["SYN-0101"].aspects == [] and by["SYN-0101"].origin == "predicted"
+    assert r.predicted_labels == {"other.jsonl": 1, "unlabeled.jsonl": 3}
+    assert any(m.endswith("missing.jsonl") for m in r.missing_files)
+    ev, _ = load_evidence(
+        replace(synthetic_settings, predictions=(str(preds / "unlabeled.jsonl"),))
+    )
+    assert by["SYN-0101"].item_id in {e.item_id for e in ev}
