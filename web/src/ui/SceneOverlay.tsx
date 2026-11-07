@@ -64,7 +64,7 @@ function FirstHint() {
   if (!show || touched) return null;
   return (
     <p className="pointer-events-none absolute inset-x-0 bottom-[96px] text-center text-[12.5px] text-text-muted max-md:hidden">
-      Drag to turn the scene. Click any dot to read its source. Keys 1 to 5 visit a station, 0 comes back.
+      Drag to turn the scene. Click a chart to focus it, or a dot to read its source. Keys 1 to 5 visit a station, 0 comes back.
     </p>
   );
 }
@@ -98,9 +98,13 @@ function TumorCard({ onClose }: { onClose: () => void }) {
 }
 
 function Legend({ is3d }: { is3d: boolean }) {
-  const [want, setOpen] = useState(true);
+  const [open, setOpen] = useState(true);
   const focused = useVitra((s) => s.focusStation !== null || s.focusTumor);
-  const open = want && !(is3d && focused);
+  // Collapse once when you fly into a station or the tumor so the view stays clear.
+  // Clicking the chip must still reopen it (the old `open && !focused` gate ignored that click).
+  useEffect(() => {
+    if (is3d && focused) setOpen(false);
+  }, [is3d, focused]);
   return (
     <div className="pointer-events-auto absolute left-4 top-4 z-10 max-md:hidden">
       {open ? (
@@ -111,7 +115,7 @@ function Legend({ is3d }: { is3d: boolean }) {
           </div>
           <div className="mb-1 h-1.5 rounded-full" style={{ background: "linear-gradient(90deg, var(--color-magenta), var(--color-muted), var(--color-cyan))" }} aria-hidden />
           <div className="num mb-2 flex justify-between text-[11px] text-text-muted"><span>{"−"}2 negative</span><span>0</span><span>+2 positive</span></div>
-          <p>Each dot is one quote from a source. In every station, height is polarity and earlier weeks sit on the left.</p>
+          <p>Each dot is one quote from a source. Click empty chart glass to focus that station. Height is polarity; earlier weeks sit on the left.</p>
           {is3d && <p className="mt-1.5">The points moving through the airways show airflow, timed to each breath.</p>}
           <p className="mt-1.5 text-text-muted">Illustrative anatomy. Not to scale.</p>
         </section>

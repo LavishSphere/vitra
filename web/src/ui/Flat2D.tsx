@@ -67,7 +67,20 @@ function StationPlot({ id, index, marks, weeks }: { id: StationId; index: number
         {def.label}
         <span className="num ml-auto text-text-muted">{live}</span>
       </button>
-      <div className={`relative h-40 rounded-lg border bg-bg-elevated/60 ${isFocus ? "border-accent/60" : "border-border"}`}>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`${def.label} chart. Click empty space to focus this station.`}
+        aria-pressed={isFocus}
+        onClick={() => setFocus(isFocus ? null : id)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setFocus(isFocus ? null : id);
+          }
+        }}
+        className={`relative h-40 cursor-pointer rounded-lg border bg-bg-elevated/60 ${isFocus ? "border-accent/60" : "border-border"}`}
+      >
         {[2, 1, 0, -1, -2].map((p) => (
           <div key={p} className="absolute inset-x-2 border-t" style={{ top: `${50 - p * 21}%`, borderColor: p === 0 ? "var(--color-border-strong)" : "var(--color-border)", borderStyle: p === 0 ? "solid" : "dashed" }}>
             {(p === 2 || p === 0 || p === -2) && <span className="num absolute -top-2 left-0 bg-bg-elevated/80 pr-1 text-[9.5px] text-text-muted">{signedPolarity(p)}</span>}
@@ -83,7 +96,10 @@ function StationPlot({ id, index, marks, weeks }: { id: StationId; index: number
             <button
               key={m.key}
               type="button"
-              onClick={() => select({ itemId: m.item.item_id, aspect: m.aspect.aspect })}
+              onClick={(e) => {
+                e.stopPropagation();
+                select({ itemId: m.item.item_id, aspect: m.aspect.aspect });
+              }}
               aria-label={`${m.item.item_id}, ${ASPECT_LABEL[m.aspect.aspect]}, polarity ${signedPolarity(m.aspect.polarity)}, ${SPEAKER_LABEL[m.aspect.speaker]}, ${m.item.iso_week}`}
               title={`"${m.aspect.span}"`}
               className={`absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform hover:scale-150 focus-visible:scale-150 ${pulsing ? "ring-2 ring-accent ring-offset-2 ring-offset-bg" : ""}`}

@@ -14,14 +14,12 @@ export function DemoBanner() {
       aria-label="About this demo build"
     >
       <p>
-        <span className="font-medium text-text">Synthetic demo.</span> Evidence on this page is invented so you can
-        poke the product on a phone. At the table, the live path runs{" "}
-        <span className="text-text">Llama 3.2 3B</span> on the laptop with Wi-Fi off.
+        <span className="font-medium text-text">Fake data on purpose.</span> This page is invented evidence so you can
+        poke the UI. Anyone can clone the repo, drop in a Llama 3.2 3B GGUF, and run the real stack on their own
+        machine with no Wi-Fi. README has the steps.
       </p>
       <p className="mt-1 text-text-muted">
-        Next step we did not ship this weekend: a smaller on-device model (about 0.5B) in the phone browser. With
-        better quantization, future on-device models may get closer to the desktop 3B quality Vitra uses today. That
-        is ambition, not this build.
+        No model in the browser yet. A ~0.5B on-device build is still later work.
       </p>
     </aside>
   );

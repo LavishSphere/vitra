@@ -19,6 +19,11 @@ Launch teams for Tagrisso (osimertinib) and Rybrevant / Lazcluze (amivantamab, l
 
 Those labels feed week-by-week sentiment trends and insight cards. You can click any score and land on the sentence it came from.
 
+<p align="center">
+  <img src="web/screenshots/xray-click.gif" alt="Lung observatory, then Evidence X-Ray with the cited span highlighted" width="720" />
+</p>
+<p align="center"><sub>Fixture demo: click a quote to open Evidence X-Ray. The lungs are illustrative; every span on screen is an exact substring of its source.</sub></p>
+
 ## Results (dev)
 
 Scored with the organizers' `score.py` on the **60-item dev set**. The hidden 240-item test set is judged separately.
@@ -47,4 +52,42 @@ Built with Llama. The model is Llama 3.2 3B Instruct (Q4_K_M), used under the Ll
 
 The organizer dataset isn't in this repository. It's provided for HACK1984 only, and the package asks teams not to redistribute it. To run Vitra you need your own copy of the package, with the PubMed abstracts filled in by its `rehydrate` step.
 
-Setup and run instructions are coming.
+## Try the public demo
+
+Synthetic fixture build (no package text, no local model): [vitra.khayrul.com](https://vitra.khayrul.com)
+
+## Setup and run (local, offline)
+
+You need: Apple Silicon or Linux, ~8 GB free RAM for the 3B GGUF, Python 3.11+, Node 20+, [llama.cpp](https://github.com/ggerganov/llama.cpp) `llama-server` on your PATH, and the organizer package extracted under `starter/` (gitignored).
+
+```bash
+# 1. Python deps (once)
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+
+# 2. Web build (once, while network is on)
+(cd web && npm ci && npm run build)
+
+# 3. Put Llama-3.2-3B-Instruct Q4_K_M at models/Llama-3.2-3B-Instruct-Q4_K_M.gguf
+#    (weights are not in this repo; Llama 3.2 Community License)
+
+# 4. Cold start with Wi-Fi off (binds 127.0.0.1 only)
+scripts/run_offline.sh --check          # smoke + loopback audit
+scripts/run_offline.sh serve            # API + web at http://127.0.0.1:8000/#t=<token>
+```
+
+Predict a split and score on the package (package path may differ on your machine):
+
+```bash
+.venv/bin/python -m pipeline.predict --split unlabeled --out data/derived/predictions/unlabeled.jsonl
+PKG=starter/hackathon_package_2026-11-05
+.venv/bin/python -I "$PKG/scoring/score.py" \
+  --gold "$PKG/data/dev.jsonl" \
+  --pred data/derived/dev_pred.jsonl \
+  --items "$PKG/data/dev.full.jsonl"
+```
+
+Measured cost on an Apple M5 MacBook Air (16 GB): **268.3 wall seconds per 100 items** on the hybrid test run (logged). Organizer judging hardware is unknown; expect different times there.
+
+## Network off
+
+`scripts/run_offline.sh --check` refuses to run while `https://example.com` answers, starts the model and API on loopback only, serves the prebuilt web bundle same-origin, runs one SYNTHETIC intake, and audits sockets. Captured Wi-Fi-off output is in the local privacy proof notes (not published with package text).

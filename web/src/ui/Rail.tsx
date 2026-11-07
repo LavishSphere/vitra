@@ -9,7 +9,9 @@ import { PolarityChip } from "./controls.tsx";
 import { STATIONS } from "../data/stations.ts";
 import { rubricPoints, RUBRIC_TEXT } from "../data/confidence.ts";
 import { EXPECTED_VOICES } from "../data/gaps.ts";
+import { abCompareIntro, abGapRows, abSideLabel } from "../lib/abGaps.ts";
 import { GAP_TITLE, gapCountLabel, gapEmptyLine, gapIntro, gapIsFocused, gapRowName } from "../lib/gapFocus.ts";
+import { downloadBlob, insightCardPng, shareFilename } from "../lib/shareCard.ts";
 
 function useMaxWidth(px: number) {
   const query = `(max-width: ${px}px)`;
@@ -202,8 +204,19 @@ function CardsSection() {
 function CardRow({ card }: { card: InsightCard }) {
   const select = useVitra((s) => s.select);
   const excluded = useVitra((s) => s.excluded);
+  const [sharing, setSharing] = useState(false);
   const nEx = card.citations.filter((c) => excluded.includes(c.item_id)).length;
   const conf = card.confidence;
+  async function sharePng() {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const blob = await insightCardPng(card);
+      downloadBlob(blob, shareFilename(card));
+    } finally {
+      setSharing(false);
+    }
+  }
   return (
     <li className="py-4 first:pt-1">
       <div className="mb-1 flex flex-wrap items-center gap-x-2 text-[12px] text-text-muted">
@@ -213,6 +226,14 @@ function CardRow({ card }: { card: InsightCard }) {
         <span aria-hidden>·</span>
         <span>{humanize(card.signal_type)}</span>
         {card.actionable && <><span aria-hidden>·</span><span className="text-text-2">Actionable</span></>}
+        <button
+          type="button"
+          onClick={() => void sharePng()}
+          disabled={sharing}
+          className="ml-auto text-[12px] text-accent hover:text-accent-hover disabled:opacity-50"
+        >
+          {sharing ? "Saving…" : "Share image"}
+        </button>
       </div>
       <h3 className="text-[14.5px] font-medium leading-snug text-text">{card.headline}</h3>
       <dl className="mt-2 grid grid-cols-[92px_1fr] gap-x-3 gap-y-1.5 text-[12.5px] leading-relaxed">
@@ -250,12 +271,15 @@ function CardRow({ card }: { card: InsightCard }) {
   );
 }
 
+const AB_COLS = "grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] items-baseline";
+
 function GapsSection() {
   const gaps = useVitra((s) => s.gaps);
   const filters = useVitra((s) => s.filters);
   const focusGap = useVitra((s) => s.focusGap);
   const product = filters.product;
   const [all, setAll] = useState(false);
+  const [mode, setMode] = useState<"list" | "ab">("ab");
   const sourceKind = useVitra((s) => s.sourceKind);
   const windowWeeks = gaps[0]?.window_weeks ?? 8;
   const matching = gaps
@@ -263,12 +287,75 @@ function GapsSection() {
     .sort((a, b) => (a.last_seen_week ?? "").localeCompare(b.last_seen_week ?? "") || a.speaker.localeCompare(b.speaker));
   const shown = all ? matching : matching.slice(0, 12);
   const focused = matching.find((g) => gapIsFocused(filters, g));
+  const compare = useMemo(() => abGapRows(gaps, EXPECTED_VOICES, windowWeeks), [gaps, windowWeeks]);
+  const showAb = product === "all" && mode === "ab";
   return (
     <div>
       <SectionHead title={GAP_TITLE}>
-        {gapIntro(windowWeeks)}
+        {showAb ? abCompareIntro(windowWeeks) : gapIntro(windowWeeks)}
       </SectionHead>
-      {shown.length === 0 ? (
+      {product === "all" && (
+        <div className="mb-3 flex gap-2 text-[12.5px]" role="group" aria-label="Gap view">
+          <button
+            type="button"
+            aria-pressed={mode === "ab"}
+            onClick={() => setMode("ab")}
+            className={`rounded-md border px-2 py-0.5 ${mode === "ab" ? "border-accent text-accent" : "border-border text-text-2 hover:border-border-strong"}`}
+          >
+            A / B compare
+          </button>
+          <button
+            type="button"
+            aria-pressed={mode === "list"}
+            onClick={() => setMode("list")}
+            className={`rounded-md border px-2 py-0.5 ${mode === "list" ? "border-accent text-accent" : "border-border text-text-2 hover:border-border-strong"}`}
+          >
+            List
+          </button>
+        </div>
+      )}
+      {showAb ? (
+        <div className="text-[12.5px]">
+          <div className={`${AB_COLS} border-b border-border text-text-muted`}>
+            <span className="py-1.5 pr-2">Voice</span>
+            <span className="py-1.5 pr-2 text-center">Tagrisso (A)</span>
+            <span className="py-1.5 text-center">Rybrevant (B)</span>
+          </div>
+          <div className="divide-y divide-border">
+            {compare.map((row) => {
+              const voice = `${SPEAKER_LABEL[row.speaker]} on ${ASPECT_LABEL[row.aspect].toLowerCase()}`;
+              return (
+                <div key={`${row.speaker}-${row.aspect}`} className={`${AB_COLS} py-2`}>
+                  <span className="pr-2 text-text">{voice}</span>
+                  {(["A", "B"] as const).map((p) => {
+                    const side = p === "A" ? row.a : row.b;
+                    const gap = p === "A" ? row.gapA : row.gapB;
+                    const on = gap ? gapIsFocused(filters, gap) : false;
+                    const label = abSideLabel(side);
+                    if (!gap) {
+                      return (
+                        <span key={p} className="num px-1 text-center text-text-2">{label}</span>
+                      );
+                    }
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        aria-pressed={on}
+                        aria-label={gapRowName(PRODUCT_LABEL[p], SPEAKER_LABEL[row.speaker], ASPECT_LABEL[row.aspect].toLowerCase(), 0, row.window_weeks)}
+                        onClick={() => focusGap(gap)}
+                        className={`num rounded-md px-1 py-0.5 text-center hover:bg-accent-soft ${on ? "bg-accent-soft text-accent" : "text-text"}`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : shown.length === 0 ? (
         <p className="text-[13px] text-text-muted">{gapEmptyLine(product)}</p>
       ) : (
         <div className="text-[12.5px]">
@@ -306,7 +393,7 @@ function GapsSection() {
           Scene and timeline are on {PRODUCT_LABEL[focused.product]}, {SPEAKER_LABEL[focused.speaker].toLowerCase()} on {ASPECT_LABEL[focused.aspect].toLowerCase()}, {filters.weekFrom} to {filters.weekTo}.
         </p>
       )}
-      {matching.length > shown.length && (
+      {!showAb && matching.length > shown.length && (
         <button type="button" onClick={() => setAll(true)} className="mt-2 text-[12.5px] text-accent hover:text-accent-hover">
           Show all {matching.length}
         </button>

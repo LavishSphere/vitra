@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { AdditiveBlending, Color, ShaderMaterial } from "three";
 import { STATIONS, type StationId } from "../data/stations.ts";
 import { useVitra } from "../store/useVitra.ts";
@@ -71,11 +71,21 @@ function StationPanel({ id, index }: { id: StationId; index: number }) {
   useEffect(() => () => mat.dispose(), [mat]);
 
   const focus = useVitra((s) => s.focusStation);
+  const setFocus = useVitra((s) => s.setFocusStation);
+  const setFocusTumor = useVitra((s) => s.setFocusTumor);
   const weeks = useVitra((s) => s.weeks);
   const from = useVitra((s) => s.filters.weekFrom);
   const to = useVitra((s) => s.filters.weekTo);
   const isFocus = focus === id;
   const dimmed = focus !== null && !isFocus;
+
+  const onClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    setFocusTumor(false);
+    setFocus(isFocus ? null : id);
+  };
+  const onOver = () => { document.body.style.cursor = "pointer"; };
+  const onOut = () => { document.body.style.cursor = ""; };
 
   const range = useRef<[number, number]>([0, 0]);
   useEffect(() => {
@@ -98,7 +108,13 @@ function StationPanel({ id, index }: { id: StationId; index: number }) {
 
   return (
     <group position={frame.position} quaternion={frame.quaternion}>
-      <mesh material={mat} renderOrder={0}>
+      <mesh
+        material={mat}
+        renderOrder={0}
+        onClick={onClick}
+        onPointerOver={onOver}
+        onPointerOut={onOut}
+      >
         <planeGeometry args={[PANEL.width, PANEL.height]} />
       </mesh>
     </group>
