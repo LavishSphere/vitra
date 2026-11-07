@@ -145,6 +145,34 @@ def test_transcript_takes_model_speaker_with_hcp_default():
     assert out["safety"]["speaker"] == "hcp" and out["convenience"]["speaker"] == "hcp"
 
 
+def test_hybrid_moves_short_numeric_stub_to_later_clause():
+    item = {
+        "item_id": "PM-SHIFT",
+        "source": "pubmed",
+        "product": "A",
+        "title": "Osimertinib outcomes",
+        "text": (
+            "ORR reached 67% (95% CI 50 to 80). "
+            "Treatment was significantly better for patients who continued therapy."
+        ),
+    }
+    raw = {
+        "signal_type": "efficacy",
+        "actionable": "yes",
+        "efficacy": {
+            "polarity": 1,
+            "speaker": "researcher",
+            "span": "ORR reached 67% (95% CI 50 to 80)",
+        },
+    }
+    out = classify_item(item, model_fn=fake_model(raw))
+    assert out["efficacy"]["span"] == (
+        "Treatment was significantly better for patients who continued therapy"
+    )
+    assert out["efficacy"]["span"] in item["text"]
+    assert prediction_errors(out, item["text"]) == []
+
+
 def test_default_hybrid_policy_keeps_rules_where_explicit():
     raw = {
         "signal_type": "regulatory",

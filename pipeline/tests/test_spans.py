@@ -89,3 +89,43 @@ def test_later_clause_shifts_a_short_numeric_stub():
     assert got == "Treatment was significantly better for patients who continued therapy"
     assert got in text
     assert ". " not in got
+
+
+def test_later_clause_keeps_a_longer_span_and_a_digit_free_sentence():
+    text = (
+        "Response rate was 67% in cohort A overall. "
+        "Treatment was significantly better for patients who continued therapy."
+    )
+    quote_end = text.index(".")
+    start, end = shift_later_clause(text, 0, quote_end, 0, quote_end)
+    assert text[start:end] == "Response rate was 67% in cohort A overall"
+
+    plain = "Response was high here. Treatment was significantly better for patients who continued."
+    cut = plain.index(".")
+    start, end = shift_later_clause(plain, 0, cut, 0, cut)
+    assert plain[start:end] == "Response was high here"
+
+
+def test_later_clause_skips_a_digit_sentence_and_prefers_a_judgment_piece():
+    text = (
+        "Response rate was 67% in cohort A. "
+        "Grade 3 events were uncommon in follow up. "
+        "Patients continued therapy and the benefit was durable for responders."
+    )
+    quote_end = text.index(".")
+    stub_end = text.index("%") + 1
+    start, end = shift_later_clause(text, 0, quote_end, 0, stub_end)
+    assert text[start:end] == "the benefit was durable for responders"
+    assert text[start:end] in text
+
+
+def test_later_clause_uses_first_digit_free_piece_without_a_judgment_word():
+    text = "Response rate was 67% in cohort A. Patients stayed on treatment through the full year."
+    start, end = shift_later_clause(text, 0, text.index("."), 0, text.index("%") + 1)
+    assert text[start:end] == "Patients stayed on treatment through the full year"
+
+
+def test_later_clause_keeps_the_stub_when_nothing_later_qualifies():
+    text = "Response rate was 67% in cohort A. See Table 2 for the listing."
+    start, end = shift_later_clause(text, 0, text.index("."), 0, text.index("%") + 1)
+    assert text[start:end] == "Response rate was 67%"

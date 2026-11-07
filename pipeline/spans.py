@@ -240,6 +240,65 @@ def trim_numeric_tail(text: str, start: int, end: int, min_words: int = 3) -> tu
 
 
 _CLAUSE_CUT = re.compile(r",\s|;\s|:\s|\s(?:and|while|whereas|which|but)\s")
+_JUDGMENT_WORDS = frozenset(
+    """
+    significantly significant improved improvement prolonged manageable tolerated
+    meaningful superior inferior reduced reduction increased benefit effective
+    favorable favourable worse better encouraging promising higher lower longer
+    shorter adverse tolerability durable activity
+    """.split()
+)
+
+
+def _has_digit(text: str, start: int, end: int) -> bool:
+    return any(ch.isdigit() for ch in text[start:end])
+
+
+def _clause_pieces(text: str, start: int, end: int) -> list[tuple[int, int]]:
+    """Slices between the same clause boundaries `shorten_span` cuts on."""
+    spans: list[tuple[int, int]] = []
+    cursor = start
+    for m in _CLAUSE_CUT.finditer(text, start, end):
+        spans.append((cursor, m.start()))
+        cursor = m.end()
+    spans.append((cursor, end))
+    out: list[tuple[int, int]] = []
+    for a, b in spans:
+        while a < b and text[a].isspace():
+            a += 1
+        while b > a and text[b - 1] in _TRAIL_PUNCT + " ":
+            b -= 1
+        if b > a:
+            out.append((a, b))
+    return out
+
+
+def _piece_ok(text: str, start: int, end: int) -> bool:
+    n = len(text[start:end].split())
+    return 3 <= n <= 15 and not _has_digit(text, start, end)
+
+
+def _has_judgment(text: str, start: int, end: int) -> bool:
+    return any(_tok(w) in _JUDGMENT_WORDS for w in text[start:end].split())
+
+
+def _pick_later_piece(text: str, start: int, end: int) -> tuple[int, int] | None:
+    pieces = [(a, b) for a, b in _clause_pieces(text, start, end) if _piece_ok(text, a, b)]
+    for a, b in pieces:
+        if _has_judgment(text, a, b):
+            return a, b
+    return pieces[0] if pieces else None
+
+
+def _sentence_index(text: str, start: int, end: int) -> int | None:
+    best_i: int | None = None
+    best_n = 0
+    for i, (a, b) in enumerate(sentence_bounds(text)):
+        lo, hi = max(a, start), min(b, end)
+        if hi - lo > best_n:
+            best_n = hi - lo
+            best_i = i
+    return best_i
 
 
 def shift_later_clause(
@@ -249,7 +308,25 @@ def shift_later_clause(
     span_start: int,
     span_end: int,
 ) -> tuple[int, int]:
-    """Placeholder. The short numeric stub stays where the trim left it."""
+    """Move a short stub out of a numeric sentence into a later digit-free clause.
+
+    Fires only when the sentence that holds the located quote contains a digit and
+    the span after numeric trim and shortening has 6 words or fewer. The result is
+    an exact slice of `text` inside one sentence. If nothing later qualifies, the
+    incoming span is unchanged.
+    """
+    if len(text[span_start:span_end].split()) > 6:
+        return span_start, span_end
+    bounds = sentence_bounds(text)
+    idx = _sentence_index(text, quote_start, quote_end)
+    if idx is None or not _has_digit(text, *bounds[idx]):
+        return span_start, span_end
+    for sa, sb in bounds[idx + 1 :]:
+        if _has_digit(text, sa, sb):
+            continue
+        picked = _pick_later_piece(text, sa, sb)
+        if picked is not None:
+            return picked
     return span_start, span_end
 
 
