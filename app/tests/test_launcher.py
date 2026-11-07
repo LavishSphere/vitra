@@ -203,7 +203,7 @@ def test_probe_online_true_when_connect_succeeds() -> None:
         def close(self) -> None:
             closed.append(True)
 
-    assert launch.probe_online(connect=lambda *a, **k: Sock()) is True
+    assert launch.tcp_reachable(connect=lambda *a, **k: Sock()) is True
     assert closed == [True]
 
 
@@ -217,9 +217,26 @@ def test_probe_online_false_on_dns_or_connect_failure() -> None:
     def timeout(*a, **k):
         raise TimeoutError
 
-    assert launch.probe_online(connect=gai) is False
-    assert launch.probe_online(connect=refused) is False
-    assert launch.probe_online(connect=timeout) is False
+    assert launch.tcp_reachable(connect=gai) is False
+    assert launch.tcp_reachable(connect=refused) is False
+    assert launch.tcp_reachable(connect=timeout) is False
+
+
+def test_probe_runs_in_a_child_process() -> None:
+    calls: list[list[str]] = []
+
+    def run(cmd, **kw):
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0)
+
+    assert launch.probe_online(run=run) is True
+    assert calls and calls[0][0] == sys.executable and "tcp_reachable" in calls[0][-1]
+    assert launch.probe_online(run=lambda cmd, **kw: subprocess.CompletedProcess(cmd, 1)) is False
+
+    def hang(cmd, **kw):
+        raise subprocess.TimeoutExpired(cmd, 30)
+
+    assert launch.probe_online(run=hang) is False
 
 
 def test_offline_check_refuses_when_online(monkeypatch) -> None:

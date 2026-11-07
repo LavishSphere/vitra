@@ -47,6 +47,7 @@ import secrets
 import shutil
 import signal
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -100,7 +101,7 @@ class LaunchError(Exception):
 # ---------------------------------------------------------------- pure helpers
 
 
-def probe_online(
+def tcp_reachable(
     host: str = "example.com",
     port: int = 443,
     timeout: float = 3.0,
@@ -111,8 +112,40 @@ def probe_online(
         conn = connect((host, port), timeout=timeout)
     except OSError:
         return False
+    try:
+        # Abortive close (RST): no FIN_WAIT or TIME_WAIT entry stays behind.
+        conn.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+    except (OSError, AttributeError):
+        pass
     conn.close()
     return True
+
+
+_PROBE_CODE = (
+    "import sys\nfrom app.launch import tcp_reachable\nsys.exit(0 if tcp_reachable() else 1)\n"
+)
+
+
+def probe_online(run: Callable[..., subprocess.CompletedProcess[bytes]] = subprocess.run) -> bool:
+    """Run tcp_reachable() in a short-lived child process.
+
+    The probe is the launcher's one deliberate outside connection, made before the audit
+    starts. Windows keeps a closed connection listed under its process for a moment, so
+    probing in-process would show up in the launcher's own audit. A child that has exited
+    is outside the audited tree.
+    """
+    try:
+        r = run(
+            [sys.executable, "-c", _PROBE_CODE],
+            cwd=ROOT,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        return False
+    return r.returncode == 0
 
 
 def endpoint_is_loopback(addr: Any) -> bool:
