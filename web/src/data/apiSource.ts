@@ -2,17 +2,21 @@
 import { ASPECTS, SPEAKERS, type EvidenceGap, type EvidenceItem, type InsightCard, type IntakeResult, type TrendCell } from "@contract/types.ts";
 import type { DataSource } from "./source.ts";
 import { TOKEN } from "./token.ts";
-import intakeJson from "../fixtures/intake.json";
+import { sampleNote } from "./recorded.ts";
 
 /** Dev server talks to the API on :8000. A built bundle is served by the API, so same origin. */
 const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
+
+class HttpError extends Error {
+  constructor(message: string, readonly status: number) { super(message); }
+}
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", "X-Vitra-Token": TOKEN, ...(init?.headers ?? {}) },
   });
-  if (!res.ok) throw new Error(`${init?.method ?? "GET"} ${path} failed with ${res.status}`);
+  if (!res.ok) throw new HttpError(`${init?.method ?? "GET"} ${path} failed with ${res.status}`, res.status);
   return (await res.json()) as T;
 }
 
@@ -47,11 +51,21 @@ export const apiSource: DataSource = {
   async intake(req) {
     return call<IntakeResult>("/api/intake", { method: "POST", body: JSON.stringify(req) });
   },
+  cardsLive: true,
+  async undo(itemId) {
+    try {
+      await call<unknown>(`/api/intake/${encodeURIComponent(itemId)}`, { method: "DELETE" });
+    } catch (e) {
+      // Older backends have no per-transcript delete. Reset drops every held transcript.
+      if (e instanceof HttpError && (e.status === 404 || e.status === 405)) await call<unknown>("/api/reset", { method: "POST" });
+      else throw e;
+    }
+  },
   async reset() {
     await call<{ transcripts_cleared: number }>("/api/reset", { method: "POST" });
   },
   async sampleTranscript() {
-    // The same SYNTHETIC sample as fixture mode, so a judge always has something to paste.
-    return (intakeJson as { transcript: { title: string; text: string; product: "A" | "B" } }).transcript;
+    // The same synthetic note as fixture mode. Here it goes through the real local model.
+    return sampleNote();
   },
 };

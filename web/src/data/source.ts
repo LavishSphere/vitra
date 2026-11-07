@@ -19,8 +19,12 @@ export interface DataSource {
   /** Recompute trends (and cards where supported) for an exclusion set. */
   whatIf(excluded: string[], evidence: EvidenceItem[]): Promise<{ trends: TrendCell[]; cards?: InsightCard[]; gaps?: EvidenceGap[] }>;
   intake(req: IntakeRequest): Promise<IntakeResult>;
+  /** True when this source recomputes insight cards (the local API). Fixture cards are stored. */
+  cardsLive: boolean;
+  /** Remove one held transcript on the source side (Undo). */
+  undo(itemId: string): Promise<void>;
   /** Drop held transcripts on the source side ("Reset to source data"). */
   reset(): Promise<void>;
-  /** A synthetic sample transcript for the intake panel, if this source has one. */
+  /** The synthetic sample note for the intake card. */
   sampleTranscript(): Promise<{ title: string; text: string; product: Product } | null>;
 }
