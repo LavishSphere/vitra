@@ -66,6 +66,8 @@ class MergePolicy:
     anchors: bool = True  # guide polarity anchors + lab-study and placeholder checks
     # aspects the rules fill when the model leaves them empty (e.g. pubmed author caveats)
     rule_aspects: frozenset[str] = frozenset()
+    # keep one aspect per quote: when the model reuses a span, the more specific aspect wins
+    dedupe_spans: bool = False
     extra: dict[str, Any] = field(default_factory=dict, compare=False)
 
 
@@ -89,6 +91,16 @@ POLICIES: dict[str, MergePolicy] = {
         aspects=frozenset({"efficacy", "safety"}),
         shorten_words=12,
         rule_aspects=frozenset({"evidence_quality"}),
+    ),
+    # pasted transcripts (advisory boards, field notes): every aspect counts, since convenience
+    # and access are what a launch team listens for; one aspect per quote
+    "transcript": MergePolicy(
+        "transcript",
+        signal_sources=frozenset(),
+        actionable_sources=_TEXT_SOURCES,
+        shorten_words=12,
+        rule_aspects=frozenset({"evidence_quality"}),
+        dedupe_spans=True,
     ),
     "full": MergePolicy("full"),
     "full-notrim": MergePolicy("full-notrim", trim_numeric=False),
@@ -207,7 +219,29 @@ def merge_model_output(
     for a in policy.rule_aspects:
         if pred.get(a) is None and rule.prediction.get(a) is not None:
             pred[a] = rule.prediction[a]
+    if policy.dedupe_spans:
+        _dedupe_spans(pred, dropped)
     return pred, dropped, overrode
+
+
+# When one quote lands under several aspects, keep the most specific one.
+_SPAN_PRIORITY = ("convenience", "access_cost", "safety", "evidence_quality", "efficacy")
+
+
+def _dedupe_spans(pred: dict[str, Any], dropped: list[dict[str, str]]) -> None:
+    kept: dict[str, str] = {}
+    for a in _SPAN_PRIORITY:
+        v = pred.get(a)
+        if not v:
+            continue
+        span = v["span"]
+        if span in kept:
+            dropped.append(
+                {"aspect": a, "span": span, "reason": f"same quote already used for {kept[span]}"}
+            )
+            pred[a] = None
+        else:
+            kept[span] = a
 
 
 def _final_check(pred: dict[str, Any], text: str, dropped: list[dict[str, str]]) -> dict[str, Any]:
