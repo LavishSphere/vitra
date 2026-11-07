@@ -4,7 +4,7 @@ import pytest
 
 from pipeline.data import DEV_GOLD, DEV_ITEMS, by_id
 from pipeline.schema import ASPECTS
-from pipeline.spans import locate_span, sentence_bounds, snap_span
+from pipeline.spans import locate_span, sentence_bounds, shift_later_clause, snap_span
 from pipeline.tests.conftest import load_or_empty, needs_data
 
 TEXT = (
@@ -75,3 +75,17 @@ def test_random_snippets_are_invariant():
 def test_sentence_bounds_respect_abbreviations():
     t = "Results were reported by Smith et al. in 2024. Second sentence here."
     assert len(sentence_bounds(t)) == 2
+
+
+def test_later_clause_shifts_a_short_numeric_stub():
+    text = (
+        "Response rate was 67% in cohort A. "
+        "Treatment was significantly better for patients who continued therapy."
+    )
+    quote_end = text.index(".")
+    stub_end = text.index("%") + 1
+    start, end = shift_later_clause(text, 0, quote_end, 0, stub_end)
+    got = text[start:end]
+    assert got == "Treatment was significantly better for patients who continued therapy"
+    assert got in text
+    assert ". " not in got

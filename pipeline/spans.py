@@ -242,6 +242,17 @@ def trim_numeric_tail(text: str, start: int, end: int, min_words: int = 3) -> tu
 _CLAUSE_CUT = re.compile(r",\s|;\s|:\s|\s(?:and|while|whereas|which|but)\s")
 
 
+def shift_later_clause(
+    text: str,
+    quote_start: int,
+    quote_end: int,
+    span_start: int,
+    span_end: int,
+) -> tuple[int, int]:
+    """Placeholder. The short numeric stub stays where the trim left it."""
+    return span_start, span_end
+
+
 def shorten_span(text: str, start: int, end: int, max_words: int = 12) -> tuple[int, int]:
     """Cut an over-long span at its first clause boundary that leaves 4 or more words.
 
