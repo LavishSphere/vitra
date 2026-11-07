@@ -9,94 +9,118 @@
 </p>
 
 <p align="center">
-  Reads public evidence on Tagrisso and Rybrevant, labels the launch signal, and ties every score to an exact quote.<br />
-  Runs a 3B model on your machine with no Wi-Fi.
+  Reads public evidence on Tagrisso and Rybrevant, labels the launch signal, and ties every score to an exact quote. A 3B model does the reading, on your laptop, with the Wi-Fi off.
 </p>
 
 <p align="center">
   <a href="https://vitra.khayrul.com">Live demo</a>
   ·
-  <a href="#results-dev">Results</a>
+  <a href="#results">Results</a>
+  ·
+  <a href="#works-with-the-wi-fi-off">Wi-Fi off</a>
   ·
   <a href="#demo-video">Video</a>
   ·
-  <a href="#setup-and-run-local-offline">Run offline</a>
+  <a href="#setup">Setup</a>
 </p>
 
 <p align="center">
   <img src="web/screenshots/xray-click.gif" alt="Lung observatory into Evidence X-Ray" width="780" />
 </p>
 <p align="center">
-  <sub>Synthetic fixture. Click a quote to open Evidence X-Ray. Lungs are illustrative; every span is an exact substring of its source.</sub>
+  <sub>Synthetic data. Click a quote to open Evidence X-Ray. The lungs are illustrative; every quote is copied word for word from its source.</sub>
 </p>
 
-<p align="center">
-  <img src="web/screenshots/01-observatory-1440.png" alt="Lung observatory" width="380" />
-  &nbsp;
-  <img src="web/screenshots/02-xray-1440.png" alt="Evidence X-Ray" width="380" />
-</p>
+## What it does
 
-## Who it's for
+Built for a launch-intelligence or medical-affairs lead on an EGFR lung cancer brand. They need week-over-week sentiment with citations they can open, and they can't paste confidential advisory-board notes into a cloud model.
 
-An EGFR NSCLC launch-intel or medical-affairs lead. They need week-over-week sentiment with citations they can open, and they cannot paste private advisory-board notes into a cloud model. Vitra is built around Within3's frame: **understand**, **interrogate**, **act**, with AI you can trace.
+For every item (trial registrations, FDA reports and labels, papers, press releases, news, or a pasted transcript), Vitra outputs:
 
-## Results (dev)
+- the signal type and whether a launch team should act on it
+- a score from −2 to +2 on efficacy, safety, convenience, access and cost, and evidence quality
+- who said it, and the exact quote behind each score
 
-Official `score.py` on the **60-item** labeled dev set (5-fold). Hidden test is 240 items, scored by organizers.
+Those labels feed weekly trends, insight cards and evidence gaps. Click any score to land on the sentence it came from.
+
+## Results
+
+Organizer scorer (`score.py`) on the 60-item labeled dev set, 5-fold. The 240-item hidden test set is scored by the organizers.
 
 | | Rules only | Rules + Llama 3.2 3B |
 |---|---|---|
-| **Composite** | 0.842 | **0.865** |
+| Composite | 0.842 | 0.865 |
 | Signal macro-F1 | 0.806 | 0.806 |
 | Actionable F1 | 0.870 | 0.917 |
 | Aspect F1 | 0.328 | 0.784 |
 | Polarity QWK | 1.000 | 0.928 |
 | Speaker accuracy | 1.000 | 1.000 |
 | Span F1 | 0.892 | 0.623 |
-| Citation validity | 1.000 | **1.000** |
+| Citation validity | 1.000 | 1.000 |
 
-Both columns were tuned on dev, so treat them as optimistic. Using only the caveat phrases the labeling guide lists, the model column scores 0.859, which is the more honest estimate. Rules alone score high on polarity and quotes because they only fill the few aspects they're sure of; the model finds far more aspects (aspect F1 0.328 to 0.784) at the cost of looser quotes. Weak spot: efficacy on long PubMed abstracts. The latest full test run took 569 s for 240 items on an Apple M5 MacBook Air (16 GB), about 2.4 s per item. Organizer hardware unknown.
+- Both columns were tuned on dev, so they're optimistic. Counting only the caveat phrases the labeling guide lists, the model column scores 0.859.
+- Rules fill only the few aspects they're sure of, so their quotes are tight. The model finds far more aspects (0.328 to 0.784) with looser quotes. Weakest area: efficacy on long PubMed abstracts.
+- The full 240-item test run took 569 s on an Apple M5 MacBook Air (16 GB), about 2.4 s per item.
 
-## One public item, end to end
+## Works with the Wi-Fi off
 
-Public source: [Rybrevant Faspro PI](https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9e58b045-e352-4f62-99bf-77fae1bebc69) (DailyMed), dosage section: subcutaneous injection under the skin of the abdomen over about 5 minutes, versus IV Rybrevant.
+`scripts/run_offline.sh --check` refuses to start while the internet is reachable, then starts the model and API on `127.0.0.1`, runs one synthetic transcript through the model, and checks every Vitra process's sockets every 0.3 s. Any connection off the machine fails the run.
 
-Vitra would typically emit:
+Captured on Nov 7 with Wi-Fi turned off:
 
-| Field | Example |
-|---|---|
-| Signal | access / convenience update |
-| Aspect | convenience, speaker often HCP or label |
-| Polarity | positive on chair-time / route |
-| Span | an exact substring of that label sentence (never paraphrased) |
+```text
+[vitra    0.0s] offline confirmed: https://example.com is unreachable
+[vitra    0.2s] starting model server: Llama-3.2-3B-Instruct-Q4_K_M.gguf on 127.0.0.1:8080
+[vitra    2.4s] model server ready
+[vitra    3.2s] API ready (2033 items, model server up, Llama-3.2-3B-Instruct-Q4_K_M.gguf)
+[vitra    3.2s] cold start complete (browser would open now)
+[vitra    3.3s] API smoke: token enforced, 2033 evidence items served
+[vitra]         intake status=complete, 2 verified span(s) (classifying 3637 ms)
+[vitra    7.2s] no node process running under the launcher
+[vitra    7.2s] network audit passed: every socket seen was loopback only
+[vitra    7.2s] CHECK PASSED
+```
 
-In the UI that span lights up in Evidence X-Ray, lands on the Administration station, and can move the convenience trend for product B.
+Cold start to a working app took 3.2 s, and a pasted transcript came back with verified quotes in 3.6 s.
 
-## Demo video
+## One transcript, end to end
 
-<a id="demo-video"></a>
+A synthetic advisory-board note, pasted into the app:
 
-3 to 5 min walkthrough (YouTube). Link lands here when the upload is ready: Wi-Fi off, cold `run_offline.sh`, lungs, X-Ray, one pasted transcript with real stage timings.
+> Synthetic advisory board note. Thoracic oncologist: The subcutaneous version of amivantamab cuts chair time from hours to minutes, and our infusion center will love that. The rash is still a real concern for my patients and needs proactive management. Payer representative: prior authorization for the combination has been slow in our region.
+
+What the local model returned, in 7.0 s:
+
+| Aspect | Score | Speaker | Quote |
+|---|---|---|---|
+| Convenience | +1 | hcp | "cuts chair time from hours to minutes" |
+| Safety | −1 | hcp | "still a real concern for my patients" |
+| Access and cost | missed | | the prior-authorization line wasn't flagged in this run |
+
+Both quotes are exact substrings of the note. The model also tried to file the chair-time quote under efficacy; Vitra keeps one aspect per quote, so it stays under convenience. In the app, the note joins the evidence, its quotes open in Evidence X-Ray, and the convenience and safety trends for Rybrevant update.
 
 ## How it works
 
-1. **Ingest** public JSONL (and private paste tagged local-only).
-2. **Rules** handle clear FDA / trial / speaker cases from the labeling guide.
-3. **Local Llama 3.2 3B** (Q4_K_M, JSON schema) fills the rest on `127.0.0.1:8080`.
-4. **Span snap** keeps every quote as an exact substring; failed snaps drop.
-5. **Aggregate** trends, gaps, insight cards, what-if exclude/restore.
-6. **Serve offline** on loopback; `run_offline.sh --check` audits sockets.
+1. **Rules** from the organizers' labeling guide handle the clear cases: trial registrations, FDA reports and labels, and who is speaking.
+2. **Llama 3.2 3B** (Q4_K_M, via llama.cpp on `127.0.0.1`) labels the rest with a strict JSON schema.
+3. **Quote check:** every quote must be found word for word in its source, or it's dropped.
+4. **Aggregate:** weekly trends, evidence gaps, insight cards, and exclude/restore with a live recount.
+5. **Serve:** the API and the web app run on the same local port; nothing is sent off the machine.
 
 ```
-pipeline/   rules + model + spans
-app/        local API
-web/        React + three.js
-contracts/  shared shapes
+pipeline/   rules, model, quote check
+app/        local API and launcher
+web/        React and three.js
+contracts/  shared data shapes
 ```
 
-**Real:** labels, spans, trends, offline run. **Illustrative:** 3D anatomy. **Synthetic:** [vitra.khayrul.com](https://vitra.khayrul.com). Not medical advice. Code MIT; model under Llama 3.2 Community License (weights not in repo). See `LICENSES.md`.
+Real: the labels, quotes, trends and offline run. Illustrative: the 3D anatomy. Synthetic: everything on [vitra.khayrul.com](https://vitra.khayrul.com) and the transcript above. Not medical advice.
 
-## Setup and run (local, offline)
+## Demo video
+
+3 to 5 minute walkthrough on YouTube. Link coming: Wi-Fi off, cold start, lungs, Evidence X-Ray, one pasted transcript with real timings.
+
+## Setup
 
 Needs ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server`, and the organizer package under `starter/` (gitignored; PubMed rehydrated).
 
@@ -152,23 +176,6 @@ PKG=starter/hackathon_package_2026-11-05
   --items "$PKG/data/dev.full.jsonl"
 ```
 
-## Network off
+## License
 
-`--check` refuses to run while `example.com:443` accepts a connection, starts model + API on loopback only, serves the prebuilt web same-origin, runs one SYNTHETIC intake, and checks the sockets of every Vitra process with psutil every 0.3 s. Any socket it sees that isn't loopback fails the run with exit code 4. On Windows it flags every UDP socket, because Windows doesn't report where UDP traffic goes.
-
-Captured on Nov 7 with Wi-Fi turned off from the menu bar (MacBook Air, Apple M5, 16 GB):
-
-```text
-[vitra    0.0s] offline confirmed: https://example.com is unreachable
-[vitra    0.2s] starting model server: Llama-3.2-3B-Instruct-Q4_K_M.gguf on 127.0.0.1:8080
-[vitra    2.4s] model server ready
-[vitra    3.2s] API ready (2033 items, model server up, Llama-3.2-3B-Instruct-Q4_K_M.gguf)
-[vitra    3.2s] cold start complete (browser would open now)
-[vitra    3.3s] API smoke: token enforced, 2033 evidence items served
-[vitra]         intake status=complete, 2 verified span(s) (classifying 3637 ms)
-[vitra    7.2s] no node process running under the launcher
-[vitra    7.2s] network audit passed: every socket seen was loopback only
-[vitra    7.2s] CHECK PASSED
-```
-
-Cold start to a working app took 3.2 s, and a pasted synthetic transcript came back with verified quotes in 3.6 s, all with no network.
+Code is MIT. The model is Llama 3.2 3B Instruct under the Llama 3.2 Community License (Built with Llama); its weights are not in this repository. Third-party licenses are in `LICENSES.md`. The organizer dataset is not included.
