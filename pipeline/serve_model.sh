@@ -12,6 +12,7 @@ PORT="${VITRA_LLM_PORT:-8080}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KEY_FILE="$ROOT/data/derived/llm_key.txt"
 
+# A busy port returns here, before this script reads or writes the key file.
 if lsof -nP -t -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   echo "serve_model.sh: port $PORT is already in use; leaving the key file unchanged" >&2
   exit 1
