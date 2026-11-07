@@ -12,7 +12,7 @@ const contractDir = fileURLToPath(new URL("../contracts", import.meta.url));
  * loopback or an XML namespace. Drop the scheme so they stay readable as plain text.
  */
 function stripDocUrls(): Plugin {
-  const keep = /^https?:\/\/(127\.0\.0\.1|localhost|www\.w3\.org)([:/]|$)/;
+  const keep = /^https?:\/\/(127\.0\.0\.1|localhost|www\.w3\.org|github\.com\/LavishSphere\/vitra)([:/#]|$)/;
   const strip = (code: string) =>
     code.replace(/https?:\/\/[A-Za-z0-9.-]+[^\s"'`)<>]*/g, (url) => (keep.test(url) ? url : url.replace(/^https?:\/\//, "")));
   return {
