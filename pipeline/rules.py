@@ -16,7 +16,7 @@ from typing import Any
 from .schema import ASPECTS, aspect, empty_prediction
 from .spans import sentence_bounds
 
-RULES_VERSION = "r2"
+RULES_VERSION = "r3"
 
 MODEL_SOURCES = frozenset({"pubmed", "press_release", "news", "transcript"})
 # sources where the model names the speaker (the quoted voice); others are fixed by source
