@@ -18,16 +18,20 @@ function useFocusTrap(active: boolean, onClose: () => void) {
     const prev = document.activeElement as HTMLElement | null;
     const root = ref.current;
     root?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    const focusItem = (el: HTMLElement) => {
+      el.focus();
+      el.scrollIntoView({ block: "nearest" });
+    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
       if (e.key !== "Tab" || !root) return;
       const items = [...root.querySelectorAll<HTMLElement>('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')]
-        .filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null);
+        .filter((el) => !el.hasAttribute("disabled") && el.getClientRects().length > 0);
       if (!items.length) return;
       const first = items[0];
       const last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); focusItem(last); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); focusItem(first); }
     };
     document.addEventListener("keydown", onKey);
     return () => {
@@ -110,7 +114,7 @@ function XRayBody({ item, aspectKey, onClose }: { item: EvidenceItem; aspectKey?
       </header>
 
       <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:overflow-hidden">
-        <section aria-label="Source text" className="scroll-thin border-border px-6 py-5 md:overflow-y-auto md:border-r">
+        <section aria-label="Source text" className="scroll-thin min-h-0 border-border px-6 py-5 md:overflow-y-auto md:border-r">
           <h3 className="mb-3 text-[13px] text-text-muted">Full source text</h3>
           <p className="text-[16.5px] leading-[1.75] text-text-2">
             {segments.map((seg) => {
@@ -151,7 +155,7 @@ function XRayBody({ item, aspectKey, onClose }: { item: EvidenceItem; aspectKey?
           </dl>
         </section>
 
-        <section aria-label="Scores and impact" className="scroll-thin px-6 py-5 md:overflow-y-auto">
+        <section aria-label="Scores and impact" className="scroll-thin min-h-0 px-6 py-5 md:overflow-y-auto">
           <h3 className="mb-2 text-[13px] text-text-muted">Aspects in this item</h3>
           <table className="w-full text-left text-[13px]">
             <thead className="text-[12px] text-text-muted">
