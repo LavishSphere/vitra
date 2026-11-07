@@ -14,12 +14,12 @@ export function DemoBanner() {
       aria-label="About this demo build"
     >
       <p>
-        <span className="font-medium text-text">Fake data on purpose.</span> This phone page uses invented evidence so
-        you can click around. The laptop demo next to it runs{" "}
-        <span className="text-text">Llama 3.2 3B</span> with the Wi-Fi off.
+        <span className="font-medium text-text">Fake data on purpose.</span> This page is invented evidence so you can
+        poke the UI. Anyone can clone the repo, drop in a Llama 3.2 3B GGUF, and run the real stack on their own
+        machine with no Wi-Fi. README has the steps.
       </p>
       <p className="mt-1 text-text-muted">
-        We didn't put a model in the browser this weekend. A tiny on-device model (~0.5B) is on the list for later.
+        No model in the browser yet. A ~0.5B on-device build is still later work.
       </p>
     </aside>
   );
