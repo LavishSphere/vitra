@@ -90,7 +90,7 @@ def test_ctgov_stop_reasons():
     p = apply_rules(
         _ct(
             "Status as of last update (2025-01-01): TERMINATED. "
-            'Reason given: "Sponsor decision, not related to safety concerns".'
+            'Reason given: "Business decision by the sponsor, with no safety issue".'
         )
     ).prediction
     assert p["safety"] is None and p["efficacy"] is None
