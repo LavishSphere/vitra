@@ -46,12 +46,16 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
   });
   const started = useRef(false);
   const overviewPos = useRef(new Vector3());
+  const overviewTarget = useRef(new Vector3());
   const goalPos = useRef(new Vector3());
   const goalTarget = useRef(new Vector3());
 
   // Where the overview is for the current viewport.
   const aspect = Math.max(0.3, (size.width - (size.width > 900 ? railPx : 0)) / Math.max(1, size.height));
-  overviewPos.current.copy(OVERVIEW.position).sub(OVERVIEW.target).multiplyScalar(overviewFit(aspect)).add(OVERVIEW.target);
+  const fit = overviewFit(aspect);
+  // On tall screens, aim lower so the lungs sit in the middle of the frame, not low in it.
+  overviewTarget.current.copy(OVERVIEW.target).setY(OVERVIEW.target.y - (fit - 1) * 2.4);
+  overviewPos.current.copy(OVERVIEW.position).sub(OVERVIEW.target).multiplyScalar(fit).add(overviewTarget.current);
 
   const begin = (toPos: Vector3, toTarget: Vector3, duration: number, arrival: boolean) => {
     const f = flight.current;
@@ -83,12 +87,12 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
     if (!controls || started.current) return;
     started.current = true;
     if (!animate || !useArrival.getState().arriving) {
-      snapTo(overviewPos.current, OVERVIEW.target);
+      snapTo(overviewPos.current, overviewTarget.current);
       useArrival.getState().finish();
       return;
     }
     snapTo(ARRIVAL_START.position, ARRIVAL_START.target);
-    begin(overviewPos.current, OVERVIEW.target, ARRIVAL_SECONDS, true);
+    begin(overviewPos.current, overviewTarget.current, ARRIVAL_SECONDS, true);
     // begin and snapTo only touch refs and the camera.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controls, animate]);
@@ -121,6 +125,7 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
       if (!cameraStation && !focusTumor) {
         // Keep pushing in, toward the refitted overview.
         f.toPos.copy(overviewPos.current);
+        f.toTarget.copy(overviewTarget.current);
         f.r1 = Math.hypot(f.toPos.x, f.toPos.z);
         return;
       }
@@ -128,7 +133,7 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
     }
     if (cameraStation) stationCamera(cameraStation, goalPos.current, goalTarget.current);
     else if (focusTumor) { goalPos.current.copy(TUMOR_VIEW.position); goalTarget.current.copy(TUMOR_VIEW.target); }
-    else { goalPos.current.copy(overviewPos.current); goalTarget.current.copy(OVERVIEW.target); }
+    else { goalPos.current.copy(overviewPos.current); goalTarget.current.copy(overviewTarget.current); }
     if (!animate) snapTo(goalPos.current, goalTarget.current);
     else begin(goalPos.current, goalTarget.current, FLIGHT_SECONDS, false);
     // Re-run on viewport changes so the overview refits.
