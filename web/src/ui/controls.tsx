@@ -40,14 +40,22 @@ export function Select<T extends string>({
   const btn = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const activeRef = useRef(0);
+  const openRef = useRef(false);
   activeRef.current = active;
+  openRef.current = open;
   const current = options.find((o) => o.value === value) ?? options[0];
   const isAll = value === ("all" as T);
   const selectedIndex = Math.max(0, options.findIndex((o) => o.value === value));
 
   const openAt = (index: number) => {
+    activeRef.current = index;
+    openRef.current = true;
     setActive(index);
     setOpen(true);
+  };
+  const closeMenu = () => {
+    openRef.current = false;
+    setOpen(false);
   };
 
   useEffect(() => {
@@ -56,7 +64,10 @@ export function Select<T extends string>({
     const row = document.getElementById(`${id}-${activeRef.current}`);
     row?.scrollIntoView({ block: "nearest" });
     const onDoc = (e: MouseEvent) => {
-      if (!list.current?.contains(e.target as Node) && !btn.current?.contains(e.target as Node)) setOpen(false);
+      if (!list.current?.contains(e.target as Node) && !btn.current?.contains(e.target as Node)) {
+        openRef.current = false;
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
@@ -71,7 +82,7 @@ export function Select<T extends string>({
     const option = options[i];
     if (!option) return;
     onChange(option.value);
-    setOpen(false);
+    closeMenu();
     btn.current?.focus();
   };
 
@@ -83,10 +94,17 @@ export function Select<T extends string>({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={`${id}-list`}
-        onClick={() => (open ? setOpen(false) : openAt(selectedIndex))}
+        onClick={() => (openRef.current ? closeMenu() : openAt(selectedIndex))}
         onKeyDown={(e) => {
-          // Once the menu is open the list owns the keys, one label per arrow.
-          if (open) return;
+          if (e.target !== e.currentTarget) return;
+          if (openRef.current) {
+            const next = stepIndex(activeRef.current, e.key, options.length);
+            if (next === null) return;
+            e.preventDefault();
+            activeRef.current = next;
+            setActive(next);
+            return;
+          }
           const index = openHighlight(selectedIndex, e.key, options.length);
           if (index === null) return;
           e.preventDefault();
@@ -110,9 +128,9 @@ export function Select<T extends string>({
           aria-activedescendant={`${id}-${active}`}
           onKeyDown={(e) => {
             const next = stepIndex(activeRef.current, e.key, options.length);
-            if (next !== null) { e.preventDefault(); setActive(next); return; }
+            if (next !== null) { e.preventDefault(); activeRef.current = next; setActive(next); return; }
             if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(activeRef.current); }
-            else if (e.key === "Escape" || e.key === "Tab") { setOpen(false); if (e.key === "Escape") btn.current?.focus(); }
+            else if (e.key === "Escape" || e.key === "Tab") { closeMenu(); if (e.key === "Escape") btn.current?.focus(); }
           }}
           className={`scroll-thin absolute top-full z-50 mt-1.5 max-h-80 min-w-48 overflow-auto rounded-lg border border-border bg-bg-elevated p-1 shadow-[var(--shadow-panel)] outline-none ${align === "right" ? "right-0" : "left-0"}`}
         >
