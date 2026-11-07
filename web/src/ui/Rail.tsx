@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ASPECTS, SPEAKERS, type AspectKey, type InsightCard, type Product, type Speaker } from "@contract/types.ts";
 import { useVitra, type RailTab } from "../store/useVitra.ts";
 import { TrendChart } from "./TrendChart.tsx";
@@ -9,6 +9,18 @@ import { PolarityChip } from "./controls.tsx";
 import { STATIONS } from "../data/stations.ts";
 import { rubricPoints, RUBRIC_TEXT } from "../data/confidence.ts";
 import { EXPECTED_VOICES } from "../data/gaps.ts";
+
+function useMaxWidth(px: number) {
+  const query = `(max-width: ${px}px)`;
+  const [on, setOn] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const m = window.matchMedia(query);
+    const fn = () => setOn(m.matches);
+    m.addEventListener("change", fn);
+    return () => m.removeEventListener("change", fn);
+  }, [query]);
+  return on;
+}
 
 const TABS: { id: RailTab; label: string }[] = [
   { id: "trends", label: "Trends" },
@@ -95,6 +107,7 @@ function TrendsSection() {
     const set = new Set(range);
     return trends.filter((c) => set.has(c.week) && c.speaker !== "all" && c.aspect !== "all");
   }, [trends, range]);
+  const stacked = useMaxWidth(639);
   const speakersPresent = useMemo(() => {
     const s = new Set<Speaker>();
     for (const c of inRange) if (c.n_items > 0 && products.includes(c.product)) s.add(c.speaker as Speaker);
@@ -134,7 +147,7 @@ function TrendsSection() {
             {products.map((p) => (
               <TrendChart
                 key={p}
-                compact={products.length > 1}
+                compact={products.length > 1 && !stacked}
                 title={ASPECT_LABEL[a]}
                 subtitle={products.length > 1 ? PRODUCT_LABEL[p] : undefined}
                 cells={inRange.filter((c) => c.product === p && c.aspect === a)}

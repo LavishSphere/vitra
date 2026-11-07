@@ -64,16 +64,16 @@ export function TrendChart({ title, cells, weeks, speakers, onOpen, compact, sub
         <span className="num text-[11px] text-text-muted">N = {totals}</span>
       </figcaption>
       <svg
-        width={W}
-        height={H}
         viewBox={`0 0 ${W} ${H}`}
-        className="block overflow-visible"
+        style={{ aspectRatio: `${W} / ${H}` }}
+        className="block h-auto w-full overflow-visible"
         role="img"
         aria-label={`${title}: weekly mean polarity by speaker, ${totals} items`}
         onMouseLeave={() => setHoverWeek(null)}
         onMouseMove={(e) => {
           const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-          const px = e.clientX - r.left;
+          if (r.width <= 0) return;
+          const px = ((e.clientX - r.left) / r.width) * W;
           const i = Math.round(((px - PAD.l) / iw) * (weeks.length - 1));
           setHoverWeek(i >= 0 && i < weeks.length ? i : null);
         }}
@@ -122,7 +122,7 @@ export function TrendChart({ title, cells, weeks, speakers, onOpen, compact, sub
       {hoverWeek !== null && (
         <div
           className="pointer-events-none absolute z-20 min-w-44 rounded-md border border-border bg-bg-elevated px-2.5 py-2 text-[11.5px] shadow-[var(--shadow-panel)]"
-          style={{ left: Math.min(x(hoverWeek) + 8, W - 150), top: 22 }}
+          style={{ left: `${(Math.min(x(hoverWeek) + 8, W - 150) / W) * 100}%`, top: 22 }}
         >
           <div className="num text-text-2">{weeks[hoverWeek]}</div>
           {hoverCells.length === 0 ? (
