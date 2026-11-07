@@ -137,8 +137,9 @@ If PowerShell blocks local scripts, use `scripts\run_offline.cmd --check` with t
 All three entry points (`run_offline.sh`, `.ps1`, `.cmd`) run `python -m app.launch`, so the checks and the socket audit are the same code on every OS.
 
 ```bash
-.venv/bin/python -m pipeline.predict --split unlabeled --out data/derived/predictions/unlabeled.jsonl
 PKG=starter/hackathon_package_2026-11-05
+.venv/bin/python -m pipeline.predict --items "$PKG/data/dev.full.jsonl" --out data/derived/dev_pred.jsonl
+.venv/bin/python -m pipeline.predict --items "$PKG/data/unlabeled.full.jsonl" --out data/derived/predictions/unlabeled.jsonl
 .venv/bin/python -I "$PKG/scoring/score.py" \
   --gold "$PKG/data/dev.jsonl" \
   --pred data/derived/dev_pred.jsonl \
