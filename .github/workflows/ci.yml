@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,7 +18,7 @@ jobs:
     name: Repo hygiene
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -58,12 +59,12 @@ jobs:
     name: Python tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: present
         run: |
           if ls pipeline/*.py app/*.py >/dev/null 2>&1; then echo "yes=true" >> "$GITHUB_OUTPUT"; else echo "yes=false" >> "$GITHUB_OUTPUT"; fi
       - if: steps.present.outputs.yes == 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.14"
           cache: pip
@@ -73,6 +74,12 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pytest
+      - if: steps.present.outputs.yes == 'true'
+        name: Lint
+        run: |
+          pip install ruff
+          ruff check .
+          ruff format --check .
       - if: steps.present.outputs.yes == 'true'
         name: Test
         # Tests that need the organizer dataset skip themselves; it is never in the repo.
@@ -87,19 +94,21 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: present
         working-directory: .
         run: |
           if [ -f web/package.json ]; then echo "yes=true" >> "$GITHUB_OUTPUT"; else echo "yes=false" >> "$GITHUB_OUTPUT"; fi
       - if: steps.present.outputs.yes == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
           cache: npm
           cache-dependency-path: web/package-lock.json
       - if: steps.present.outputs.yes == 'true'
         run: npm ci
+      - if: steps.present.outputs.yes == 'true'
+        run: npm run lint --if-present
       - if: steps.present.outputs.yes == 'true'
         run: npm run typecheck --if-present
       - if: steps.present.outputs.yes == 'true'
