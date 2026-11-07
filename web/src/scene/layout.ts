@@ -15,7 +15,7 @@ export interface CameraPose { position: Vec3; target: Vec3 }
 export const PANEL = { width: 2.05, height: 1.7, polarityStep: 0.3, padX: 0.14 };
 
 /** The floor the path is drawn on, just below the base of the lungs. */
-export const FLOOR_Y = -3.05;
+export const FLOOR_Y = -3.55;
 /** Glass plinth under each panel. The panel floats `gap` above its top face. */
 export const PLINTH = { radius: 1.08, height: 0.12, gap: 0.2 };
 
@@ -31,7 +31,7 @@ const FOOTPRINTS: [number, number][] = [
 /** Overview: high enough that the path reads as a path, framed on the lungs and all five stations. */
 export const OVERVIEW = {
   position: new Vector3(0, 8.4, 27.2),
-  target: new Vector3(0, -1.45, 4.6),
+  target: new Vector3(0, -1.75, 4.6),
 };
 
 export interface StationFrame {
