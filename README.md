@@ -72,8 +72,10 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 # 4. Cold start with Wi-Fi off (binds 127.0.0.1 only)
 scripts/run_offline.sh --check          # smoke + loopback audit
-scripts/run_offline.sh serve            # API + web at http://127.0.0.1:8000/#t=<token>
+scripts/run_offline.sh serve            # starts API + web; opens the browser for you
 ```
+
+`serve` prints a fresh random line like `X-Vitra-Token for this launch: …` and opens `http://127.0.0.1:8000/#t=…` with that same value in the URL fragment (the browser never sends the fragment to the server). If the browser does not open, copy the printed URL from the terminal. There is no account signup and no fixed token in the repo.
 
 Predict a split and score on the package (package path may differ on your machine):
 
