@@ -34,6 +34,8 @@ function stripDocUrls(): Plugin {
 }
 
 export default defineConfig({
+  // Public Pages build sets VITE_BASE=/ ; local and API-served builds keep ./
+  base: (process.env.VITE_BASE as string | undefined) || "./",
   plugins: [react(), tailwindcss(), stripDocUrls()],
   resolve: {
     alias: { "@contract": contractDir },

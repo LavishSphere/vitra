@@ -1,6 +1,7 @@
 import { Component, Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { useVitra } from "./store/useVitra.ts";
 import { TopBar } from "./ui/TopBar.tsx";
+import { DemoBanner } from "./ui/DemoBanner.tsx";
 import { Rail, RAIL_WIDTH } from "./ui/Rail.tsx";
 import { Timeline } from "./ui/Timeline.tsx";
 import { XRay } from "./ui/XRay.tsx";
@@ -66,6 +67,7 @@ export function App() {
   return (
     <div className="fixed inset-0 flex flex-col">
       <a href="#report" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:rounded focus:bg-bg-elevated focus:px-3 focus:py-1.5">Skip to the report</a>
+      <DemoBanner />
       <TopBar />
       <main className="relative min-h-0 flex-1 overflow-hidden">
         <div className="absolute inset-0">
