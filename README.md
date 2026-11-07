@@ -112,8 +112,8 @@ scripts/run_offline.sh serve
 `serve` prints `X-Vitra-Token for this launch: …` and opens `http://127.0.0.1:8000/#t=…`. No signup. No fixed token in the repo.
 
 ```bash
-.venv/bin/python -m pipeline.predict --split unlabeled --out data/derived/predictions/unlabeled.jsonl
 PKG=starter/hackathon_package_2026-11-05
+.venv/bin/python -m pipeline.predict --items "$PKG/data/unlabeled.full.jsonl" --out data/derived/predictions/unlabeled.jsonl
 .venv/bin/python -I "$PKG/scoring/score.py" \
   --gold "$PKG/data/dev.jsonl" \
   --pred data/derived/dev_pred.jsonl \
