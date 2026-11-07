@@ -8,7 +8,10 @@ press_release / news, the aspects with polarity and span, and the speaker for ne
 from __future__ import annotations
 
 import json
+import math
+import os
 import re
+from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
@@ -224,8 +227,50 @@ _EXAMPLE_SOURCES = {
 }
 
 
+SIMILARITY_CHARS = 600
+FEWSHOT_METHODS = ("tfidf", "tfidf-mixed", "jaccard")
+
+
+def _head(item: dict[str, Any]) -> str:
+    return f"{item.get('title') or ''} {(item.get('text') or '')[:SIMILARITY_CHARS]}".lower()
+
+
 def _words(item: dict[str, Any]) -> set[str]:
-    return set(_WORD.findall(f"{item.get('title') or ''} {(item.get('text') or '')[:600]}".lower()))
+    return set(_WORD.findall(_head(item)))
+
+
+def tfidf_similarity(query: dict[str, Any], docs: Sequence[dict[str, Any]]) -> dict[str, float]:
+    """Cosine similarity of `query` to each doc (keyed by item_id) on title + text head.
+
+    Sublinear tf and smoothed idf fitted on the docs plus the query. Standard library only.
+    """
+    tfs = {d["item_id"]: Counter(_WORD.findall(_head(d))) for d in docs}
+    q_tf = Counter(_WORD.findall(_head(query)))
+    n = len(tfs) + 1
+    df: Counter[str] = Counter()
+    for tf in [*tfs.values(), q_tf]:
+        df.update(tf.keys())
+    idf = {w: math.log((n + 1) / (c + 1)) + 1.0 for w, c in df.items()}
+
+    def unit(tf: Counter[str]) -> dict[str, float]:
+        v = {w: (1.0 + math.log(c)) * idf[w] for w, c in tf.items()}
+        norm = math.sqrt(sum(x * x for x in v.values())) or 1.0
+        return {w: x / norm for w, x in v.items()}
+
+    q = unit(q_tf)
+    return {iid: sum(x * q.get(w, 0.0) for w, x in unit(tf).items()) for iid, tf in tfs.items()}
+
+
+def jaccard_similarity(query: dict[str, Any], docs: Sequence[dict[str, Any]]) -> dict[str, float]:
+    """Word-set overlap of `query` with each doc (keyed by item_id)."""
+    w = _words(query)
+    return {d["item_id"]: len(w & _words(d)) / (len(w | _words(d)) or 1) for d in docs}
+
+
+def fewshot_method() -> str:
+    """Example ranking: 'tfidf' (same source first, then cosine) or 'jaccard' (overlap first)."""
+    m = os.environ.get("VITRA_FEWSHOT_METHOD", "tfidf")
+    return m if m in FEWSHOT_METHODS else "tfidf"
 
 
 def fewshot_k(source: str | None) -> int:
@@ -236,24 +281,30 @@ def fewshot_k(source: str | None) -> int:
 
 
 def select_fewshot(
-    item: dict[str, Any], pool: Sequence[dict[str, Any]], k: int = N_FEWSHOT
+    item: dict[str, Any],
+    pool: Sequence[dict[str, Any]],
+    k: int = N_FEWSHOT,
+    method: str | None = None,
 ) -> list[dict[str, Any]]:
     """Most similar labeled examples of a compatible source, at most 2 per signal type.
 
-    Deterministic. The pool must already exclude the item itself (and, in evaluation, its fold).
+    'tfidf' ranks the item's own source first, then TF-IDF cosine; 'jaccard' ranks by
+    word-set overlap and uses source only to break ties. Deterministic (final tie-break on
+    item_id). The item itself is always skipped; in evaluation the caller removes its fold.
     """
+    method = method or fewshot_method()
     srcs = _EXAMPLE_SOURCES.get(item.get("source") or "", ("pubmed",))
     cands = [
         p
         for p in pool
         if p.get("source") in srcs and p.get("text") and p["item_id"] != item.get("item_id")
     ]
-    w = _words(item)
+    sim = (jaccard_similarity if method == "jaccard" else tfidf_similarity)(item, cands)
 
-    def score(p: dict[str, Any]) -> tuple[float, int, str]:
-        pw = _words(p)
-        jac = len(w & pw) / (len(w | pw) or 1)
-        return (-jac, srcs.index(p["source"]), p["item_id"])
+    def score(p: dict[str, Any]) -> tuple[float, float, str]:
+        src_rank = float(srcs.index(p["source"]))
+        s = -round(sim[p["item_id"]], 12)
+        return (src_rank, s, p["item_id"]) if method == "tfidf" else (s, src_rank, p["item_id"])
 
     chosen: list[dict[str, Any]] = []
     per_signal: dict[str, int] = {}
