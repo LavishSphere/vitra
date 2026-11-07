@@ -1,0 +1,32 @@
+# Organizer package: the package asks teams not to post it publicly, so never commit it
+starter/
+*.zip
+hackathon_package_*/
+
+# Derived outputs contain package text (spans); private judge data never committed
+data/derived/*
+!data/derived/.gitkeep
+data/private/
+
+# Model weights
+models/*
+!models/.gitkeep
+*.gguf
+*.safetensors
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+
+# Tooling
+node_modules/
+dist/
+.vite/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+logs/
+*.log
+.DS_Store

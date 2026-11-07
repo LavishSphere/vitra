@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hygiene:
+    name: Repo hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Only project files are tracked
+        run: |
+          fail=0
+          check() { # $1 = message, $2 = matches
+            if [ -n "$2" ]; then echo "::error::$1"; echo "$2"; fail=1; fi
+          }
+          files=$(git ls-files)
+          check "Hidden folders or files outside the allowlist are tracked" \
+            "$(echo "$files" | grep -E '^\.' | grep -vE '^\.(github/|gitignore$|env\.example$)' || true)"
+          check "Uppercase markdown files outside the allowlist are tracked" \
+            "$(echo "$files" | grep -E '(^|/)[A-Z_]+\.md$' | grep -vE '(^|/)(README|ASSETS|LICENSES|LICENSE|CONTRACT)\.md$' || true)"
+          check "Internal notes folder is tracked" \
+            "$(echo "$files" | grep -E '^docs/' || true)"
+          check "Model weights, archives or raw data dumps are tracked" \
+            "$(echo "$files" | grep -E '\.(gguf|safetensors|bin|zip|jsonl)$' | grep -v '/fixtures/' || true)"
+          check "Organizer data paths are tracked" \
+            "$(echo "$files" | grep -E '^(starter|data/derived|data/private)/' | grep -v '\.gitkeep$' || true)"
+          big=$(git ls-files -z | xargs -0 -I{} sh -c 'test -f "{}" && [ $(wc -c < "{}") -gt 5242880 ] && echo "{}"' || true)
+          check "Files over 5 MB are tracked" "$big"
+          exit $fail
+
+      - name: No tool attribution in commit messages
+        run: |
+          msgs=$(git log --format='%H%n%B%n---' )
+          bad=$(echo "$msgs" | grep -iE '^co-authored-by:.*noreply@' | grep -viE 'users\.noreply\.github\.com' || true)
+          gen=$(echo "$msgs" | grep -iE 'generated (with|by) ' || true)
+          if [ -n "$bad$gen" ]; then echo "::error::Commit messages carry tool attribution"; echo "$bad"; echo "$gen"; exit 1; fi
+
+      - name: No em or en dashes in markdown
+        run: |
+          hits=$(git ls-files '*.md' | xargs -r grep -nP '[\x{2013}\x{2014}]' || true)
+          if [ -n "$hits" ]; then echo "::error::Em or en dashes found"; echo "$hits"; exit 1; fi
+
+  python:
+    name: Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: present
+        run: |
+          if ls pipeline/*.py app/*.py >/dev/null 2>&1; then echo "yes=true" >> "$GITHUB_OUTPUT"; else echo "yes=false" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.present.outputs.yes == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - if: steps.present.outputs.yes == 'true'
+        name: Install
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest
+      - if: steps.present.outputs.yes == 'true'
+        name: Test
+        # Tests that need the organizer dataset skip themselves; it is never in the repo.
+        run: python -m pytest -q
+      - if: steps.present.outputs.yes != 'true'
+        run: echo "No Python packages yet, skipping."
+
+  web:
+    name: Web build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - id: present
+        working-directory: .
+        run: |
+          if [ -f web/package.json ]; then echo "yes=true" >> "$GITHUB_OUTPUT"; else echo "yes=false" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.present.outputs.yes == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - if: steps.present.outputs.yes == 'true'
+        run: npm ci
+      - if: steps.present.outputs.yes == 'true'
+        run: npm run typecheck --if-present
+      - if: steps.present.outputs.yes == 'true'
+        run: npm run test --if-present
+      - if: steps.present.outputs.yes == 'true'
+        run: npm run build
+      - if: steps.present.outputs.yes == 'true'
+        name: Bundle makes no remote requests
+        # Warn-only until the frontend settles; flips to a hard failure before submission.
+        continue-on-error: true
+        run: |
+          hits=$(grep -rhoE 'https?://[a-zA-Z0-9.-]+' dist | sort -u | grep -vE '^https?://(127\.0\.0\.1|localhost|www\.w3\.org)' || true)
+          if [ -n "$hits" ]; then echo "::warning::Remote hosts referenced in the bundle"; echo "$hits"; exit 1; fi
+      - if: steps.present.outputs.yes != 'true'
+        working-directory: .
+        run: echo "No web app yet, skipping."
