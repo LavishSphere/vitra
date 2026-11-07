@@ -98,7 +98,11 @@ contracts/  shared shapes
 
 ## Setup and run (local, offline)
 
-Runs on macOS (Apple Silicon or Intel), Linux and Windows. Needs ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server` on PATH, and the organizer package under `starter/` (gitignored; PubMed rehydrated). On macOS, `brew install llama.cpp` gives you `llama-server` on both chip types. Apple Silicon and machines with an NVIDIA or AMD GPU run the model fastest; Intel Macs and CPU-only machines work too, just slower.
+Needs ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server`, and the organizer package under `starter/` (gitignored; PubMed rehydrated). A GPU runs the model fastest; CPU-only machines work too, just slower.
+
+### macOS and Linux
+
+Same steps on both. Get `llama-server` with `brew install llama.cpp` on macOS (Apple Silicon or Intel), or a Linux build from [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases).
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
