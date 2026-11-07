@@ -11,6 +11,7 @@ import { dataSource } from "../data/index.ts";
 import { weekSpan } from "../data/trends.ts";
 import { weeksBetween } from "../lib/isoWeek.ts";
 import { stationFor, type StationId } from "../data/stations.ts";
+import { gapFocus } from "../lib/gapFocus.ts";
 
 export type ProductFilter = "A" | "B" | "all";
 
@@ -71,6 +72,8 @@ interface VitraState {
 
   load(): Promise<void>;
   setFilter<K extends keyof Filters>(key: K, value: Filters[K]): void;
+  /** Point the scene and the timeline at one gap cell. Stays on the current rail tab. */
+  focusGap(gap: EvidenceGap): void;
   setWeekRange(from: string, to: string): void;
   resetFilters(): void;
   select(sel: Selection | null): void;
@@ -171,6 +174,18 @@ export const useVitra = create<VitraState>((set, get) => ({
   setFilter(key, value) {
     const filters = { ...get().filters, [key]: value };
     set({ filters, marks: buildMarks(get().evidence, filters, get().excluded, get().marks) });
+  },
+
+  focusGap(gap) {
+    const patch = gapFocus(gap, get().weeks);
+    const filters = { ...get().filters, ...patch };
+    set({
+      filters,
+      marks: buildMarks(get().evidence, filters, get().excluded, get().marks),
+      focusStation: stationFor(gap.aspect, gap.speaker),
+      focusTumor: false,
+      selection: null,
+    });
   },
 
   setWeekRange(from, to) {

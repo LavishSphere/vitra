@@ -9,6 +9,7 @@ import { PolarityChip } from "./controls.tsx";
 import { STATIONS } from "../data/stations.ts";
 import { rubricPoints, RUBRIC_TEXT } from "../data/confidence.ts";
 import { EXPECTED_VOICES } from "../data/gaps.ts";
+import { GAP_TITLE, gapCountLabel, gapEmptyLine, gapIntro, gapIsFocused, gapRowName } from "../lib/gapFocus.ts";
 
 function useMaxWidth(px: number) {
   const query = `(max-width: ${px}px)`;
@@ -21,6 +22,8 @@ function useMaxWidth(px: number) {
   }, [query]);
   return on;
 }
+
+const GAP_COLS = "grid grid-cols-[minmax(0,1.15fr)_minmax(0,1.7fr)_4.5rem_4.75rem] items-baseline";
 
 const TABS: { id: RailTab; label: string }[] = [
   { id: "trends", label: "Trends" },
@@ -249,41 +252,59 @@ function CardRow({ card }: { card: InsightCard }) {
 
 function GapsSection() {
   const gaps = useVitra((s) => s.gaps);
-  const product = useVitra((s) => s.filters.product);
+  const filters = useVitra((s) => s.filters);
+  const focusGap = useVitra((s) => s.focusGap);
+  const product = filters.product;
   const [all, setAll] = useState(false);
   const sourceKind = useVitra((s) => s.sourceKind);
+  const windowWeeks = gaps[0]?.window_weeks ?? 8;
   const matching = gaps
     .filter((g) => product === "all" || g.product === product)
     .sort((a, b) => (a.last_seen_week ?? "").localeCompare(b.last_seen_week ?? "") || a.speaker.localeCompare(b.speaker));
   const shown = all ? matching : matching.slice(0, 12);
+  const focused = matching.find((g) => gapIsFocused(filters, g));
   return (
     <div>
-      <SectionHead title="Where the evidence is thin">
-        Voices a launch team would expect to hear from, with little or no evidence in the last {gaps[0]?.window_weeks ?? 8} ISO weeks. N is the count in that window. Zero means missing, not neutral.
+      <SectionHead title={GAP_TITLE}>
+        {gapIntro(windowWeeks)}
       </SectionHead>
       {shown.length === 0 ? (
-        <p className="text-[13px] text-text-muted">No gaps for this product in the window.</p>
+        <p className="text-[13px] text-text-muted">{gapEmptyLine(product)}</p>
       ) : (
-        <table className="w-full text-left text-[12.5px]">
-          <thead className="text-text-muted">
-            <tr className="border-b border-border">
-              <th className="py-1.5 pr-2 font-normal">Product</th>
-              <th className="py-1.5 pr-2 font-normal">Missing voice</th>
-              <th className="py-1.5 pr-2 font-normal text-right">N</th>
-              <th className="py-1.5 font-normal text-right">Last seen</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {shown.map((g) => (
-              <tr key={`${g.product}-${g.speaker}-${g.aspect}`}>
-                <td className="py-2 pr-2 text-text-2">{PRODUCT_LABEL[g.product]}</td>
-                <td className="py-2 pr-2 text-text">{SPEAKER_LABEL[g.speaker]} on {ASPECT_LABEL[g.aspect].toLowerCase()}</td>
-                <td className="num py-2 pr-2 text-right text-text-2">{g.n_items_in_window}</td>
-                <td className="num py-2 text-right text-text-2">{g.last_seen_week ?? "never"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="text-[12.5px]">
+          <div className={`${GAP_COLS} border-b border-border text-text-muted`}>
+            <span className="py-1.5 pr-2">Product</span>
+            <span className="py-1.5 pr-2">Missing voice</span>
+            <span className="py-1.5 pr-2 text-right">Count</span>
+            <span className="py-1.5 text-right">Last seen</span>
+          </div>
+          <div className="divide-y divide-border">
+            {shown.map((g) => {
+              const on = gapIsFocused(filters, g);
+              const voice = `${SPEAKER_LABEL[g.speaker]} on ${ASPECT_LABEL[g.aspect].toLowerCase()}`;
+              return (
+                <button
+                  key={`${g.product}-${g.speaker}-${g.aspect}`}
+                  type="button"
+                  aria-pressed={on}
+                  aria-label={gapRowName(PRODUCT_LABEL[g.product], SPEAKER_LABEL[g.speaker], ASPECT_LABEL[g.aspect].toLowerCase(), g.n_items_in_window, g.window_weeks)}
+                  onClick={() => focusGap(g)}
+                  className={`${GAP_COLS} w-full py-2 text-left hover:bg-accent-soft ${on ? "bg-accent-soft" : ""}`}
+                >
+                  <span className="pr-2 text-text-2">{PRODUCT_LABEL[g.product]}</span>
+                  <span className="pr-2 text-text">{voice}</span>
+                  <span className="num pr-2 text-right text-text-2">{gapCountLabel(g.n_items_in_window)}</span>
+                  <span className="num text-right text-text-2">{g.last_seen_week ?? "never"}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {focused && (
+        <p role="status" className="mt-3 text-[12.5px] text-text-2">
+          Scene and timeline are on {PRODUCT_LABEL[focused.product]}, {SPEAKER_LABEL[focused.speaker].toLowerCase()} on {ASPECT_LABEL[focused.aspect].toLowerCase()}, {filters.weekFrom} to {filters.weekTo}.
+        </p>
       )}
       {matching.length > shown.length && (
         <button type="button" onClick={() => setAll(true)} className="mt-2 text-[12.5px] text-accent hover:text-accent-hover">

@@ -1,5 +1,6 @@
 import { useMemo, useRef, type KeyboardEvent, type PointerEvent } from "react";
 import { matchesAspect, matchesItem, useVitra } from "../store/useVitra.ts";
+import { rangeQuoteLabel } from "../lib/gapFocus.ts";
 import { shortWeek, weekMonthLabel } from "../lib/isoWeek.ts";
 
 /** ISO-week range scrubber with a histogram of matching quotes per week. */
@@ -83,7 +84,7 @@ export function Timeline() {
           <span className="num text-text">{shortWeek(weeks[i1])}</span>
           <span className="text-text-muted"> {weekMonthLabel(weeks[i1])}, {weeks[i1].slice(0, 4)}</span>
         </span>
-        <span className="num text-text-muted">{i1 - i0 + 1} weeks · {inRange} items with quotes</span>
+        <span className="num text-text-muted">{i1 - i0 + 1} weeks · {rangeQuoteLabel(inRange)}</span>
       </div>
       <div
         ref={track}
