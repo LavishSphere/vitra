@@ -482,10 +482,12 @@
   "product": "A",
   "speaker": "all",
   "aspect": "all",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": -2,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0047"
+  ]
  },
  {
   "week": "2025-W30",
@@ -572,11 +574,12 @@
   "product": "A",
   "speaker": "all",
   "aspect": "all",
-  "mean_polarity": -1,
-  "n_items": 1,
-  "n_sources": 1,
+  "mean_polarity": -0.33,
+  "n_items": 2,
+  "n_sources": 2,
   "item_ids": [
-   "SYN-0016"
+   "SYN-0016",
+   "SYN-0049"
   ]
  },
  {
@@ -596,11 +599,12 @@
   "product": "A",
   "speaker": "all",
   "aspect": "all",
-  "mean_polarity": 1,
-  "n_items": 1,
-  "n_sources": 1,
+  "mean_polarity": 0.67,
+  "n_items": 2,
+  "n_sources": 2,
   "item_ids": [
-   "SYN-0018"
+   "SYN-0018",
+   "SYN-0050"
   ]
  },
  {
@@ -1215,10 +1219,12 @@
   "product": "A",
   "speaker": "all",
   "aspect": "evidence_quality",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": -1,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0049"
+  ]
  },
  {
   "week": "2025-W38",
@@ -1235,11 +1241,12 @@
   "product": "A",
   "speaker": "all",
   "aspect": "evidence_quality",
-  "mean_polarity": 1,
-  "n_items": 1,
-  "n_sources": 1,
+  "mean_polarity": 0.5,
+  "n_items": 2,
+  "n_sources": 2,
   "item_ids": [
-   "SYN-0018"
+   "SYN-0018",
+   "SYN-0050"
   ]
  },
  {
@@ -1447,10 +1454,12 @@
   "product": "A",
   "speaker": "all",
   "aspect": "safety",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": -2,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0047"
+  ]
  },
  {
   "week": "2025-W30",
@@ -1533,11 +1542,12 @@
   "product": "A",
   "speaker": "all",
   "aspect": "safety",
-  "mean_polarity": -1,
-  "n_items": 1,
-  "n_sources": 1,
+  "mean_polarity": 0,
+  "n_items": 2,
+  "n_sources": 2,
   "item_ids": [
-   "SYN-0016"
+   "SYN-0016",
+   "SYN-0049"
   ]
  },
  {
@@ -2673,10 +2683,12 @@
   "product": "A",
   "speaker": "hcp",
   "aspect": "all",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": -2,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0047"
+  ]
  },
  {
   "week": "2025-W30",
@@ -3287,10 +3299,12 @@
   "product": "A",
   "speaker": "hcp",
   "aspect": "safety",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": -2,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0047"
+  ]
  },
  {
   "week": "2025-W30",
@@ -5815,10 +5829,12 @@
   "product": "A",
   "speaker": "researcher",
   "aspect": "all",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": 0,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0049"
+  ]
  },
  {
   "week": "2025-W38",
@@ -5835,11 +5851,12 @@
   "product": "A",
   "speaker": "researcher",
   "aspect": "all",
-  "mean_polarity": 1,
-  "n_items": 1,
-  "n_sources": 1,
+  "mean_polarity": 0.67,
+  "n_items": 2,
+  "n_sources": 2,
   "item_ids": [
-   "SYN-0018"
+   "SYN-0018",
+   "SYN-0050"
   ]
  },
  {
@@ -6441,10 +6458,12 @@
   "product": "A",
   "speaker": "researcher",
   "aspect": "evidence_quality",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": -1,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0049"
+  ]
  },
  {
   "week": "2025-W38",
@@ -6461,11 +6480,12 @@
   "product": "A",
   "speaker": "researcher",
   "aspect": "evidence_quality",
-  "mean_polarity": 1,
-  "n_items": 1,
-  "n_sources": 1,
+  "mean_polarity": 0.5,
+  "n_items": 2,
+  "n_sources": 2,
   "item_ids": [
-   "SYN-0018"
+   "SYN-0018",
+   "SYN-0050"
   ]
  },
  {
@@ -6747,10 +6767,12 @@
   "product": "A",
   "speaker": "researcher",
   "aspect": "safety",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": 1,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0049"
+  ]
  },
  {
   "week": "2025-W38",
@@ -7347,10 +7369,12 @@
   "product": "B",
   "speaker": "all",
   "aspect": "all",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": 0,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0048"
+  ]
  },
  {
   "week": "2025-W35",
@@ -7669,10 +7693,12 @@
   "product": "B",
   "speaker": "all",
   "aspect": "convenience",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": 1,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0048"
+  ]
  },
  {
   "week": "2025-W35",
@@ -8603,10 +8629,12 @@
   "product": "B",
   "speaker": "all",
   "aspect": "safety",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": -1,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0048"
+  ]
  },
  {
   "week": "2025-W35",
@@ -11949,10 +11977,12 @@
   "product": "B",
   "speaker": "patient",
   "aspect": "all",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": 0,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0048"
+  ]
  },
  {
   "week": "2025-W35",
@@ -12255,10 +12285,12 @@
   "product": "B",
   "speaker": "patient",
   "aspect": "convenience",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": 1,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0048"
+  ]
  },
  {
   "week": "2025-W35",
@@ -12561,10 +12593,12 @@
   "product": "B",
   "speaker": "patient",
   "aspect": "safety",
-  "mean_polarity": null,
-  "n_items": 0,
-  "n_sources": 0,
-  "item_ids": []
+  "mean_polarity": -1,
+  "n_items": 1,
+  "n_sources": 1,
+  "item_ids": [
+   "SYN-0048"
+  ]
  },
  {
   "week": "2025-W35",
