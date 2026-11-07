@@ -14,7 +14,6 @@ from pipeline.predict import (
 )
 from pipeline.schema import public_prediction
 
-
 ITEMS = [
     {"item_id": "A", "source": "news", "text": "Tagrisso helped in clinic today."},
     {"item_id": "B", "source": "news", "text": "Rybrevant rash was discussed."},
