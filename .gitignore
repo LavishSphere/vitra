@@ -1,5 +1,5 @@
 # Organizer package: the package asks teams not to post it publicly, so never commit it
-starter/
+starter
 *.zip
 hackathon_package_*/
 

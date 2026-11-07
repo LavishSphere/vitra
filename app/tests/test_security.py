@@ -51,3 +51,19 @@ def test_llm_url_loopback_detection() -> None:
     assert is_loopback_url("http://localhost:8080/v1")
     assert not is_loopback_url("https://api.example.com/v1")
     assert not is_loopback_url("http://192.168.0.4:8080")
+
+
+def test_listening_check_falls_back_to_psutil_without_lsof(monkeypatch) -> None:
+    """Windows has no lsof: the privacy status still reports facts, from psutil."""
+    import socket
+
+    from app import main
+
+    monkeypatch.setattr(main.shutil, "which", lambda name: None)
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        s.listen()
+        port = s.getsockname()[1]
+        ok, detail = main._listening_sockets()
+    assert ok is True
+    assert f"127.0.0.1:{port}" in detail and "(psutil)" in detail

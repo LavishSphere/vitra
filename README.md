@@ -98,7 +98,7 @@ contracts/  shared shapes
 
 ## Setup and run (local, offline)
 
-Needs Apple Silicon or Linux, ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server` on PATH, organizer package under `starter/` (gitignored; PubMed rehydrated).
+Needs macOS (Apple Silicon), Linux or Windows, ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server` on PATH, organizer package under `starter/` (gitignored; PubMed rehydrated).
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -111,6 +111,30 @@ scripts/run_offline.sh serve
 
 `serve` prints `X-Vitra-Token for this launch: …` and opens `http://127.0.0.1:8000/#t=…`. No signup. No fixed token in the repo.
 
+### Windows
+
+Same launcher, same flags. In PowerShell from the repo root:
+
+```powershell
+py -3 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+cd web
+npm ci
+npm run build
+cd ..
+# models\Llama-3.2-3B-Instruct-Q4_K_M.gguf
+# llama-server.exe: unzip a Windows build from github.com/ggml-org/llama.cpp/releases
+# (the cpu-x64 build needs no GPU; cuda and vulkan builds use one), then put its folder on PATH or:
+$env:VITRA_LLAMA_SERVER = "C:\llama.cpp\llama-server.exe"
+
+scripts\run_offline.ps1 --check
+scripts\run_offline.ps1 serve
+```
+
+If PowerShell blocks local scripts, use `scripts\run_offline.cmd --check` with the same arguments. Ctrl+C stops the model server and the API. WSL2 also works: follow the Linux steps inside a WSL shell, and if no browser opens, paste the printed URL into your Windows browser.
+
+All three entry points (`run_offline.sh`, `.ps1`, `.cmd`) run `python -m app.launch`, so the checks and the socket audit are the same code on every OS.
+
 ```bash
 .venv/bin/python -m pipeline.predict --split unlabeled --out data/derived/predictions/unlabeled.jsonl
 PKG=starter/hackathon_package_2026-11-05
@@ -122,4 +146,4 @@ PKG=starter/hackathon_package_2026-11-05
 
 ## Network off
 
-`--check` refuses to run while `https://example.com` answers, starts model + API on loopback only, serves the prebuilt web same-origin, runs one SYNTHETIC intake, and audits sockets.
+`--check` refuses to run while `example.com:443` accepts a connection, starts model + API on loopback only, serves the prebuilt web same-origin, runs one SYNTHETIC intake, and checks the sockets of every Vitra process with psutil every 0.3 s. Any socket it sees that isn't loopback fails the run with exit code 4. On Windows it flags every UDP socket, because Windows doesn't report where UDP traffic goes.
