@@ -73,11 +73,16 @@ jobs:
       - id: present
         run: |
           if ls pipeline/*.py app/*.py >/dev/null 2>&1; then echo "yes=true" >> "$GITHUB_OUTPUT"; else echo "yes=false" >> "$GITHUB_OUTPUT"; fi
-      - if: steps.present.outputs.yes == 'true'
+          if [ -f requirements.txt ]; then echo "pip_cache=true" >> "$GITHUB_OUTPUT"; else echo "pip_cache=false" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.present.outputs.yes == 'true' && steps.present.outputs.pip_cache == 'true'
         uses: actions/setup-python@v7
         with:
           python-version: "3.14"
           cache: pip
+      - if: steps.present.outputs.yes == 'true' && steps.present.outputs.pip_cache != 'true'
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
       - if: steps.present.outputs.yes == 'true'
         name: Install
         run: |
