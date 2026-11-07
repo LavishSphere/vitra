@@ -103,7 +103,8 @@ Runs on macOS (Apple Silicon or Intel), Linux and Windows. Needs ~8 GB free RAM,
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 (cd web && npm ci && npm run build)
-# models/Llama-3.2-3B-Instruct-Q4_K_M.gguf
+# Model: Llama-3.2-3B-Instruct-Q4_K_M.gguf from huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF into models/
+# sha256 6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff
 
 scripts/run_offline.sh --check
 scripts/run_offline.sh serve
