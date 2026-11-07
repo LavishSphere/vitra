@@ -48,7 +48,12 @@ def test_model_output_merged_with_rules():
         "span": "Osimertinib significantly prolonged PFS",
     }
     assert out["safety"]["span"] == "Toxicity was manageable"
-    assert out["evidence_quality"] is None
+    # the model's paraphrase is dropped; the rule fills the author caveat verbatim
+    assert out["evidence_quality"] == {
+        "polarity": -1,
+        "speaker": "researcher",
+        "span": "retrospective cohort",
+    }
     assert [d["aspect"] for d in out["_meta"]["dropped_spans"]] == ["evidence_quality"]
     assert out["_meta"]["method"] in {"model", "mixed"}
     assert prediction_errors(out, PUBMED["text"]) == []
@@ -173,7 +178,7 @@ def test_hybrid_moves_short_numeric_stub_to_later_clause():
     assert prediction_errors(out, item["text"]) == []
 
 
-def test_default_hybrid_policy_keeps_rules_where_explicit():
+def test_default_policy_keeps_rules_where_explicit():
     raw = {
         "signal_type": "regulatory",
         "actionable": "no",
@@ -184,7 +189,25 @@ def test_default_hybrid_policy_keeps_rules_where_explicit():
     # pubmed: signal and actionable from rules (phase 3 title -> actionable yes)
     assert out["signal_type"] == "efficacy" and out["actionable"] == "yes"
     assert out["efficacy"]["polarity"] == 2
-    assert out["evidence_quality"] is None  # hybrid keeps efficacy + safety only
+    # model evidence_quality is off; the pubmed caveat rule supplies it
+    assert out["evidence_quality"]["span"] == "retrospective cohort"
+    assert out["evidence_quality"]["polarity"] == -1
+
+
+def test_plain_hybrid_policy_leaves_evidence_quality_empty():
+    raw = {
+        "signal_type": "regulatory",
+        "actionable": "no",
+        "evidence_quality": {"polarity": -1, "span": "This was a retrospective cohort"},
+    }
+    out = classify_item(PUBMED, model_fn=fake_model(raw), policy=POLICIES["hybrid"])
+    assert out["evidence_quality"] is None
+
+
+def test_full_policy_has_no_rule_aspects():
+    raw = {"signal_type": "efficacy", "actionable": "no", "evidence_quality": None}
+    out = classify_item(PUBMED, model_fn=fake_model(raw), policy=POLICIES["full"])
+    assert out["evidence_quality"] is None  # rule_aspects is empty outside hybrid-evq
 
 
 def test_guide_anchors_make_polarity_milder():

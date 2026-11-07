@@ -115,7 +115,7 @@ POLICIES: dict[str, MergePolicy] = {
         max_span_words=20,
     ),
 }
-DEFAULT_POLICY = "hybrid"
+DEFAULT_POLICY = "hybrid-evq"
 
 
 def get_policy(name: str | None = None) -> MergePolicy:
