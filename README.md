@@ -45,7 +45,7 @@ Those labels feed weekly trends, insight cards and evidence gaps. Click any scor
 
 ## Results
 
-Organizer scorer (`score.py`) on the 60-item labeled dev set, 5-fold. The 240-item hidden test set is scored by the organizers.
+Organizer scorer (`score.py`) on the 60-item labeled dev set. The model column is leak-free 5-fold; rules have no training step. The 240-item hidden test set is scored by the organizers.
 
 | | Rules only | Rules + Llama 3.2 3B |
 |---|---|---|
@@ -59,14 +59,14 @@ Organizer scorer (`score.py`) on the 60-item labeled dev set, 5-fold. The 240-it
 | Citation validity | 1.000 | 1.000 |
 
 - Both columns were tuned on dev, so they're optimistic. Counting only the caveat phrases the labeling guide lists, the model column scores 0.859.
-- Rules fill only the few aspects they're sure of, so their quotes are tight. The model finds far more aspects (0.328 to 0.784) with looser quotes. Weakest area: efficacy on long PubMed abstracts.
-- The full 240-item test run took 569 s on an Apple M5 MacBook Air (16 GB), about 2.4 s per item.
+- Rules fill only the few aspects they're sure of, so their quotes are tight. The model finds far more aspects (0.328 to 0.784) with looser quotes.
+- The full 240-item test run took 569 s of wall time on an Apple M5 MacBook Air (16 GB), with 4 requests in parallel (25.3 items per minute).
 
 ## Works with the Wi-Fi off
 
-`scripts/run_offline.sh --check` refuses to start while the internet is reachable, then starts the model and API on `127.0.0.1`, runs one synthetic transcript through the model, and checks every Vitra process's sockets every 0.3 s. Any connection off the machine fails the run.
+`scripts/run_offline.sh --check` refuses to start while the internet is reachable, then starts the model and API on `127.0.0.1`, runs one synthetic transcript through the model, and checks every Vitra process's sockets every 0.3 s; any off-machine socket it sees fails the run. It's a sample, so a connection shorter than 0.3 s could slip between checks.
 
-Captured on Nov 7 with Wi-Fi turned off:
+Captured on Nov 7 with Wi-Fi turned off (excerpt):
 
 ```text
 [vitra    0.0s] offline confirmed: https://example.com is unreachable
@@ -81,7 +81,7 @@ Captured on Nov 7 with Wi-Fi turned off:
 [vitra    7.2s] CHECK PASSED
 ```
 
-Cold start to a working app took 3.2 s, and a pasted transcript came back with verified quotes in 3.6 s.
+The API was ready 3.2 s after a cold start, and the synthetic transcript was classified in 3.6 s with verified quotes.
 
 ## One transcript, end to end
 
@@ -122,7 +122,7 @@ Real: the labels, quotes, trends and offline run. Illustrative: the 3D anatomy. 
 
 ## Setup
 
-Needs ~8 GB free RAM, Python 3.11+, Node 20+, `llama-server`, and the organizer package under `starter/` (gitignored; PubMed rehydrated).
+Needs Python 3.11+, Node 20+, `llama-server`, the model file (about 2 GB), and the organizer package under `starter/` (gitignored; PubMed rehydrated).
 
 ### Linux / macOS
 
