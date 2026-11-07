@@ -121,11 +121,11 @@ def _week(raw: str | None, name: str) -> str | None:
     return raw or None
 
 
-def _listening_sockets() -> tuple[bool | None, str]:
-    """Ask lsof which TCP addresses this process is listening on."""
+def _lsof_listen_addrs() -> list[str] | None:
+    """TCP addresses this process listens on, per lsof (None if lsof is missing or fails)."""
     lsof = shutil.which("lsof")
     if not lsof:
-        return None, "lsof not available; not checked"
+        return None
     try:
         out = subprocess.run(
             [lsof, "-nP", "-a", "-p", str(os.getpid()), "-iTCP", "-sTCP:LISTEN", "-Fn"],
@@ -133,16 +133,43 @@ def _listening_sockets() -> tuple[bool | None, str]:
             text=True,
             timeout=3,
         ).stdout
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        return None, f"lsof failed ({type(exc).__name__}); not checked"
-    addrs = sorted({line[1:] for line in out.splitlines() if line.startswith("n")})
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return sorted({line[1:] for line in out.splitlines() if line.startswith("n")})
+
+
+def _psutil_listen_addrs() -> list[str] | None:
+    """The same list from psutil, for systems without lsof (Windows, minimal Linux)."""
+    try:
+        import psutil
+    except ImportError:
+        return None
+    try:
+        conns = psutil.Process().net_connections(kind="tcp")
+    except (psutil.Error, OSError):
+        return None
+    addrs = set()
+    for c in conns:
+        if c.status == psutil.CONN_LISTEN and c.laddr:
+            ip, port = c.laddr[0], c.laddr[1]
+            addrs.add(f"[{ip}]:{port}" if ":" in ip else f"{ip}:{port}")
+    return sorted(addrs)
+
+
+def _listening_sockets() -> tuple[bool | None, str]:
+    """Which TCP addresses this process listens on: lsof if present, else psutil."""
+    addrs, tool = _lsof_listen_addrs(), "lsof"
+    if addrs is None:
+        addrs, tool = _psutil_listen_addrs(), "psutil"
+    if addrs is None:
+        return None, "neither lsof nor psutil could list this process's sockets; not checked"
     if not addrs:
         return (
             None,
             "no listening TCP socket found for this process (e.g. running under a test client)",
         )
     ok = all(is_loopback_ip(a.rsplit(":", 1)[0]) for a in addrs)
-    return ok, "listening on " + ", ".join(addrs)
+    return ok, f"listening on {', '.join(addrs)} ({tool})"
 
 
 def create_app(
