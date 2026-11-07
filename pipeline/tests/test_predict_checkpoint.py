@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 
 from pipeline.predict import (
@@ -12,7 +13,6 @@ from pipeline.predict import (
     rewrite_checkpoint,
 )
 from pipeline.schema import public_prediction
-import threading
 
 
 ITEMS = [
