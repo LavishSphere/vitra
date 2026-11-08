@@ -39,8 +39,9 @@ jobs:
             "$(echo "$files" | grep -E '\.(gguf|safetensors|bin|zip|jsonl)$' | grep -v '/fixtures/' || true)"
           check "Organizer data paths are tracked" \
             "$(echo "$files" | grep -E '^(starter|data/derived|data/private)(/|$)' | grep -v '\.gitkeep$' || true)"
-          big=$(git ls-files -z | xargs -0 -I{} sh -c 'test -f "{}" && [ $(wc -c < "{}") -gt 5242880 ] && echo "{}"' || true)
-          check "Files over 5 MB are tracked" "$big"
+          # README screenshots and GIFs may be up to 10 MB; everything else stays under 5 MB.
+          big=$(git ls-files -z | xargs -0 -I{} sh -c 'f="{}"; test -f "$f" || exit 0; lim=5242880; case "$f" in web/screenshots/*) lim=10485760;; esac; [ $(wc -c < "$f") -gt $lim ] && echo "$f"' || true)
+          check "Files over the size limit are tracked (5 MB, or 10 MB for web/screenshots)" "$big"
           exit $fail
 
       - name: No tool attribution in commit messages
