@@ -161,18 +161,18 @@
   "iso_week": "2025-W17",
   "product": "A",
   "title": "Synthetic label revision notice for Tagrisso (demo)",
-  "text": "This is an invented label revision used for demonstration. The revised section adds monitoring language for a cardiac adverse reaction. Prescribers are advised to assess cardiac function at baseline and during treatment as clinically indicated.",
+  "text": "This is an invented label revision used for demonstration. The revised section updates the storage section with room-temperature handling language for the demo pack.",
   "signal_type": "regulatory",
   "actionable": "yes",
   "origin": "synthetic_demo",
   "aspects": [
    {
     "aspect": "safety",
-    "polarity": -1,
+    "polarity": 0,
     "speaker": "regulator",
-    "span": "The revised section adds monitoring language for a cardiac adverse reaction.",
+    "span": "The revised section updates the storage section",
     "span_start": 59,
-    "span_end": 135
+    "span_end": 106
    }
   ],
   "confidence": {
