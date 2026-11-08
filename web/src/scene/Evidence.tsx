@@ -12,10 +12,11 @@ import { PULSE_TRAVEL } from "./Pulses.tsx";
 import { cellScale, columnCenter, columnOf, groupMarks } from "../data/cells.ts";
 
 const CAPACITY = 8192;
-const BASE = 0.085;
+// Dot radius. With 10 columns the biggest dot (BASE * MAX_SCALE * 2) stays narrower than a column.
+const BASE = 0.062;
 /** Time columns per 3D card and the biggest dot, so neighbors don't overlap. */
 const COLUMNS = 10;
-const MAX_SCALE = 1.5;
+const MAX_SCALE = 1.45;
 
 interface Layout { positions: Float32Array; weights: Float32Array; count: number; }
 
@@ -116,8 +117,8 @@ export function Evidence({ animate }: { animate: boolean }) {
       const w = layout.weights[i];
       if (m && m.visible && w > 0) {
         target = (m.excluded ? 0.75 : 1) * w;
-        if (m.key === hovered) target = w * 1.35;
-        if (m.key === selectedKey) target = w * 1.5;
+        if (m.key === hovered) target = w * 1.15;
+        if (m.key === selectedKey) target = w * 1.3;
         const land = animate ? landAt.get(m.key) : undefined;
         if (land !== undefined) {
           const since = now - land;
@@ -152,8 +153,12 @@ export function Evidence({ animate }: { animate: boolean }) {
 
   const onMove = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
+    // Sticky hover: keep the current dot while the pointer is still over it, so two touching
+    // dots can't trade the hover back and forth every frame.
+    const current = useVitra.getState().hovered;
+    if (current && e.intersections.some((h) => h.object === mesh.current && h.instanceId !== undefined && byIndex[h.instanceId]?.key === current)) return;
     const m = e.instanceId !== undefined ? byIndex[e.instanceId] : undefined;
-    if (m && m.visible) { hover(m.key); document.body.style.cursor = "pointer"; }
+    if (m && m.visible && layout.weights[m.index] > 0) { hover(m.key); document.body.style.cursor = "pointer"; }
   };
   const onOut = () => { hover(null); document.body.style.cursor = ""; };
   const onClick = (e: ThreeEvent<MouseEvent>) => {
