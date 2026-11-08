@@ -5,6 +5,7 @@ import { MECHANISM_CAPTION, verifiedFacts } from "../data/biomedical.ts";
 import { STATIONS } from "../data/stations.ts";
 import { useArrival } from "../scene/arrival.ts";
 import { openDiveFrom } from "../scene/cell/store.ts";
+import { GuidedExperience } from "./GuidedExperience.tsx";
 
 export function SceneOverlay({ is3d }: { is3d: boolean }) {
   const focusStation = useVitra((s) => s.focusStation);
@@ -47,6 +48,7 @@ export function SceneOverlay({ is3d }: { is3d: boolean }) {
       )}
       <Legend is3d={is3d} />
       {is3d && <FirstHint />}
+      {is3d && <GuidedExperience />}
       {is3d && <SkipArrival />}
       {is3d && !focusTumor && (
         <p className="pointer-events-none absolute right-4 top-5 text-[11.5px] text-text-muted max-md:hidden">
