@@ -103,8 +103,8 @@ function useKeyboardShortcuts() {
       const s = useVitra.getState();
       // A dialog that handled the key (X-Ray or dive Esc) keeps the scene where it is.
       if (e.defaultPrevented || s.selection) return;
-      const t = e.target as HTMLElement;
-      if (t.closest("input, textarea, [role=listbox], [role=slider]") || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target instanceof Element ? e.target : null;
+      if ((el && el.closest("input, textarea, [role=listbox], [role=slider]")) || e.metaKey || e.ctrlKey || e.altKey) return;
       // Escape closes the tumor facts card first; key 0 (and Escape with no card) leave the zoom.
       if (e.key === "Escape" && s.tumorCardOpen) { s.setTumorCardOpen(false); return; }
       if (e.key === "0" || e.key === "Escape") { s.clearFocus(); }
