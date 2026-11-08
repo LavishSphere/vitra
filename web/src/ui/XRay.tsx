@@ -80,10 +80,16 @@ export function XRay() {
 
 function XRayBody({ item, aspectKey, onClose }: { item: EvidenceItem; aspectKey?: string; onClose: () => void }) {
   const select = useVitra((s) => s.select);
+  const diveTo = useVitra((s) => s.diveTo);
   const aspects = displayableAspects(item);
   const hidden = item.aspects.length - aspects.length;
   const current: AspectEvidence | undefined = aspects.find((a) => a.aspect === aspectKey) ?? aspects[0];
   const segments = useMemo(() => segmentText(item.text, aspects), [item.text, aspects]);
+  const diveToQuote = () => {
+    if (!current) return;
+    select(null);
+    diveTo(item.item_id, current.aspect);
+  };
 
   return (
     <>
@@ -103,14 +109,25 @@ function XRayBody({ item, aspectKey, onClose }: { item: EvidenceItem; aspectKey?
           </div>
           <h2 id="xray-title" className="text-[19px] font-medium leading-snug text-text">{item.title}</h2>
         </div>
-        <button
-          type="button"
-          data-autofocus
-          onClick={onClose}
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-border px-2.5 py-1 text-[12.5px] text-text-2 hover:border-border-strong hover:text-text"
-        >
-          Close <kbd className="num rounded border border-border px-1 text-[10.5px] text-text-muted">Esc</kbd>
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {current && (
+            <button
+              type="button"
+              onClick={diveToQuote}
+              className="rounded-lg border border-border px-2.5 py-1 text-[12.5px] text-text-2 hover:border-border-strong hover:text-text"
+            >
+              Dive to quote
+            </button>
+          )}
+          <button
+            type="button"
+            data-autofocus
+            onClick={onClose}
+            className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-1 text-[12.5px] text-text-2 hover:border-border-strong hover:text-text"
+          >
+            Close <kbd className="num rounded border border-border px-1 text-[10.5px] text-text-muted">Esc</kbd>
+          </button>
+        </div>
       </header>
 
       <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:overflow-hidden">
