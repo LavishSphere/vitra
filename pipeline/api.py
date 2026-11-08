@@ -68,6 +68,8 @@ class MergePolicy:
     rule_aspects: frozenset[str] = frozenset()
     # keep one aspect per quote: when the model reuses a span, the more specific aspect wins
     dedupe_spans: bool = False
+    # aspects where a rule quote (a guide phrase) replaces the model's quote and polarity
+    prefer_rule: frozenset[str] = frozenset()
     extra: dict[str, Any] = field(default_factory=dict, compare=False)
 
 
@@ -91,6 +93,27 @@ POLICIES: dict[str, MergePolicy] = {
         aspects=frozenset({"efficacy", "safety"}),
         shorten_words=12,
         rule_aspects=frozenset({"evidence_quality"}),
+    ),
+    # hybrid-evq plus rule efficacy for pubmed when the model leaves it empty or its quote
+    # is not in the text (guide efficacy cues in a sentence that names our product)
+    "hybrid-evq-eff": MergePolicy(
+        "hybrid-evq-eff",
+        signal_sources=frozenset(),
+        actionable_sources=_TEXT_SOURCES,
+        aspects=frozenset({"efficacy", "safety"}),
+        shorten_words=12,
+        rule_aspects=frozenset({"evidence_quality", "efficacy"}),
+    ),
+    # hybrid-evq-eff plus ruling 8 safety anchors; guide phrases found by the rules win
+    # over the model's quote for efficacy and safety
+    "hybrid-evq-eff2": MergePolicy(
+        "hybrid-evq-eff2",
+        signal_sources=frozenset(),
+        actionable_sources=_TEXT_SOURCES,
+        aspects=frozenset({"efficacy", "safety"}),
+        shorten_words=12,
+        rule_aspects=frozenset({"evidence_quality", "efficacy", "safety"}),
+        prefer_rule=frozenset({"efficacy", "safety"}),
     ),
     # pasted transcripts (advisory boards, field notes): every aspect counts, since convenience
     # and access are what a launch team listens for; one aspect per quote
@@ -127,7 +150,7 @@ POLICIES: dict[str, MergePolicy] = {
         max_span_words=20,
     ),
 }
-DEFAULT_POLICY = "hybrid-evq"
+DEFAULT_POLICY = "hybrid-evq-eff2"
 TRANSCRIPT_POLICY = "transcript"
 
 
@@ -225,7 +248,9 @@ def merge_model_output(
             overrode = True
         pred[a] = aspect(pol, speaker, snapped)
     for a in policy.rule_aspects:
-        if pred.get(a) is None and rule.prediction.get(a) is not None:
+        if rule.prediction.get(a) is None:
+            continue
+        if pred.get(a) is None or a in policy.prefer_rule:
             pred[a] = rule.prediction[a]
     if policy.dedupe_spans:
         _dedupe_spans(pred, dropped)

@@ -8,7 +8,8 @@ import { TUMOR_POSITION } from "../scene/anatomy.ts";
 import { signedPolarity, humanize } from "../lib/format.ts";
 import { polarityCss } from "../theme.ts";
 
-const TUMOR_ANCHOR = TUMOR_POSITION.clone().add(new Vector3(-0.2, 0.32, 0));
+// To the right of the hotspot, over the lung glass, so it stays clear of the station on the left.
+const TUMOR_ANCHOR = TUMOR_POSITION.clone().add(new Vector3(0.24, 0.02, 0.3));
 
 /** DOM labels pinned to scene positions. Focusable, so the stations work from the keyboard. */
 export function SceneLabels() {
@@ -60,7 +61,7 @@ export function SceneLabels() {
           type="button"
           onClick={() => setFocusTumor(!focusTumor)}
           aria-pressed={focusTumor}
-          className="pointer-events-auto -translate-x-full -translate-y-full flex items-center gap-2 whitespace-nowrap rounded-full border border-border bg-bg/70 py-1 pl-2 pr-3 text-[12px] text-text-2 backdrop-blur-md transition-colors hover:border-border-strong hover:text-text"
+          className="pointer-events-auto -translate-y-1/2 flex items-center gap-2 whitespace-nowrap rounded-full border border-border bg-bg/70 py-1 pl-2 pr-3 text-[12px] text-text-2 backdrop-blur-md transition-colors hover:border-border-strong hover:text-text"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-magenta" />
           Tumor hotspot

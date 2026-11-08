@@ -1,4 +1,4 @@
-"""Pubmed author caveats -> evidence_quality. Synthetic sentences built around caveat phrases."""
+"""Pubmed author caveats -> evidence_quality. Invented sentences built around the guide's caveat phrases."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from pipeline.rules import apply_rules, evidence_caveat
     ("text", "span"),
     [
         (
-            "METHODS: We conducted a retrospective cohort study of 80 patients.",
+            "Methods: the team ran a retrospective cohort study of 52 invented cases.",
             "retrospective cohort study",
         ),
         (
@@ -19,7 +19,7 @@ from pipeline.rules import apply_rules, evidence_caveat
             "retrospectively analyzed",
         ),
         (
-            "OS did not reach statistical significance, possibly due to immature data.",
+            "Survival missed significance in this toy example, possibly due to immature data.",
             "possibly due to immature data",
         ),
         ("Results are limited by a small sample size.", "small sample size"),
@@ -38,16 +38,18 @@ def test_caveat_phrases_give_minus_one_with_the_shortest_span(text: str, span: s
 
 
 def test_clause_cue_keeps_the_limiting_clause() -> None:
-    text = "PFS improved, although high crossover rates prevented them demonstrating an OS benefit."
+    text = "Median PFS was longer, although early unblinding prevented the authors demonstrating a survival gain."
     pol, span = evidence_caveat(text) or (None, "")
     assert pol == -1
-    assert span in text and "prevented them demonstrating" in span and "PFS improved" not in span
+    assert (
+        span in text and "prevented the authors demonstrating" in span and "Median PFS" not in span
+    )
 
 
 @pytest.mark.parametrize(
     "text",
     [
-        "Further evaluation of the regimen is not warranted in these subsets.",  # efficacy call
+        "More testing of the doublet is not warranted for these subgroups.",  # efficacy call
         "Previous retrospective studies suggested a benefit; we ran a randomized trial.",
         "Real-world outcomes were compared between two cohorts.",
         "Enrollment in trials was explored but limited by availability.",
