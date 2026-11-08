@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { AdaptiveDpr, OrbitControls, PerformanceMonitor } from "@react-three/drei";
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { OrbitControls, PerformanceMonitor } from "@react-three/drei";
 import { Lungs } from "./Lungs.tsx";
 import { Floor } from "./Stage.tsx";
 import { Stations } from "./Stations.tsx";
@@ -33,7 +32,9 @@ function FpsProbe() {
 }
 
 export function Observatory({ animate, railPx }: { animate: boolean; railPx: number }) {
-  const [dpr, setDpr] = useState(1.5);
+  // One resolution for the whole session. Every resolution change resizes the canvas and shows a
+  // black frame, so it may only step down once, and only if the machine keeps struggling.
+  const [dpr, setDpr] = useState(() => Math.min(2, Math.max(1, window.devicePixelRatio || 1)));
   const deselect = useVitra((s) => s.setFocusTumor);
   // The cell dive covers the observatory with its own canvas, so stop drawing this one meanwhile.
   const covered = useCellDive((s) => s.covering);
@@ -41,8 +42,9 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
   const homeOnExit = useVitra((s) => s.focusStation === null && !s.focusTumor);
 
   return (
+    <>
     <Canvas
-      dpr={[1, Math.min(2, dpr)]}
+      dpr={dpr}
       gl={{ antialias: false, powerPreference: "high-performance", alpha: false, stencil: false }}
       camera={{ fov: 34, near: 0.1, far: 120, position: (animate ? ARRIVAL_START : OVERVIEW).position.toArray() }}
       frameloop={covered ? "never" : "always"}
@@ -50,8 +52,7 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
       aria-label="Interactive 3D lung observatory"
     >
       <color attach="background" args={["#0a0e17"]} />
-      <PerformanceMonitor onIncline={() => setDpr(2)} onDecline={() => setDpr(1)} flipflops={3} />
-      <AdaptiveDpr />
+      <PerformanceMonitor onFallback={() => setDpr(1)} flipflops={2} />
       <OrbitControls
         makeDefault
         enablePan={false}
@@ -76,10 +77,9 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
       <Pulses />
       <FpsProbe />
       <LabelProjector />
-      <EffectComposer multisampling={4}>
-        <Bloom mipmapBlur luminanceThreshold={0.85} luminanceSmoothing={0.2} intensity={0.85} radius={0.72} />
-        <Vignette offset={0.32} darkness={0.62} />
-      </EffectComposer>
+      {/* No post-processing pass here: on Mac GPUs it dropped whole frames (black flashes). Edge darkening is CSS. */}
     </Canvas>
+    <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(4, 6, 11, 0.55) 100%)" }} />
+    </>
   );
 }

@@ -199,7 +199,8 @@ export function flowMaterial(color: Color, size: number): ShaderMaterial {
       void main() {
         vSeed = aSeed;
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = uSize * (0.6 + 0.6 * aSeed) * (300.0 / -mv.z);
+        // Capped: unbounded sprites near the camera pop when the GPU clamps them.
+        gl_PointSize = min(uSize * (0.6 + 0.6 * aSeed) * (300.0 / max(-mv.z, 0.001)), 28.0);
         gl_Position = projectionMatrix * mv;
       }
     `,
