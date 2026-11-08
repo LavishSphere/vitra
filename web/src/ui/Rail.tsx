@@ -121,8 +121,8 @@ function TrendsSection() {
 
   return (
     <div>
-      <SectionHead title="Weekly polarity by speaker">
-        Mean polarity per ISO week of publication, from {"−"}2 to +2. A week with no evidence is left empty. Dot size grows with N.
+      <SectionHead title="Polarity by speaker over time">
+        Mean polarity by week of publication, from {"−"}2 to +2. Long ranges group neighboring weeks, up to 16 steps per chart. A step with no evidence is left empty. Dot size grows with N.
       </SectionHead>
       {f.product === "all" && (
         <p className="mb-3 border-l-2 border-border-strong pl-3 text-[12.5px] leading-relaxed text-text-2">
