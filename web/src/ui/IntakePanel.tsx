@@ -383,7 +383,7 @@ function Classification({ result, stop, compact }: { result: IntakeResult; stop:
               <button
                 type="button"
                 onClick={() => select({ itemId: ev.item_id, aspect: a.aspect })}
-                aria-label={`${ASPECT_LABEL[a.aspect]}, ${SPEAKER_LABEL[a.speaker]}, ${POLARITY_WORD[a.polarity]}. Open the quote in the X-Ray.`}
+                aria-label={`${ASPECT_LABEL[a.aspect]}, ${SPEAKER_LABEL[a.speaker]}, ${POLARITY_WORD[a.polarity]}. Open the source and see the quote.`}
                 className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${active ? "border-accent/70 bg-accent-soft" : "border-border hover:border-border-strong hover:bg-bg-hover"}`}
               >
                 <span className="flex items-center justify-between gap-2 text-[12px]">

@@ -149,7 +149,7 @@ export function Evidence({ animate }: { animate: boolean }) {
     e.stopPropagation();
     const m = e.instanceId !== undefined ? byIndex[e.instanceId] : undefined;
     if (!m || !m.visible) return;
-    // Primary path is Evidence X-Ray (judge moment). Shift-click keeps the spectral dive.
+    // Primary path opens the source with the quote marked. Shift-click keeps the spectral dive.
     if (e.nativeEvent.shiftKey) useVitra.getState().diveTo(m.item.item_id, m.aspect.aspect);
     else useVitra.getState().select({ itemId: m.item.item_id, aspect: m.aspect.aspect });
   };

@@ -7,7 +7,7 @@ import { ASPECT_LABEL, SPEAKER_LABEL } from "./options.ts";
 
 /**
  * The 2.5D view: used when WebGL isn't available, when reduced motion is on, or by choice.
- * Same store, same marks, same X-Ray. No animation loop.
+ * Same store, same marks, same quote panel. No animation loop.
  */
 export function Flat2D({ railPx }: { railPx: number }) {
   const marks = useVitra((s) => s.marks);

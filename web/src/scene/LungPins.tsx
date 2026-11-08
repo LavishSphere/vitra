@@ -330,7 +330,7 @@ export function LungPinLabels() {
           <div key={id} ref={anchorRef(`lungpin-${id}`, pinAnchor(id))} className="absolute left-0 top-0 will-change-transform">
             <button
               type="button"
-              aria-label={`Lung safety evidence ${id}, ${h.item.iso_week}, ${p === null ? "source text mention, no polarity" : `${POLARITY_WORD[p]} ${signedPolarity(p)}`}. Open in the Evidence X-Ray.`}
+              aria-label={`Lung safety evidence ${id}, ${h.item.iso_week}, ${p === null ? "source text mention, no polarity" : `${POLARITY_WORD[p]} ${signedPolarity(p)}`}. Open the source and see the quote.`}
               onFocus={() => setHovered(id)}
               onBlur={() => setHovered(null)}
               onClick={() => select({ itemId: id, ...(h.aspect ? { aspect: h.aspect } : {}) })}

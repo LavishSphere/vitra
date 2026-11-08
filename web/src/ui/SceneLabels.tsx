@@ -102,7 +102,7 @@ function MarkTooltip({ mark }: { mark: Mark }) {
         </div>
         <p className="mt-1 line-clamp-3 text-[13px] leading-snug text-text">&ldquo;{a.span}&rdquo;</p>
         <p className="mt-1.5 text-[11.5px] text-text-2">
-          {humanize(a.aspect)} · {a.speaker}{mark.excluded ? " · excluded" : ""} · click for X-Ray · shift-click to dive
+          {humanize(a.aspect)} · {a.speaker}{mark.excluded ? " · excluded" : ""} · click to see the quote · shift-click to dive
         </p>
       </div>
     </div>
