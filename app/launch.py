@@ -262,7 +262,9 @@ def stack_root_pids(api_port: int, llm_port: int) -> list[int]:
     return list(found)
 
 
-def audit_running_stack(api_port: int = 8000, llm_port: int = 8080) -> tuple[list[str], list[int], list[int]]:
+def audit_running_stack(
+    api_port: int = 8000, llm_port: int = 8080
+) -> tuple[list[str], list[int], list[int]]:
     """One-shot socket audit of a running Vitra stack.
 
     Returns (findings, unaudited_pids, root_pids). findings empty and root_pids empty
@@ -676,7 +678,9 @@ class Launcher:
                 "(or by process name); nothing to audit"
             )
             return 0
-        self.stage(f"auditing {len(roots)} stack root pid(s): {', '.join(str(p) for p in sorted(roots))}")
+        self.stage(
+            f"auditing {len(roots)} stack root pid(s): {', '.join(str(p) for p in sorted(roots))}"
+        )
         if unaudited:
             pids = ", ".join(str(p) for p in sorted(unaudited))
             self.stage(
