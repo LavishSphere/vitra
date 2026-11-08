@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { openTumorFacts } from "../scene/CellDive.tsx";
+import { useCellDive } from "../scene/cell/store.ts";
 import { useVitra } from "./useVitra.ts";
 
 afterEach(() => {
@@ -9,6 +11,7 @@ afterEach(() => {
     tumorCardOpen: false,
     railTab: "trends",
   });
+  useCellDive.getState().closeDive();
 });
 
 describe("tumorCardOpen", () => {
@@ -37,5 +40,18 @@ describe("tumorCardOpen", () => {
   it("does not open the card when the camera is not on the tumor", () => {
     useVitra.getState().setTumorCardOpen(true);
     expect(useVitra.getState().tumorCardOpen).toBe(false);
+  });
+
+  it("zoom does not open the cell dive; Hotspot facts returns to the card", () => {
+    useVitra.getState().setFocusTumor(true);
+    expect(useCellDive.getState().open).toBe(false);
+
+    useCellDive.getState().openDive({ x: 10, y: 20 });
+    expect(useCellDive.getState().open).toBe(true);
+
+    openTumorFacts();
+    expect(useCellDive.getState().open).toBe(false);
+    expect(useVitra.getState().focusTumor).toBe(true);
+    expect(useVitra.getState().tumorCardOpen).toBe(true);
   });
 });

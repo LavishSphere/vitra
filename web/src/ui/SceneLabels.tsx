@@ -59,13 +59,19 @@ export function SceneLabels() {
       <div ref={anchorRef("tumor", TUMOR_ANCHOR)} className="absolute left-0 top-0 will-change-transform">
         <button
           type="button"
-          onClick={(e) => openDiveFrom(e.currentTarget)}
+          onClick={(e) => {
+            if (!focusTumor) {
+              useVitra.getState().setFocusTumor(true);
+              return;
+            }
+            openDiveFrom(e.currentTarget);
+          }}
           aria-pressed={focusTumor}
           className="pointer-events-auto -translate-y-1/2 flex items-center gap-2 whitespace-nowrap rounded-full border border-border bg-bg/70 py-1 pl-2 pr-3 text-[12px] text-text-2 backdrop-blur-md transition-colors hover:border-border-strong hover:text-text"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-magenta" />
-          Tumor hotspot
-          <span className="text-text-muted">illustrative</span>
+          {focusTumor ? "See receptors" : "Tumor hotspot"}
+          {!focusTumor && <span className="text-text-muted">illustrative</span>}
         </button>
       </div>
 

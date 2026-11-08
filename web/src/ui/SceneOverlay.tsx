@@ -4,6 +4,7 @@ import { missingCellMessage } from "../lib/gapFocus.ts";
 import { MECHANISM_CAPTION, verifiedFacts } from "../data/biomedical.ts";
 import { STATIONS } from "../data/stations.ts";
 import { useArrival } from "../scene/arrival.ts";
+import { openDiveFrom } from "../scene/cell/store.ts";
 
 export function SceneOverlay({ is3d }: { is3d: boolean }) {
   const focusStation = useVitra((s) => s.focusStation);
@@ -139,6 +140,13 @@ function TumorCard({ onClose }: { onClose: () => void }) {
         ))}
       </ul>
       <p className="mt-2 text-[11.5px] text-text-muted">{MECHANISM_CAPTION}</p>
+      <button
+        type="button"
+        onClick={(e) => openDiveFrom(e.currentTarget)}
+        className="mt-3 w-full rounded-lg border border-border bg-bg/60 px-3 py-2 text-[13px] text-text-2 hover:border-border-strong hover:text-text"
+      >
+        See receptors
+      </button>
     </section>
   );
 }
