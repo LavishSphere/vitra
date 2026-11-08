@@ -27,6 +27,14 @@ export function leaveDive() {
   s.setFocusStation(null);
 }
 
+/** Leave the dive and open the tumor hotspot facts card. */
+export function openTumorFacts() {
+  useCellDive.getState().closeDive();
+  const s = useVitra.getState();
+  s.setFocusStation(null);
+  s.setFocusTumor(true);
+}
+
 export function CellDive({ animate }: { animate: boolean }) {
   const open = useCellDive((s) => s.open);
   return open ? <DiveOverlay animate={animate} /> : null;
@@ -95,7 +103,7 @@ function DiveOverlay({ animate }: { animate: boolean }) {
       <div className="pointer-events-none absolute inset-0">
         <SceneTags m={m} />
         <div className="absolute left-5 top-4 max-w-[340px]">
-          <p className="text-[11.5px] uppercase tracking-[0.14em] text-text-muted">Inside the tumor hotspot</p>
+          <p className="text-[11.5px] tracking-[0.04em] text-text-muted">Inside the tumor hotspot</p>
           <h2 className="mt-1 text-[22px] font-medium leading-tight text-text">EGFR and MET on the cell surface</h2>
           <p className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border bg-bg/80 px-2 py-1 text-[12px] text-text-2 backdrop-blur-md">
             <span className="h-1.5 w-1.5 rounded-full bg-text-muted" aria-hidden />
@@ -113,6 +121,13 @@ function DiveOverlay({ animate }: { animate: boolean }) {
             <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden><path d="M7.5 2.5L4 6l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg>
             Back to the evidence
             <kbd className="num ml-1 rounded border border-border px-1 text-[10.5px] text-text-muted">Esc</kbd>
+          </button>
+          <button
+            type="button"
+            onClick={openTumorFacts}
+            className="pointer-events-auto rounded-lg border border-border bg-bg/80 px-3 py-1.5 text-[13px] text-text-2 backdrop-blur-md hover:border-border-strong hover:text-text"
+          >
+            Hotspot facts
           </button>
           {!arrived && (
             <button
@@ -190,7 +205,7 @@ function SceneTags({ m }: { m: Mechanism }) {
         <span className="block -translate-y-1/2 whitespace-nowrap rounded-md border border-muted/50 bg-bg/80 px-2 py-0.5 text-[12.5px] font-medium text-muted backdrop-blur-sm">{SCENE_LABELS.met}</span>
       </div>
       <div ref={cellAnchor("side", CELL_LABEL_POS.side)} className="absolute left-0 top-0 will-change-transform">
-        <span className="block whitespace-nowrap text-[11.5px] uppercase tracking-[0.14em] text-text-muted">{SCENE_LABELS.side}</span>
+        <span className="block whitespace-nowrap text-[11.5px] tracking-[0.04em] text-text-muted">{SCENE_LABELS.side}</span>
       </div>
       {m.antibody === "bound" && (
         <div ref={cellAnchor("antibody", CELL_LABEL_POS.antibody)} className="absolute left-0 top-0 will-change-transform">

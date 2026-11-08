@@ -7,6 +7,7 @@ import { stationAxisAnchor, stationLabelAnchor } from "../scene/layout.ts";
 import { TUMOR_POSITION } from "../scene/anatomy.ts";
 import { signedPolarity, humanize } from "../lib/format.ts";
 import { polarityCss } from "../theme.ts";
+import { openDiveFrom } from "../scene/cell/store.ts";
 
 // To the right of the hotspot, over the lung glass, so it stays clear of the station on the left.
 const TUMOR_ANCHOR = TUMOR_POSITION.clone().add(new Vector3(0.24, 0.02, 0.3));
@@ -16,7 +17,6 @@ export function SceneLabels() {
   const focus = useVitra((s) => s.focusStation);
   const setFocus = useVitra((s) => s.setFocusStation);
   const focusTumor = useVitra((s) => s.focusTumor);
-  const setFocusTumor = useVitra((s) => s.setFocusTumor);
   const marks = useVitra((s) => s.marks);
   const hovered = useVitra((s) => s.hovered);
 
@@ -59,7 +59,7 @@ export function SceneLabels() {
       <div ref={anchorRef("tumor", TUMOR_ANCHOR)} className="absolute left-0 top-0 will-change-transform">
         <button
           type="button"
-          onClick={() => setFocusTumor(!focusTumor)}
+          onClick={(e) => openDiveFrom(e.currentTarget)}
           aria-pressed={focusTumor}
           className="pointer-events-auto -translate-y-1/2 flex items-center gap-2 whitespace-nowrap rounded-full border border-border bg-bg/70 py-1 pl-2 pr-3 text-[12px] text-text-2 backdrop-blur-md transition-colors hover:border-border-strong hover:text-text"
         >

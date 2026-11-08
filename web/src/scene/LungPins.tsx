@@ -27,9 +27,9 @@ import { polarityCss } from "../theme.ts";
 
 export const PLACEMENT_NOTE = "Illustrative placement. A pin's spot on the lung carries no anatomical meaning.";
 
-const STEM = 0.16;
-const HEAD = 0.042;
-const HIT = 0.11;
+const STEM = 0.2;
+const HEAD = 0.078;
+const HIT = 0.18;
 
 // ---------------------------------------------------------------------------------------------
 // Local UI state. Kept out of the main store so the pins add no fields other views depend on.
@@ -107,7 +107,7 @@ export function pinAnchor(itemId: string): Vector3 {
 
 function glowMaterial(): ShaderMaterial {
   return new ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uViewportH: { value: 900 }, uSize: { value: 0.5 } },
+    uniforms: { uTime: { value: 0 }, uViewportH: { value: 900 }, uSize: { value: 0.95 } },
     vertexShader: /* glsl */ `
       attribute vec3 aColor;
       attribute float aBoost;
@@ -233,12 +233,12 @@ export function LungPins({ animate }: { animate: boolean }) {
 
       q.setFromUnitVectors(Y, n);
       p.set(s.x, s.y, s.z).addScaledVector(n, STEM / 2);
-      stems.current?.setMatrixAt(i, m.compose(p, q, sc.set(0.006, STEM, 0.006)));
+      stems.current?.setMatrixAt(i, m.compose(p, q, sc.set(0.011, STEM, 0.011)));
       stems.current?.setColorAt(i, c);
 
       q.setFromUnitVectors(Z, n);
-      p.set(s.x, s.y, s.z).addScaledVector(n, 0.006);
-      const rr = focus ? 0.1 : 0.07;
+      p.set(s.x, s.y, s.z).addScaledVector(n, 0.008);
+      const rr = focus ? 0.16 : 0.12;
       rings.current?.setMatrixAt(i, m.compose(p, q, sc.set(rr, rr, rr)));
       rings.current?.setColorAt(i, c.clone().multiplyScalar(1.2));
 
