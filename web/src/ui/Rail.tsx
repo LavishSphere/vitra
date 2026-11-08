@@ -201,12 +201,24 @@ function CardsSection() {
   );
 }
 
+function cardMethodLabel(card: InsightCard, evidence: { item_id: string; origin: string }[]): string {
+  const origins = card.citations
+    .map((c) => evidence.find((e) => e.item_id === c.item_id)?.origin)
+    .filter((o): o is string => Boolean(o));
+  if (origins.length > 0 && origins.every((o) => o === "synthetic_demo")) {
+    return "hand-written demo label";
+  }
+  return card.confidence.method;
+}
+
 function CardRow({ card }: { card: InsightCard }) {
   const select = useVitra((s) => s.select);
   const excluded = useVitra((s) => s.excluded);
+  const evidence = useVitra((s) => s.evidence);
   const [sharing, setSharing] = useState(false);
   const nEx = card.citations.filter((c) => excluded.includes(c.item_id)).length;
   const conf = card.confidence;
+  const methodText = cardMethodLabel(card, evidence);
   async function sharePng() {
     if (sharing) return;
     setSharing(true);
@@ -261,7 +273,7 @@ function CardRow({ card }: { card: InsightCard }) {
         <dt className="text-text-muted">Confidence</dt>
         <dd className="text-text-2" title={RUBRIC_TEXT}>
           <span className="capitalize text-text">{conf.level}</span>
-          <span className="text-text-muted"> · {rubricPoints(conf)} points · {humanize(conf.source_authority)} source · {conf.method} · {conf.corroborating_items} corroborating · span {conf.span_verified ? "verified" : "unverified"}</span>
+          <span className="text-text-muted"> · {rubricPoints(conf)} points · {humanize(conf.source_authority)} source · {methodText} · {conf.corroborating_items} corroborating · span {conf.span_verified ? "verified" : "unverified"}</span>
         </dd>
       </dl>
       {nEx > 0 && (
