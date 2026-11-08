@@ -200,6 +200,13 @@ function XRayBody({ item, aspectKey, onClose }: { item: EvidenceItem; aspectKey?
   );
 }
 
+function methodLabel(origin: EvidenceItem["origin"], method: EvidenceItem["confidence"]["method"]): string {
+  if (origin === "synthetic_demo") return "hand-written demo label";
+  if (method === "rule") return "rule-derived";
+  if (method === "model") return "model-derived";
+  return method;
+}
+
 function ConfidenceBlock({ item }: { item: EvidenceItem }) {
   const c = item.confidence;
   const select = useVitra((s) => s.select);
@@ -214,7 +221,7 @@ function ConfidenceBlock({ item }: { item: EvidenceItem }) {
       <table className="w-full text-[12.5px]">
         <tbody className="divide-y divide-border">
           <tr><td className="py-1.5 text-text-muted">Source authority</td><td className="py-1.5 text-text-2">{humanize(c.source_authority)}</td><td className="num py-1.5 text-right text-text-2">+{AUTHORITY_POINTS[c.source_authority] ?? 0}</td></tr>
-          <tr><td className="py-1.5 text-text-muted">Method</td><td className="py-1.5 text-text-2">{c.method === "rule" ? "rule-derived" : c.method === "model" ? "model-derived" : c.method}</td><td className="num py-1.5 text-right text-text-2">+{METHOD_POINTS[c.method]}</td></tr>
+          <tr><td className="py-1.5 text-text-muted">Method</td><td className="py-1.5 text-text-2">{methodLabel(item.origin, c.method)}</td><td className="num py-1.5 text-right text-text-2">+{METHOD_POINTS[c.method]}</td></tr>
           <tr>
             <td className="py-1.5 align-top text-text-muted">Corroborating</td>
             <td className="py-1.5 text-text-2">
