@@ -45,9 +45,9 @@ Those labels feed weekly trends, insight cards and evidence gaps. Click any scor
 
 ## Results
 
-Organizer scorer (`score.py`) on the 60-item labeled dev set. The model column is leak-free 5-fold; rules have no training step. The 240-item hidden test set is scored by the organizers.
+Organizer scorer (`score.py`) on the 60-item labeled dev set. The model column is 5-fold on the model calls (policy hybrid-evq). Evidence-quality rules were tuned on dev, so that column is not leak-free. The 240-item hidden test set is scored by the organizers.
 
-| | Rules only | Rules + Llama 3.2 3B |
+| | Rules only | Rules + model (hybrid-evq) |
 |---|---|---|
 | Composite | 0.842 | 0.865 |
 | Signal macro-F1 | 0.806 | 0.806 |
