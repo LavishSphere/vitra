@@ -1,7 +1,7 @@
 {
   "name": "Vitra",
   "short_name": "Vitra",
-  "description": "Local signal-to-dose view for EGFR+ NSCLC launch intelligence. Runs on this machine.",
+  "description": "Synthetic demo of a local launch-evidence view.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

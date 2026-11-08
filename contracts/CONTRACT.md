@@ -33,7 +33,7 @@ Model server: llama-server at `http://127.0.0.1:8080`, owned by `pipeline/`. Con
 ## 3. EvidenceItem (what `app/` serves and `web/` renders)
 ```json
 {
-  "item_id": "PM-0012",
+  "item_id": "SYN-0001",
   "source": "pubmed",
   "url": "https://...",
   "published": "2025-06-02",
@@ -70,10 +70,10 @@ Model server: llama-server at `http://127.0.0.1:8080`, owned by `pipeline/`. Con
 
 ## 5. InsightCard
 ```json
-{"id": "card-PM-0012", "headline": "...", "signal_type": "efficacy", "product": "A",
+{"id": "card-SYN-0001", "headline": "...", "signal_type": "efficacy", "product": "A",
  "week": "2025-W23", "actionable": true,
  "why_it_matters": "...",
- "citations": [{"item_id": "PM-0012", "aspect": "efficacy", "span": "...", "url": "...",
+ "citations": [{"item_id": "SYN-0001", "aspect": "efficacy", "span": "...", "url": "...",
                 "span_start": 120, "span_end": 168}],
  "confidence": {"level": "medium", "method": "model", "span_verified": true,
                 "source_authority": "peer_reviewed", "corroborating_items": 1, "notes": []},

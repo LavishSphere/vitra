@@ -6,6 +6,7 @@ import { TUMOR_POSITION } from "./anatomy.ts";
 import { haloMaterial, tumorMaterial } from "./materials.ts";
 import { theme } from "./colors.ts";
 import { useVitra } from "../store/useVitra.ts";
+import { useCellDive } from "./cell/store.ts";
 
 /**
  * Illustrative tumor hotspot. Its look never changes with sentiment or evidence: biology is a
@@ -15,7 +16,6 @@ export function Tumor({ animate }: { animate: boolean }) {
   const core = useRef<Mesh>(null);
   const [hover, setHover] = useState(false);
   const focusTumor = useVitra((s) => s.focusTumor);
-  const setFocusTumor = useVitra((s) => s.setFocusTumor);
 
   const mag = theme().magenta;
   const coreMat = useMemo(() => tumorMaterial(new Color().copy(mag).multiplyScalar(1.15)), [mag]);
@@ -33,7 +33,7 @@ export function Tumor({ animate }: { animate: boolean }) {
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    setFocusTumor(true);
+    useCellDive.getState().openDive({ x: e.nativeEvent.clientX, y: e.nativeEvent.clientY });
   };
 
   return (

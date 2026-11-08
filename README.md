@@ -122,7 +122,7 @@ Real: the labels, quotes, trends and offline run. Illustrative: the 3D anatomy. 
 
 ## Setup
 
-Needs Python 3.11+, Node 20+, `llama-server`, the model file (about 2 GB), and the organizer package under `starter/` (gitignored; PubMed rehydrated).
+Needs Python 3.11+, Node 20+, `llama-server`, the model file (about 2 GB), and the organizer package under `starter/` (gitignored; PubMed rehydrated). Sample notes in `data/demo/notes.json`.
 
 ### Linux / macOS
 

@@ -37,7 +37,9 @@ function productLabel(p: InsightCard["product"]): string {
 
 /** Build a PNG blob for one insight card. Uses the first citation span as the quote. */
 export async function insightCardPng(card: InsightCard): Promise<Blob> {
-  const quote = card.citations[0]?.span?.trim() || card.fact;
+  const cited = card.citations[0]?.span?.trim();
+  const quote = cited || card.fact;
+  const quoteDisplay = cited ? `"${cited}"` : quote;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = 640;
@@ -76,7 +78,7 @@ export async function insightCardPng(card: InsightCard): Promise<Blob> {
   y += 28;
   ctx.fillStyle = TEXT;
   ctx.font = "italic 22px \"Instrument Serif\", Georgia, serif";
-  const qLines = wrap(ctx, `"${quote}"`, W - PAD * 2).slice(0, 5);
+  const qLines = wrap(ctx, quoteDisplay, W - PAD * 2).slice(0, 5);
   for (const line of qLines) {
     ctx.fillText(line, PAD, y);
     y += 32;

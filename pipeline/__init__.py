@@ -1,1 +1,1 @@
-"""VITRA prediction pipeline: rules, local model adapter, span snapping."""
+"""Vitra prediction pipeline: rules, local model adapter, span snapping."""

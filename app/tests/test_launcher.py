@@ -441,6 +441,8 @@ def test_parse_args_matches_the_bash_flags() -> None:
     assert o.predict_args == ["dev", "--no-model", "--out", "x"]
     assert launch.parse_args([], {"VITRA_OFFLINE_WARN_ONLY": "1"}).warn_only is True
     assert launch.parse_args(["local"], {}).web == "auto"
+    assert launch.parse_args(["--audit-only", "--api-port", "8011"], {}).mode == "audit"
+    assert launch.parse_args(["--audit-only", "--api-port", "8011"], {}).api_port == 8011
     env: dict[str, str] = {}
     launch.parse_args(["--predictions", "test,unlabeled"], env)
     assert env["VITRA_PREDICTIONS"] == "test,unlabeled"
@@ -448,6 +450,39 @@ def test_parse_args_matches_the_bash_flags() -> None:
         launch.parse_args(["--dev-web"], {})
     with pytest.raises(launch.LaunchError):
         launch.parse_args(["--nope"], {})
+
+
+def test_is_vitra_stack_process_matches_llama_and_app_module() -> None:
+    assert launch._is_vitra_stack_process("llama-server", [])
+    assert launch._is_vitra_stack_process("llama-ser", [])  # truncated names still start with llama
+    assert launch._is_vitra_stack_process("python", ["python", "-m", "app.launch", "--check"])
+    assert launch._is_vitra_stack_process("python.exe", ["python.exe", "-m", "app"])
+    assert not launch._is_vitra_stack_process("python", ["python", "-m", "pytest"])
+    assert not launch._is_vitra_stack_process("node", ["node", "vite"])
+
+
+def test_audit_only_passes_when_no_stack_is_running(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(launch, "audit_running_stack", lambda api, llm: ([], [], []))
+    assert launch.main(["--audit-only"]) == 0
+    assert "nothing to audit" in capsys.readouterr().out
+
+
+def test_audit_only_fails_on_non_loopback_findings(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(
+        launch,
+        "audit_running_stack",
+        lambda api, llm: (["llama-server 11 TCP 10.0.0.5:1->93.184.216.34:443"], [], [11]),
+    )
+    assert launch.main(["--audit-only"]) == launch.EXIT_AUDIT
+    out = capsys.readouterr().out
+    assert "NETWORK AUDIT FAILED" in out
+    assert "93.184.216.34:443" in out
+
+
+def test_audit_only_passes_a_clean_stack(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(launch, "audit_running_stack", lambda api, llm: ([], [], [42, 43]))
+    assert launch.main(["--audit-only", "--llm-port", "8099"]) == 0
+    assert "network audit passed" in capsys.readouterr().out
 
 
 def test_cleanup_stops_every_child(tmp_path: Path) -> None:

@@ -1,6 +1,6 @@
 /**
  * SYNTHETIC demo seed. Every title, text, person, site and outlet below is invented for the
- * VITRA demo. None of it is package data, and none of it is a clinical claim.
+ * Vitra demo. None of it is package data, and none of it is a clinical claim.
  * `npm run fixtures` turns this into src/fixtures/*.json with verified span offsets.
  */
 import type { AspectKey, Polarity, Product, SignalType, Source, Speaker } from "../../contracts/types.ts";
@@ -41,9 +41,9 @@ export const SEED: SeedItem[] = [
   {
     n: 3, source: "fda_label", product: "A", date: "2025-04-24", signal: "regulatory", actionable: "yes",
     title: "Synthetic label revision notice for Tagrisso (demo)",
-    text: "This is an invented label revision used for demonstration. The revised section adds monitoring language for a cardiac adverse reaction. Prescribers are advised to assess cardiac function at baseline and during treatment as clinically indicated.",
+    text: "This is an invented label revision used for demonstration. The revised section updates the storage section with room-temperature handling language for the demo pack.",
     aspects: [
-      ["safety", -1, "regulator", "The revised section adds monitoring language for a cardiac adverse reaction."],
+      ["safety", 0, "regulator", "The revised section updates the storage section"],
     ],
   },
   {
@@ -403,6 +403,41 @@ export const SEED: SeedItem[] = [
     text: "A fictional regional guideline committee published an invented update to its EGFR pathway. A committee member, a fictional oncologist, said both Tagrisso and the Rybrevant combination are listed as preferred first-line options in the update.",
     aspects: [
       ["efficacy", 1, "hcp", "said both Tagrisso and the Rybrevant combination are listed as preferred first-line options in the update"],
+    ],
+  },
+  // ---------- Lung safety mentions (ILD / pneumonitis). Also invented, for the lung pins ----------
+  {
+    n: 47, source: "fda_event", product: "A", date: "2025-07-16", signal: "safety", actionable: "no",
+    title: "Synthetic adverse event narrative (demo)",
+    text: "This invented report describes a fictional adult on Tagrisso. A reporting physician described pneumonitis that led to the treatment being stopped. The narrative states that the patient recovered after supportive care.",
+    aspects: [
+      ["safety", -2, "hcp", "A reporting physician described pneumonitis that led to the treatment being stopped."],
+    ],
+  },
+  {
+    n: 48, source: "news", product: "B", date: "2025-08-20", signal: "none", actionable: "no",
+    title: "Demo Patient Voices: questions at every visit",
+    text: "An invented patient forum post comes from Jordan, a fictional patient on Rybrevant with Lazcluze. Jordan wrote that the team asks about new cough at every visit because interstitial lung disease is on their checklist. Jordan said the questions take a minute.",
+    aspects: [
+      ["safety", -1, "patient", "Jordan wrote that the team asks about new cough at every visit because interstitial lung disease is on their checklist."],
+      ["convenience", 1, "patient", "Jordan said the questions take a minute."],
+    ],
+  },
+  {
+    n: 49, source: "pubmed", product: "A", date: "2025-09-10", signal: "safety", actionable: "no",
+    title: "Synthetic safety follow-up from a fictional registry",
+    text: "This synthetic abstract summarizes an invented registry of adults on Tagrisso. Investigators reported no new cases of ILD after the first interim cutoff. The registry relies on clinician reporting and may miss mild events.",
+    aspects: [
+      ["safety", 1, "researcher", "Investigators reported no new cases of ILD after the first interim cutoff."],
+      ["evidence_quality", -1, "researcher", "The registry relies on clinician reporting and may miss mild events."],
+    ],
+  },
+  {
+    n: 50, source: "ctgov", product: "A", date: "2025-09-24", signal: "trial_update", actionable: "no",
+    title: "Synthetic registry entry: fictional Tagrisso study",
+    text: "This invented registry entry describes a fictional study of Tagrisso. People with a history of interstitial lung disease are not eligible to enroll. Enrollment status changed to recruiting at four fictional sites.",
+    aspects: [
+      ["evidence_quality", 0, "researcher", "Enrollment status changed to recruiting at four fictional sites."],
     ],
   },
 ];

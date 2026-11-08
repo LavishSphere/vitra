@@ -161,18 +161,18 @@
   "iso_week": "2025-W17",
   "product": "A",
   "title": "Synthetic label revision notice for Tagrisso (demo)",
-  "text": "This is an invented label revision used for demonstration. The revised section adds monitoring language for a cardiac adverse reaction. Prescribers are advised to assess cardiac function at baseline and during treatment as clinically indicated.",
+  "text": "This is an invented label revision used for demonstration. The revised section updates the storage section with room-temperature handling language for the demo pack.",
   "signal_type": "regulatory",
   "actionable": "yes",
   "origin": "synthetic_demo",
   "aspects": [
    {
     "aspect": "safety",
-    "polarity": -1,
+    "polarity": 0,
     "speaker": "regulator",
-    "span": "The revised section adds monitoring language for a cardiac adverse reaction.",
+    "span": "The revised section updates the storage section",
     "span_start": 59,
-    "span_end": 135
+    "span_end": 106
    }
   ],
   "confidence": {
@@ -735,6 +735,40 @@
   }
  },
  {
+  "item_id": "SYN-0047",
+  "source": "fda_event",
+  "url": "urn:vitra:synthetic:SYN-0047",
+  "published": "2025-07-16",
+  "iso_week": "2025-W29",
+  "product": "A",
+  "title": "Synthetic adverse event narrative (demo)",
+  "text": "This invented report describes a fictional adult on Tagrisso. A reporting physician described pneumonitis that led to the treatment being stopped. The narrative states that the patient recovered after supportive care.",
+  "signal_type": "safety",
+  "actionable": "no",
+  "origin": "synthetic_demo",
+  "aspects": [
+   {
+    "aspect": "safety",
+    "polarity": -2,
+    "speaker": "hcp",
+    "span": "A reporting physician described pneumonitis that led to the treatment being stopped.",
+    "span_start": 62,
+    "span_end": 146
+   }
+  ],
+  "confidence": {
+   "level": "low",
+   "method": "rule",
+   "span_verified": true,
+   "source_authority": "news",
+   "corroborating_items": 0,
+   "notes": [
+    "Rubric points 1: method rule, authority news, 0 corroborating item(s).",
+    "SYNTHETIC demo item. Text is invented."
+   ]
+  }
+ },
+ {
   "item_id": "SYN-0011",
   "source": "fda_notice",
   "url": "urn:vitra:synthetic:SYN-0011",
@@ -868,14 +902,14 @@
    }
   ],
   "confidence": {
-   "level": "medium",
+   "level": "high",
    "method": "rule",
    "span_verified": true,
    "source_authority": "regulator",
-   "corroborating_items": 1,
+   "corroborating_items": 2,
    "notes": [
-    "Rubric points 3: method rule, authority regulator, 1 corroborating item(s).",
-    "Corroborated by SYN-0034.",
+    "Rubric points 4: method rule, authority regulator, 2 corroborating item(s).",
+    "Corroborated by SYN-0034, SYN-0048.",
     "SYNTHETIC demo item. Text is invented."
    ]
   }
@@ -915,10 +949,10 @@
    "method": "model",
    "span_verified": true,
    "source_authority": "news",
-   "corroborating_items": 1,
+   "corroborating_items": 2,
    "notes": [
-    "Rubric points 0: method model, authority news, 1 corroborating item(s).",
-    "Corroborated by SYN-0033.",
+    "Rubric points 1: method model, authority news, 2 corroborating item(s).",
+    "Corroborated by SYN-0033, SYN-0048.",
     "SYNTHETIC demo item. Text is invented."
    ]
   }
@@ -988,6 +1022,49 @@
    "notes": [
     "Rubric points 1: method model, authority peer_reviewed, 1 corroborating item(s).",
     "Corroborated by SYN-0012.",
+    "SYNTHETIC demo item. Text is invented."
+   ]
+  }
+ },
+ {
+  "item_id": "SYN-0048",
+  "source": "news",
+  "url": "urn:vitra:synthetic:SYN-0048",
+  "published": "2025-08-20",
+  "iso_week": "2025-W34",
+  "product": "B",
+  "title": "Demo Patient Voices: questions at every visit",
+  "text": "An invented patient forum post comes from Jordan, a fictional patient on Rybrevant with Lazcluze. Jordan wrote that the team asks about new cough at every visit because interstitial lung disease is on their checklist. Jordan said the questions take a minute.",
+  "signal_type": "none",
+  "actionable": "no",
+  "origin": "synthetic_demo",
+  "aspects": [
+   {
+    "aspect": "safety",
+    "polarity": -1,
+    "speaker": "patient",
+    "span": "Jordan wrote that the team asks about new cough at every visit because interstitial lung disease is on their checklist.",
+    "span_start": 98,
+    "span_end": 217
+   },
+   {
+    "aspect": "convenience",
+    "polarity": 1,
+    "speaker": "patient",
+    "span": "Jordan said the questions take a minute.",
+    "span_start": 218,
+    "span_end": 258
+   }
+  ],
+  "confidence": {
+   "level": "low",
+   "method": "model",
+   "span_verified": true,
+   "source_authority": "news",
+   "corroborating_items": 2,
+   "notes": [
+    "Rubric points 1: method model, authority news, 2 corroborating item(s).",
+    "Corroborated by SYN-0033, SYN-0034.",
     "SYNTHETIC demo item. Text is invented."
    ]
   }
@@ -1139,6 +1216,48 @@
   }
  },
  {
+  "item_id": "SYN-0049",
+  "source": "pubmed",
+  "url": "urn:vitra:synthetic:SYN-0049",
+  "published": "2025-09-10",
+  "iso_week": "2025-W37",
+  "product": "A",
+  "title": "Synthetic safety follow-up from a fictional registry",
+  "text": "This synthetic abstract summarizes an invented registry of adults on Tagrisso. Investigators reported no new cases of ILD after the first interim cutoff. The registry relies on clinician reporting and may miss mild events.",
+  "signal_type": "safety",
+  "actionable": "no",
+  "origin": "synthetic_demo",
+  "aspects": [
+   {
+    "aspect": "safety",
+    "polarity": 1,
+    "speaker": "researcher",
+    "span": "Investigators reported no new cases of ILD after the first interim cutoff.",
+    "span_start": 79,
+    "span_end": 153
+   },
+   {
+    "aspect": "evidence_quality",
+    "polarity": -1,
+    "speaker": "researcher",
+    "span": "The registry relies on clinician reporting and may miss mild events.",
+    "span_start": 154,
+    "span_end": 222
+   }
+  ],
+  "confidence": {
+   "level": "low",
+   "method": "model",
+   "span_verified": true,
+   "source_authority": "peer_reviewed",
+   "corroborating_items": 0,
+   "notes": [
+    "Rubric points 1: method model, authority peer_reviewed, 0 corroborating item(s).",
+    "SYNTHETIC demo item. Text is invented."
+   ]
+  }
+ },
+ {
   "item_id": "SYN-0017",
   "source": "news",
   "url": "urn:vitra:synthetic:SYN-0017",
@@ -1280,6 +1399,40 @@
    "notes": [
     "Rubric points 0: method model, authority news, 1 corroborating item(s).",
     "Corroborated by SYN-0039.",
+    "SYNTHETIC demo item. Text is invented."
+   ]
+  }
+ },
+ {
+  "item_id": "SYN-0050",
+  "source": "ctgov",
+  "url": "urn:vitra:synthetic:SYN-0050",
+  "published": "2025-09-24",
+  "iso_week": "2025-W39",
+  "product": "A",
+  "title": "Synthetic registry entry: fictional Tagrisso study",
+  "text": "This invented registry entry describes a fictional study of Tagrisso. People with a history of interstitial lung disease are not eligible to enroll. Enrollment status changed to recruiting at four fictional sites.",
+  "signal_type": "trial_update",
+  "actionable": "no",
+  "origin": "synthetic_demo",
+  "aspects": [
+   {
+    "aspect": "evidence_quality",
+    "polarity": 0,
+    "speaker": "researcher",
+    "span": "Enrollment status changed to recruiting at four fictional sites.",
+    "span_start": 149,
+    "span_end": 213
+   }
+  ],
+  "confidence": {
+   "level": "medium",
+   "method": "rule",
+   "span_verified": true,
+   "source_authority": "registry",
+   "corroborating_items": 0,
+   "notes": [
+    "Rubric points 3: method rule, authority registry, 0 corroborating item(s).",
     "SYNTHETIC demo item. Text is invented."
    ]
   }

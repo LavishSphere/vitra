@@ -12,6 +12,7 @@ import { LabelProjector } from "./LabelProjector.tsx";
 import { ARRIVAL_START } from "./framing.ts";
 import { OVERVIEW } from "./layout.ts";
 import { useVitra } from "../store/useVitra.ts";
+import { useCellDive } from "./cell/store.ts";
 
 /** Reports frames per second to window.__vitraFps (read by the perf check script). */
 function FpsProbe() {
@@ -32,13 +33,15 @@ function FpsProbe() {
 export function Observatory({ animate, railPx }: { animate: boolean; railPx: number }) {
   const [dpr, setDpr] = useState(1.5);
   const deselect = useVitra((s) => s.setFocusTumor);
+  // The cell dive covers the observatory with its own canvas, so stop drawing this one meanwhile.
+  const covered = useCellDive((s) => s.covering);
 
   return (
     <Canvas
       dpr={[1, Math.min(2, dpr)]}
       gl={{ antialias: false, powerPreference: "high-performance", alpha: false, stencil: false }}
       camera={{ fov: 34, near: 0.1, far: 120, position: (animate ? ARRIVAL_START : OVERVIEW).position.toArray() }}
-      frameloop="always"
+      frameloop={covered ? "never" : "always"}
       onPointerMissed={() => deselect(false)}
       aria-label="Interactive 3D lung observatory"
     >

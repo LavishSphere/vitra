@@ -7,6 +7,7 @@ import { Billboard } from "@react-three/drei";
 import { theme } from "./colors.ts";
 import { useVitra } from "../store/useVitra.ts";
 import { Tumor } from "./Tumor.tsx";
+import { LungPins } from "./LungPins.tsx";
 
 /** Breathing period in seconds. Exposed so other views can stay in phase. */
 export const BREATH_PERIOD = 5.6;
@@ -139,6 +140,7 @@ export function Lungs({ surface, animate }: LungsProps) {
       <mesh geometry={airways} material={airMat} renderOrder={1} />
       <points geometry={flow.geo} material={flowMat} renderOrder={3} frustumCulled={false} />
       <Tumor animate={animate} />
+      <LungPins animate={animate} />
     </group>
   );
 }

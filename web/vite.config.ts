@@ -33,10 +33,24 @@ function stripDocUrls(): Plugin {
   };
 }
 
+/** Public fixture Pages builds: drop the local-dev connect-src hosts from the CSP meta. */
+function stripDevConnectSrc(): Plugin {
+  const fixtures = process.env.VITE_DATA_SOURCE === "fixtures";
+  const drop =
+    / ws:\/\/127\.0\.0\.1:5173 ws:\/\/localhost:5173 http:\/\/127\.0\.0\.1:8000/;
+  return {
+    name: "vitra-strip-dev-connect-src",
+    transformIndexHtml(html) {
+      if (!fixtures) return html;
+      return html.replace(drop, "");
+    },
+  };
+}
+
 export default defineConfig({
   // Public Pages build sets VITE_BASE=/ ; local and API-served builds keep ./
   base: (process.env.VITE_BASE as string | undefined) || "./",
-  plugins: [react(), tailwindcss(), stripDocUrls()],
+  plugins: [react(), tailwindcss(), stripDocUrls(), stripDevConnectSrc()],
   resolve: {
     alias: { "@contract": contractDir },
   },
