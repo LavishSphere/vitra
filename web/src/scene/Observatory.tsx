@@ -9,6 +9,8 @@ import { Evidence } from "./Evidence.tsx";
 import { CameraRig } from "./CameraRig.tsx";
 import { Pulses } from "./Pulses.tsx";
 import { LabelProjector } from "./LabelProjector.tsx";
+import { LensGhosts, SpectralRing } from "./SpectralRing.tsx";
+import { EvidenceDive } from "./EvidenceDive.tsx";
 import { ARRIVAL_START } from "./framing.ts";
 import { OVERVIEW } from "./layout.ts";
 import { useVitra } from "../store/useVitra.ts";
@@ -35,6 +37,8 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
   const deselect = useVitra((s) => s.setFocusTumor);
   // The cell dive covers the observatory with its own canvas, so stop drawing this one meanwhile.
   const covered = useCellDive((s) => s.covering);
+  const dive = useVitra((s) => (s.cameraFocus?.kind === "evidence" ? s.cameraFocus : null));
+  const homeOnExit = useVitra((s) => s.focusStation === null && !s.focusTumor);
 
   return (
     <Canvas
@@ -66,6 +70,9 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
       <Lungs animate={animate} />
       <Stations animate={animate} />
       <Evidence animate={animate} />
+      <LensGhosts />
+      <SpectralRing animate={animate} dim={dive !== null} />
+      <EvidenceDive target={dive} animate={animate} homeOnExit={homeOnExit} />
       <Pulses />
       <FpsProbe />
       <LabelProjector />

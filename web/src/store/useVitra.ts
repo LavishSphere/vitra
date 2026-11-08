@@ -65,8 +65,14 @@ export interface IntakeSession {
 
 export type RailTab = "trends" | "cards" | "gaps" | "evidence";
 
-/** Where the camera should be. "intake" moves come from a classified transcript, "user" from a click or key. */
-export interface CameraFocus { stationId: StationId; reason: "intake" | "user"; }
+/**
+ * Where the camera should be.
+ * - station: fly to a journey station (intake tour or a station click/key).
+ * - evidence: glide onto one evidence mark (EvidenceDive drives the camera).
+ */
+export type CameraFocus =
+  | { kind: "station"; stationId: StationId; reason: "intake" | "user" }
+  | { kind: "evidence"; stationId: StationId; itemId: string; aspect: AspectKey; reason: "user" };
 export type ViewMode = "3d" | "2d";
 
 interface VitraState {
@@ -87,7 +93,7 @@ interface VitraState {
   selection: Selection | null;
   hovered: string | null; // mark key
   focusStation: StationId | null;
-  /** Camera target. Kept in step with focusStation; the rig flies here. */
+  /** Camera target. Station focus stays in step with focusStation; evidence focus is a dive. */
   cameraFocus: CameraFocus | null;
   focusTumor: boolean;
   /** Text panel for the tumor hotspot. Independent of focusTumor so Close can dismiss facts without leaving the zoom. */
@@ -112,7 +118,9 @@ interface VitraState {
   hover(key: string | null): void;
   setFocusStation(s: StationId | null): void;
   /** Fly the camera to a station. Intake moves leave the rail tab alone. */
-  focusCameraOn(id: StationId, reason?: CameraFocus["reason"]): void;
+  focusCameraOn(id: StationId, reason?: "intake" | "user"): void;
+  /** Dive onto one evidence mark; EvidenceDive owns the camera while this is set. */
+  diveTo(itemId: string, aspect: AspectKey): void;
   /** Back to the overview. */
   clearFocus(): void;
   setFocusTumor(on: boolean): void;
@@ -231,11 +239,12 @@ export const useVitra = create<VitraState>((set, get) => ({
   focusGap(gap) {
     const patch = gapFocus(gap, get().weeks);
     const filters = { ...get().filters, ...patch };
+    const stationId = stationFor(gap.aspect, gap.speaker);
     set({
       filters,
       marks: buildMarks(get().evidence, filters, get().excluded, get().marks),
-      focusStation: stationFor(gap.aspect, gap.speaker),
-      cameraFocus: { stationId: stationFor(gap.aspect, gap.speaker), reason: "user" },
+      focusStation: stationId,
+      cameraFocus: { kind: "station", stationId, reason: "user" },
       focusTumor: false,
       tumorCardOpen: false,
       selection: null,
@@ -258,7 +267,7 @@ export const useVitra = create<VitraState>((set, get) => ({
   setFocusStation(s) {
     set({
       focusStation: s,
-      cameraFocus: s ? { stationId: s, reason: "user" } : null,
+      cameraFocus: s ? { kind: "station", stationId: s, reason: "user" } : null,
       focusTumor: false,
       tumorCardOpen: false,
       ...(s ? { railTab: "evidence" as RailTab } : {}),
@@ -267,21 +276,33 @@ export const useVitra = create<VitraState>((set, get) => ({
   focusCameraOn(id, reason = "user") {
     set({
       focusStation: id,
-      cameraFocus: { stationId: id, reason },
+      cameraFocus: { kind: "station", stationId: id, reason },
       focusTumor: false,
       tumorCardOpen: false,
       ...(reason === "user" ? { railTab: "evidence" as RailTab } : {}),
     });
   },
+  diveTo(itemId, aspect) {
+    const m = get().marks.find((x) => x.key === `${itemId}:${aspect}`);
+    if (!m) return;
+    set({
+      cameraFocus: { kind: "evidence", stationId: m.station, itemId, aspect, reason: "user" },
+      focusStation: m.station,
+      focusTumor: false,
+      tumorCardOpen: false,
+    });
+  },
   clearFocus() { set({ focusStation: null, cameraFocus: null, focusTumor: false, tumorCardOpen: false }); },
   setFocusTumor(on) {
     const keep = on ? null : get().focusStation;
+    const prev = get().cameraFocus;
     set({
       focusTumor: on,
       // Entering the tumor opens the facts card; leaving the zoom dismisses it.
       tumorCardOpen: on,
       focusStation: keep,
-      cameraFocus: keep ? get().cameraFocus : null,
+      // Keep a station focus when leaving the tumor; drop an evidence dive.
+      cameraFocus: keep && prev?.kind === "station" ? prev : null,
     });
   },
   setTumorCardOpen(open) {
