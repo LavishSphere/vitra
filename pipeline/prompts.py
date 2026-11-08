@@ -98,6 +98,16 @@ _NEWS_SPEAKER = [
     " framing or headline = media.",
 ]
 
+# p3: p2 without copyable example quotes. Under p2 the model pasted 'significantly improved
+# progression-free survival' and 'a manageable safety profile' into abstracts that do not
+# contain them, so those aspects were dropped.
+_P3_EXTRA = [
+    *_P2_EXTRA[:-1],
+    "- A span quotes the judging words exactly as THIS text writes them (the verb or"
+    " adjective that judges, with its subject), not bare numbers, hazard ratios or p-values."
+    " Never copy a phrase from these instructions; if the text has no such words, use null.",
+]
+
 SOURCE_HINTS = {
     "pubmed": "Source: a PubMed abstract. Speaker is always the researchers. Authors' caveats"
     " (retrospective, small sample, further studies needed) = evidence_quality -1."
@@ -115,6 +125,7 @@ SOURCE_HINTS = {
 SYSTEMS = {
     "p1": "\n".join(_P1_SYSTEM),
     "p2": "\n".join(_P1_SYSTEM + _P2_EXTRA),
+    "p3": "\n".join(_P1_SYSTEM + _P3_EXTRA),
 }
 NEWS_SPEAKER = "\n".join(_NEWS_SPEAKER)
 
