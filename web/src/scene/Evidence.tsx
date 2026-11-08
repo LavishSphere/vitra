@@ -9,31 +9,41 @@ import { PANEL, frameOf, weekX } from "./layout.ts";
 import { polarityColor, theme } from "./colors.ts";
 import { haloMaterial } from "./materials.ts";
 import { PULSE_TRAVEL } from "./Pulses.tsx";
+import { cellScale, columnCenter, columnOf, groupMarks } from "../data/cells.ts";
 
-const CAPACITY = 1024;
+const CAPACITY = 8192;
 const BASE = 0.085;
+/** Time columns per 3D card and the biggest dot, so neighbors don't overlap. */
+const COLUMNS = 10;
+const MAX_SCALE = 1.5;
 
-interface Layout { positions: Float32Array; count: number; }
+interface Layout { positions: Float32Array; weights: Float32Array; count: number; }
 
-/** World position for each mark: station panel, x = week, y = polarity, stacked when they collide. */
+/**
+ * World position for each mark: station panel, x = time column, y = polarity.
+ * Visible marks that share a column and polarity become one dot sized by their count;
+ * the rest of that group sit at the same spot with weight 0, so the ring and dives still find them.
+ */
 function layoutMarks(marks: Mark[], weeks: string[]): Layout {
   const positions = new Float32Array(CAPACITY * 3);
-  const stacks = new Map<string, number>();
+  const weights = new Float32Array(CAPACITY);
   const v = new Vector3();
   const n = weeks.length;
   const weekIdx = new Map(weeks.map((w, i) => [w, i]));
-  for (const m of marks) {
-    if (m.index >= CAPACITY) continue;
-    const wi = weekIdx.get(m.item.iso_week) ?? 0;
-    const key = `${m.station}|${wi}|${m.aspect.polarity}`;
-    const k = stacks.get(key) ?? 0;
-    stacks.set(key, k + 1);
-    const off = k === 0 ? 0 : (k % 2 ? 1 : -1) * Math.ceil(k / 2);
-    v.set(weekX(wi, n), m.aspect.polarity * PANEL.polarityStep + off * 0.055, 0.1 + Math.abs(off) * 0.12);
+  const place = (m: Mark, col: number) => {
+    v.set(weekX(columnCenter(col, n, COLUMNS), n), m.aspect.polarity * PANEL.polarityStep, 0.1);
     v.applyMatrix4(frameOf(m.station).matrix);
     positions.set([v.x, v.y, v.z], m.index * 3);
+  };
+  for (const m of marks) {
+    if (m.index >= CAPACITY || m.visible) continue;
+    place(m, columnOf(weekIdx.get(m.item.iso_week) ?? 0, n, COLUMNS));
   }
-  return { positions, count: Math.min(CAPACITY, marks.reduce((mx, m) => Math.max(mx, m.index + 1), 0)) };
+  for (const cell of groupMarks(marks.filter((m) => m.visible && m.index < CAPACITY), weeks, COLUMNS)) {
+    for (const m of cell.members) place(m, cell.col);
+    weights[cell.rep.index] = cellScale(cell.members.length, MAX_SCALE);
+  }
+  return { positions, weights, count: Math.min(CAPACITY, marks.reduce((mx, m) => Math.max(mx, m.index + 1), 0)) };
 }
 
 export function Evidence({ animate }: { animate: boolean }) {
@@ -103,10 +113,11 @@ export function Evidence({ animate }: { animate: boolean }) {
     for (let i = 0; i < layout.count; i++) {
       const m = byIndex[i];
       let target = 0;
-      if (m && m.visible) {
-        target = m.excluded ? 0.75 : 1;
-        if (m.key === hovered) target = 1.6;
-        if (m.key === selectedKey) target = 1.9;
+      const w = layout.weights[i];
+      if (m && m.visible && w > 0) {
+        target = (m.excluded ? 0.75 : 1) * w;
+        if (m.key === hovered) target = w * 1.35;
+        if (m.key === selectedKey) target = w * 1.5;
         const land = animate ? landAt.get(m.key) : undefined;
         if (land !== undefined) {
           const since = now - land;
