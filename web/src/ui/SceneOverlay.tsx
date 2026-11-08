@@ -122,7 +122,7 @@ function TumorCard({ onClose }: { onClose: () => void }) {
   const product = useVitra((s) => s.filters.product);
   const facts = verifiedFacts(product);
   return (
-    <section aria-label="Tumor hotspot" className="panel scroll-thin pointer-events-auto absolute right-4 top-4 z-10 max-h-[min(420px,calc(100%-160px))] w-[280px] overflow-y-auto rounded-xl p-3.5">
+    <section aria-label="Tumor hotspot" className="panel scroll-thin pointer-events-auto absolute right-4 top-4 z-20 max-h-[min(420px,calc(100%-160px))] w-[280px] overflow-y-auto rounded-xl p-3.5">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-[15px] font-medium text-text">Tumor hotspot</h2>
         <button type="button" onClick={onClose} className="text-[12.5px] text-accent hover:text-accent-hover">Close</button>
@@ -130,6 +130,13 @@ function TumorCard({ onClose }: { onClose: () => void }) {
       <p className="mt-1.5 text-[13px] leading-relaxed text-text-2">
         Illustrative anatomy. The glow marks where a tumor sits in this stylized lung. It never changes with the evidence, because sentiment says nothing about biology.
       </p>
+      <button
+        type="button"
+        onClick={(e) => openDiveFrom(e.currentTarget)}
+        className="mt-3 w-full rounded-lg border border-border bg-bg/60 px-3 py-2 text-[13px] text-text-2 hover:border-border-strong hover:text-text"
+      >
+        See receptors
+      </button>
       <h3 className="mt-3 border-t border-border pt-3 text-[13px] text-text">From the labels</h3>
       <ul className="mt-1.5 space-y-2 text-[12.5px] leading-relaxed text-text-2">
         {facts.map((f) => (
@@ -140,13 +147,6 @@ function TumorCard({ onClose }: { onClose: () => void }) {
         ))}
       </ul>
       <p className="mt-2 text-[11.5px] text-text-muted">{MECHANISM_CAPTION}</p>
-      <button
-        type="button"
-        onClick={(e) => openDiveFrom(e.currentTarget)}
-        className="mt-3 w-full rounded-lg border border-border bg-bg/60 px-3 py-2 text-[13px] text-text-2 hover:border-border-strong hover:text-text"
-      >
-        See receptors
-      </button>
     </section>
   );
 }
