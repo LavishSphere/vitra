@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useVitra } from "../store/useVitra.ts";
 import { missingCellMessage } from "../lib/gapFocus.ts";
-import { BIO_FACTS, verifiedFacts } from "../data/biomedical.ts";
+import { MECHANISM_CAPTION, verifiedFacts } from "../data/biomedical.ts";
 import { STATIONS } from "../data/stations.ts";
 import { useArrival } from "../scene/arrival.ts";
 
@@ -127,9 +127,7 @@ function TumorCard({ onClose }: { onClose: () => void }) {
           </li>
         ))}
       </ul>
-      {BIO_FACTS.some((f) => !f.checked) && (
-        <p className="mt-2 text-[11.5px] text-text-muted">Statements without a label source stay hidden.</p>
-      )}
+      <p className="mt-2 text-[11.5px] text-text-muted">{MECHANISM_CAPTION}</p>
     </section>
   );
 }
