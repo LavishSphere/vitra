@@ -11,12 +11,26 @@
  "prediction": {
   "item_id": "SYN-T002",
   "signal_type": "none",
-  "actionable": "no",
+  "actionable": "yes",
   "efficacy": null,
-  "safety": {"polarity": -1, "speaker": "hcp", "span": "still a real concern for my patients"},
-  "convenience": {"polarity": 1, "speaker": "hcp", "span": "cuts chair time from hours to minutes"},
-  "access_cost": null,
+  "safety": {
+   "polarity": -1,
+   "speaker": "hcp",
+   "span": "still a real concern for my patients and needs proactive management"
+  },
+  "convenience": {
+   "polarity": 1,
+   "speaker": "hcp",
+   "span": "cuts chair time from hours to minutes"
+  },
+  "access_cost": {
+   "polarity": -1,
+   "speaker": "payer",
+   "span": "prior authorization for the combination has been slow in our region"
+  },
   "evidence_quality": null
  },
- "recorded_stages_ms": {"classifying": 7012}
+ "recorded_stages_ms": {
+  "classifying": 11653
+ }
 }

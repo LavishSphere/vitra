@@ -110,15 +110,15 @@ A synthetic advisory-board note, pasted into the app:
 
 > Synthetic advisory board note. Thoracic oncologist: The subcutaneous version of amivantamab cuts chair time from hours to minutes, and our infusion center will love that. The rash is still a real concern for my patients and needs proactive management. Payer representative: prior authorization for the combination has been slow in our region.
 
-What the local model returned, in 7.0 s:
+What the local model returned, in 11.7 s:
 
 | Aspect | Score | Speaker | Quote |
 |---|---|---|---|
 | Convenience | +1 | hcp | "cuts chair time from hours to minutes" |
-| Safety | −1 | hcp | "still a real concern for my patients" |
-| Access and cost | missed | | the prior-authorization line wasn't flagged in this run |
+| Safety | −1 | hcp | "still a real concern for my patients and needs proactive management" |
+| Access and cost | −1 | payer | "prior authorization for the combination has been slow in our region" |
 
-Both quotes are exact substrings of the note. The model also tried to file the chair-time quote under efficacy; Vitra keeps one aspect per quote, so it stays under convenience. In the app, the note joins the evidence, its quotes open with the span marked in the source, and the convenience and safety trends for Rybrevant update.
+All three quotes are exact substrings of the note. In the app, the note joins the evidence, its quotes open with the span marked in the source, and the convenience, safety and access trends for Rybrevant update.
 
 ## How it works
 
