@@ -13,6 +13,7 @@ import { RECORDED_NOTICE, isRecordedNote } from "../data/recorded.ts";
 import { STATIONS, stationFor } from "../data/stations.ts";
 import { POLARITY_WORD } from "../lib/format.ts";
 import { ImpactCard } from "./ImpactCard.tsx";
+import { registerSampleIntake } from "./guided.ts";
 
 type StageName = IntakeStageName | "complete";
 const STAGES: { name: StageName; label: string }[] = [
@@ -89,9 +90,12 @@ export function IntakePanel() {
   const [notice, setNotice] = useState<string | null>(null);
   const area = useRef<HTMLTextAreaElement>(null);
   const timers = useRef<number[]>([]);
+  const sampleRef = useRef<() => Promise<void>>(async () => {});
 
   const clearTimers = () => { timers.current.forEach((t) => window.clearTimeout(t)); timers.current = []; };
   useEffect(() => () => { timers.current.forEach((t) => window.clearTimeout(t)); }, []);
+  // Guided step "Watch the intelligence change" uses this same sample note, then analyze.
+  useEffect(() => registerSampleIntake(() => sampleRef.current()), []);
 
   useEffect(() => { if (open && phase === "compose") area.current?.focus(); }, [open, phase]);
 
@@ -126,8 +130,6 @@ export function IntakePanel() {
     return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("pointerdown", onDown); };
   }, [phase]);
 
-  if (!open) return null;
-
   const fixtures = sourceKind === "fixtures";
   const isSample = isRecordedNote(text);
 
@@ -137,12 +139,18 @@ export function IntakePanel() {
     setPhase("impact");
   };
 
-  const loadSample = async () => {
+  const loadSample = async (): Promise<{ text: string; product: Product } | null> => {
     const s = await dataSource.sampleTranscript();
-    if (s) { setText(s.text); setProduct(s.product === "A" ? "A" : "B"); }
+    if (!s) return null;
+    const drug: Product = s.product === "A" ? "A" : "B";
+    setText(s.text);
+    setProduct(drug);
+    return { text: s.text, product: drug };
   };
 
-  const analyze = async () => {
+  const analyze = async (note?: { text: string; product: Product }) => {
+    const body = note?.text ?? text;
+    const drug = note?.product ?? product;
     clearTimers();
     setNotice(null);
     const t0 = performance.now();
@@ -153,7 +161,7 @@ export function IntakePanel() {
     setAnnounce("Received locally. Classifying.");
     let result: IntakeResult;
     try {
-      result = await dataSource.intake({ text, product });
+      result = await dataSource.intake({ text: body, product: drug });
     } catch (e) {
       result = { status: "error", stages: [], evidence: null, rejected_spans: [], reason: null, error: e instanceof Error ? e.message : String(e) };
     }
@@ -194,6 +202,14 @@ export function IntakePanel() {
   };
 
   const startOver = () => { clearTimers(); setPhase("compose"); setRun({ startedAt: 0, result: null, incorporateMs: null }); };
+
+  sampleRef.current = async () => {
+    setOpen(true);
+    const note = await loadSample();
+    if (note) await analyze(note);
+  };
+
+  if (!open) return null;
 
   const r = run.result;
   const stageMs = (name: StageName): number | null => {
