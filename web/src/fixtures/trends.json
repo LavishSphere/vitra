@@ -346,7 +346,7 @@
   "product": "A",
   "speaker": "all",
   "aspect": "all",
-  "mean_polarity": -1,
+  "mean_polarity": 0,
   "n_items": 1,
   "n_sources": 1,
   "item_ids": [
@@ -1326,7 +1326,7 @@
   "product": "A",
   "speaker": "all",
   "aspect": "safety",
-  "mean_polarity": -1,
+  "mean_polarity": 0,
   "n_items": 1,
   "n_sources": 1,
   "item_ids": [
@@ -5007,7 +5007,7 @@
   "product": "A",
   "speaker": "regulator",
   "aspect": "all",
-  "mean_polarity": -1,
+  "mean_polarity": 0,
   "n_items": 1,
   "n_sources": 1,
   "item_ids": [
@@ -5313,7 +5313,7 @@
   "product": "A",
   "speaker": "regulator",
   "aspect": "safety",
-  "mean_polarity": -1,
+  "mean_polarity": 0,
   "n_items": 1,
   "n_sources": 1,
   "item_ids": [

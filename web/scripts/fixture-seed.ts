@@ -1,6 +1,6 @@
 /**
  * SYNTHETIC demo seed. Every title, text, person, site and outlet below is invented for the
- * VITRA demo. None of it is package data, and none of it is a clinical claim.
+ * Vitra demo. None of it is package data, and none of it is a clinical claim.
  * `npm run fixtures` turns this into src/fixtures/*.json with verified span offsets.
  */
 import type { AspectKey, Polarity, Product, SignalType, Source, Speaker } from "../../contracts/types.ts";
@@ -41,9 +41,9 @@ export const SEED: SeedItem[] = [
   {
     n: 3, source: "fda_label", product: "A", date: "2025-04-24", signal: "regulatory", actionable: "yes",
     title: "Synthetic label revision notice for Tagrisso (demo)",
-    text: "This is an invented label revision used for demonstration. The revised section adds monitoring language for a cardiac adverse reaction. Prescribers are advised to assess cardiac function at baseline and during treatment as clinically indicated.",
+    text: "This is an invented label revision used for demonstration. The revised section updates the storage section with room-temperature handling language for the demo pack.",
     aspects: [
-      ["safety", -1, "regulator", "The revised section adds monitoring language for a cardiac adverse reaction."],
+      ["safety", 0, "regulator", "The revised section updates the storage section"],
     ],
   },
   {

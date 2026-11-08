@@ -55,7 +55,7 @@ jobs:
         env:
           BODY: ${{ github.event.pull_request.body }}
         run: |
-          if printf '%s' "$BODY" | grep -qiE 'made with[[:space:]]*(\[)?cursor|cursor\.com\)|generated (with|by)|co-authored-by:'; then
+          if printf '%s' "$BODY" | grep -qiE 'made with[[:space:]]*\[?[a-z]+\]?\(https?://|generated (with|by)|co-authored-by:'; then
             echo "::error::PR body carries tool attribution"
             exit 1
           fi
