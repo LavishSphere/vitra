@@ -1,5 +1,5 @@
 /**
- * Confidence rubric (documented, never a probability). Mirrors app/evidence.py so the X-Ray
+ * Confidence rubric (documented, never a probability). Mirrors app/evidence.py so the quote panel
  * explains the same points the API computes.
  * points = method + source authority + (1 if at least 2 corroborating items).
  * Level: low if the span is unverified, else high >= 4, medium >= 2, low otherwise.

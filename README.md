@@ -25,10 +25,10 @@
 </p>
 
 <p align="center">
-  <img src="web/screenshots/xray-click.gif" alt="Lung observatory, tumor dive, and Evidence X-Ray" width="780" />
+  <img src="web/screenshots/xray-click.gif" alt="Lung observatory, tumor dive, and the quote view" width="780" />
 </p>
 <p align="center">
-  <sub>Synthetic data. From the lung observatory into the tumor hotspot, then Evidence X-Ray. The anatomy is illustrative; every quote is copied word for word from its source.</sub>
+  <sub>Synthetic data. From the lung observatory into the tumor hotspot, then the quote marked in its source. The anatomy is illustrative; every quote is copied word for word from its source.</sub>
 </p>
 
 <p align="center">
@@ -46,10 +46,10 @@
 </p>
 
 <p align="center">
-  <img src="web/screenshots/02-xray-1440.png" alt="Evidence X-Ray open on a lung-safety quote" width="780" />
+  <img src="web/screenshots/02-xray-1440.png" alt="Quote marked in its source on a lung-safety item" width="780" />
 </p>
 <p align="center">
-  <sub>Evidence X-Ray: the exact span highlighted in the source, with speaker, polarity, and confidence for that item.</sub>
+  <sub>See the quote: the exact span highlighted in the source, with speaker, polarity, and confidence for that item.</sub>
 </p>
 
 ## What it does
@@ -118,7 +118,7 @@ What the local model returned, in 7.0 s:
 | Safety | −1 | hcp | "still a real concern for my patients" |
 | Access and cost | missed | | the prior-authorization line wasn't flagged in this run |
 
-Both quotes are exact substrings of the note. The model also tried to file the chair-time quote under efficacy; Vitra keeps one aspect per quote, so it stays under convenience. In the app, the note joins the evidence, its quotes open in Evidence X-Ray, and the convenience and safety trends for Rybrevant update.
+Both quotes are exact substrings of the note. The model also tried to file the chair-time quote under efficacy; Vitra keeps one aspect per quote, so it stays under convenience. In the app, the note joins the evidence, its quotes open with the span marked in the source, and the convenience and safety trends for Rybrevant update.
 
 ## How it works
 
@@ -139,7 +139,7 @@ Real: the labels, quotes, trends and offline run. Illustrative: the 3D anatomy. 
 
 ## Demo video
 
-3 to 5 minute walkthrough on YouTube. Link coming: Wi-Fi off, cold start, lungs, Evidence X-Ray, one pasted transcript with real timings.
+3 to 5 minute walkthrough on YouTube. Link coming: Wi-Fi off, cold start, lungs, see the quote, one pasted transcript with real timings.
 
 ## Setup
 

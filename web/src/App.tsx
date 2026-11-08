@@ -101,7 +101,7 @@ function useKeyboardShortcuts() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const s = useVitra.getState();
-      // A dialog that handled the key (X-Ray or dive Esc) keeps the scene where it is.
+      // A dialog that handled the key (quote panel or dive Esc) keeps the scene where it is.
       if (e.defaultPrevented || s.selection) return;
       const el = e.target instanceof Element ? e.target : null;
       if ((el && el.closest("input, textarea, [role=listbox], [role=slider]")) || e.metaKey || e.ctrlKey || e.altKey) return;

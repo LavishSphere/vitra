@@ -1,6 +1,6 @@
 /**
  * "What changed" after an intake. Every number is a diff of two snapshots that came from the
- * same trend, card and gap functions (lib/impact.ts). Every row opens the new quote in the X-Ray.
+ * same trend, card and gap functions (lib/impact.ts). Every row opens the new quote in the source panel.
  */
 import { useState } from "react";
 import type { AspectKey } from "@contract/types.ts";

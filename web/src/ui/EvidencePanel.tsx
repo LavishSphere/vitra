@@ -2,7 +2,7 @@
  * Floating quote panel for the evidence dive. DOM, pinned next to the dived point in the scene
  * (the label projector moves it every frame without React re-rendering).
  * It shows the exact quote only when the span verifies against the source text.
- * Keys: Tab or arrows walk the evidence, Enter opens the X-Ray, Esc leaves the dive.
+ * Keys: Tab or arrows walk the evidence, Enter opens the quote, Esc leaves the dive.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { EvidenceItem } from "@contract/types.ts";
@@ -24,7 +24,7 @@ export interface EvidencePanelProps {
   onStep: (next: DiveTarget) => void;
   /** Leave the dive (Esc or the close button). */
   onExit: () => void;
-  /** Open the full source in the Evidence X-Ray. */
+  /** Open the full source with the quote highlighted. */
   onOpenXRay: (t: DiveTarget) => void;
 }
 
@@ -181,7 +181,7 @@ export function EvidencePanel({ target, onStep, onExit, onOpenXRay }: EvidencePa
                 onClick={() => onOpenXRay({ itemId: item.item_id, aspect: a.aspect })}
                 className="rounded-lg bg-accent px-3 py-1.5 text-[12.5px] font-medium text-bg transition-colors hover:bg-accent-hover"
               >
-                Open in X-Ray
+                See the quote
               </button>
               <div className="ml-auto flex items-center gap-1">
                 <button type="button" onClick={() => step(-1)} aria-label="Previous quote" className="rounded-md border border-border px-2 py-1 text-[12px] text-text-2 hover:border-border-strong hover:text-text">
@@ -193,7 +193,7 @@ export function EvidencePanel({ target, onStep, onExit, onOpenXRay }: EvidencePa
               </div>
             </footer>
             <p className="px-4 pb-2.5 text-[11px] text-text-muted">
-              <kbd className="num">Tab</kbd> or arrows for the next quote · <kbd className="num">Enter</kbd> X-Ray · <kbd className="num">Esc</kbd> back
+              <kbd className="num">Tab</kbd> or arrows for the next quote · <kbd className="num">Enter</kbd> see the quote · <kbd className="num">Esc</kbd> back
             </p>
           </div>
         </div>
