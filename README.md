@@ -25,10 +25,10 @@
 </p>
 
 <p align="center">
-  <img src="web/screenshots/xray-click.gif" alt="Lung observatory, tumor dive, and the quote view" width="780" />
+  <img src="web/screenshots/xray-click.gif" alt="Lung observatory, tumor hotspot, receptor close-up, and the quote view" width="780" />
 </p>
 <p align="center">
-  <sub>Synthetic data. From the lung observatory into the tumor hotspot, then the quote marked in its source. The anatomy is illustrative; every quote is copied word for word from its source.</sub>
+  <sub>Synthetic data. From the lung observatory into the tumor hotspot and the Rybrevant receptor close-up, then a lung-safety quote marked in its source. The anatomy is illustrative; every quote is copied word for word from its source.</sub>
 </p>
 
 <p align="center">
