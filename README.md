@@ -139,7 +139,11 @@ Real: the labels, quotes, trends and offline run. Illustrative: the 3D anatomy. 
 
 ## Demo video
 
-3 to 5 minute walkthrough on YouTube. Link coming: Wi-Fi off, cold start, lungs, see the quote, one pasted transcript with real timings.
+<p align="center">
+  <a href="https://youtu.be/PjITolUy3Pk"><img src="web/screenshots/video-thumbnail.png" alt="Watch the Vitra demo on YouTube" width="780" /></a>
+</p>
+
+[Watch on YouTube](https://youtu.be/PjITolUy3Pk) (4:36, captions on). Wi-Fi off and the internet check failing, Vitra starting on the laptop, the lungs and receptors, a quote traced to its source, a pasted note classified live and undone, and the gaps that say who to talk to next.
 
 ## Setup
 
