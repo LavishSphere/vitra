@@ -4,6 +4,10 @@ import { useVitra, type Mark } from "../store/useVitra.ts";
 import { polarityCss } from "../theme.ts";
 import { signedPolarity } from "../lib/format.ts";
 import { ASPECT_LABEL, SPEAKER_LABEL } from "./options.ts";
+import { type Cell, cellScale, columnCenter, groupMarks } from "../data/cells.ts";
+
+/** Time columns per 2D card. */
+const COLUMNS_2D = 16;
 
 /**
  * The 2.5D view: used when WebGL isn't available, when reduced motion is on, or by choice.
@@ -46,12 +50,11 @@ function StationPlot({ id, index, marks, weeks }: { id: StationId; index: number
   const to = useVitra((s) => s.filters.weekTo);
   const pulses = useVitra((s) => s.pulses);
   const n = weeks.length;
-  const idx = useMemo(() => new Map(weeks.map((w, i) => [w, i])), [weeks]);
-  const pos = (m: Mark, k: number) => ({
-    left: `${4 + ((idx.get(m.item.iso_week) ?? 0) / Math.max(1, n - 1)) * 92}%`,
-    top: `${50 - m.aspect.polarity * 21 + (k % 2 ? 4 : 0)}%`,
+  const cells = useMemo(() => groupMarks(marks, weeks, COLUMNS_2D), [marks, weeks]);
+  const pos = (cell: Cell) => ({
+    left: `${4 + (columnCenter(cell.col, n, COLUMNS_2D) / Math.max(1, n - 1)) * 92}%`,
+    top: `${50 - cell.polarity * 21}%`,
   });
-  const stacks = new Map<string, number>();
   const live = count(marks);
   const isFocus = focus === id;
 
@@ -86,27 +89,30 @@ function StationPlot({ id, index, marks, weeks }: { id: StationId; index: number
             {(p === 2 || p === 0 || p === -2) && <span className="num absolute -top-2 left-0 bg-bg-elevated/80 pr-1 text-[9.5px] text-text-muted">{signedPolarity(p)}</span>}
           </div>
         ))}
-        {marks.map((m) => {
-          const key = `${m.item.iso_week}|${m.aspect.polarity}`;
-          const k = stacks.get(key) ?? 0;
-          stacks.set(key, k + 1);
-          const inRange = m.item.iso_week >= from && m.item.iso_week <= to;
-          const pulsing = pulses.some((p) => p.itemId === m.item.item_id);
+        {cells.map((cell) => {
+          const m = cell.rep;
+          const many = cell.members.length;
+          const inRange = cell.members.some((x) => x.item.iso_week >= from && x.item.iso_week <= to);
+          const pulsing = pulses.some((p) => cell.members.some((x) => x.item.item_id === p.itemId));
+          const size = 12 * cellScale(many, 2.2);
           return (
             <button
-              key={m.key}
+              key={cell.key}
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 select({ itemId: m.item.item_id, aspect: m.aspect.aspect });
               }}
-              aria-label={`${m.item.item_id}, ${ASPECT_LABEL[m.aspect.aspect]}, polarity ${signedPolarity(m.aspect.polarity)}, ${SPEAKER_LABEL[m.aspect.speaker]}, ${m.item.iso_week}`}
-              title={`"${m.aspect.span}"`}
-              className={`absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform hover:scale-150 focus-visible:scale-150 ${pulsing ? "ring-2 ring-accent ring-offset-2 ring-offset-bg" : ""}`}
+              aria-label={many > 1
+                ? `${many} quotes, ${ASPECT_LABEL[m.aspect.aspect]}, polarity ${signedPolarity(m.aspect.polarity)}. Opens ${m.item.item_id}.`
+                : `${m.item.item_id}, ${ASPECT_LABEL[m.aspect.aspect]}, polarity ${signedPolarity(m.aspect.polarity)}, ${SPEAKER_LABEL[m.aspect.speaker]}, ${m.item.iso_week}`}
+              title={many > 1 ? `${many} quotes here. Click to open one.` : `"${m.aspect.span}"`}
+              className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform hover:scale-125 focus-visible:scale-125 ${pulsing ? "ring-2 ring-accent ring-offset-2 ring-offset-bg" : ""}`}
               style={{
-                ...pos(m, k),
-                marginLeft: k ? `${(k % 2 ? 1 : -1) * Math.ceil(k / 2) * 7}px` : undefined,
-                background: m.excluded ? "var(--color-border-strong)" : polarityCss(m.aspect.polarity),
+                ...pos(cell),
+                width: `${size}px`,
+                height: `${size}px`,
+                background: cell.live === 0 ? "var(--color-border-strong)" : polarityCss(m.aspect.polarity),
                 opacity: inRange ? 1 : 0.25,
               }}
             />
