@@ -14,15 +14,15 @@ describe("intake undo", () => {
 
     const result = await fixtureSource.intake({ text: sampleNote().text, product: "B" });
     expect(result.status).toBe("complete");
-    expect(result.stages.find((s) => s.name === "classifying")?.ms).toBe(7012);
+    expect(result.stages.find((s) => s.name === "classifying")?.ms).toBe(11653);
     await useVitra.getState().incorporate(result, { tour: false });
 
     const mid = useVitra.getState();
     expect(mid.session?.itemId).toBe("SYN-T002");
     expect(mid.session?.impact.empty).toBe(false);
-    expect(mid.session?.impact.cells.length).toBe(2);
-    expect(mid.session?.tour.map((t) => t.station)).toEqual(["living", "administration"]);
-    expect(mid.marks.filter((m) => m.item.item_id === "SYN-T002").map((m) => m.station).sort()).toEqual(["administration", "living"]);
+    expect(mid.session?.impact.cells.length).toBe(3);
+    expect(mid.session?.tour.map((t) => t.station).sort()).toEqual(["access", "administration", "living"]);
+    expect(mid.marks.filter((m) => m.item.item_id === "SYN-T002").map((m) => m.station).sort()).toEqual(["access", "administration", "living"]);
     expect(mid.trends).not.toEqual(base.trends);
     expect(mid.gaps).not.toEqual(base.gaps);
 

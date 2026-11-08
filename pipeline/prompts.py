@@ -58,7 +58,8 @@ _P1_SYSTEM = [
     '- safety: side effects or tolerability (rash, ILD, grade >=3 AEs, VTE, "well tolerated")',
     "- convenience: dosing, administration, burden (oral once daily, infusion time,"
     " subcutaneous, premedication)",
-    "- access_cost: coverage, price, reimbursement, cost-effectiveness, availability",
+    "- access_cost: coverage, price, reimbursement, cost-effectiveness, availability,"
+    " prior authorization, formulary, payer delays, out-of-pocket cost",
     "- evidence_quality: strength of evidence (randomized phase 3 = +1 only if stressed;"
     " retrospective, small sample, immature data, further studies needed = -1)",
     "polarity: -2 strongly negative (failed, fatal, boxed warning) | -1 mildly negative"
@@ -93,9 +94,10 @@ _P2_EXTRA = [
 
 _NEWS_SPEAKER = [
     "",
-    "speaker (news only): who holds the opinion in the span: hcp (a clinician), payer,"
-    " company, regulator (FDA, EMA, NICE, HAS), patient, researcher; the writer's own"
-    " framing or headline = media.",
+    "speaker (news and transcripts): who holds the opinion in the span: hcp (a clinician),"
+    " payer, company, regulator (FDA, EMA, NICE, HAS), patient, researcher; the writer's"
+    " own framing or headline = media. On a transcript, use the role named in the line"
+    " (payer representative = payer, oncologist or nurse = hcp).",
 ]
 
 # p3: p2 without copyable example quotes. Under p2 the model pasted 'significantly improved
@@ -119,7 +121,10 @@ SOURCE_HINTS = {
     " drug and ours is only the comparator, use competitor_move (if it beats or challenges"
     " ours) or none.",
     "transcript": "Source: a private transcript of experts discussing our products. Label each"
-    " speaker's view in the matching aspect.",
+    " speaker's view in the matching aspect. A payer line about prior authorization,"
+    " coverage, formulary or reimbursement is access_cost (speaker payer), not convenience."
+    " A clinician line about chair time, infusion length or subcutaneous dosing is"
+    " convenience. A clinician line about rash, ILD or tolerability is safety.",
 }
 
 SYSTEMS = {

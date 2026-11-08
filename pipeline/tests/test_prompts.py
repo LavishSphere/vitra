@@ -88,3 +88,11 @@ def test_pubmed_prompt_keeps_three_examples():
 def test_transcript_without_a_pool_has_no_example():
     msgs = build_messages(TRANSCRIPT, [])
     assert [m["role"] for m in msgs] == ["system", "user"]
+
+
+def test_transcript_system_names_prior_authorization_as_access_cost():
+    msgs = build_messages(TRANSCRIPT, [])
+    system = msgs[0]["content"]
+    assert "prior authorization" in system
+    assert "access_cost" in system
+    assert "payer" in system
