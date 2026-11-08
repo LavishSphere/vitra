@@ -33,6 +33,11 @@ export function Tumor({ animate }: { animate: boolean }) {
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    // Two steps: first click zooms + facts card; second opens the cell dive.
+    if (!useVitra.getState().focusTumor) {
+      useVitra.getState().setFocusTumor(true);
+      return;
+    }
     useCellDive.getState().openDive({ x: e.nativeEvent.clientX, y: e.nativeEvent.clientY });
   };
 
