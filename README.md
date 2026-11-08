@@ -39,10 +39,10 @@
 </p>
 
 <p align="center">
-  <img src="web/screenshots/lungs-dive-tagrisso.png" alt="Inside the tumor hotspot, EGFR and MET on the cell surface" width="780" />
+  <img src="web/screenshots/lungs-dive-rybrevant.png" alt="Amivantamab bound to EGFR and MET on the cell surface" width="780" />
 </p>
 <p align="center">
-  <sub>Tumor dive: EGFR and MET on the cell surface, with label-only captions. Illustrative mechanism, not a clinical simulation.</sub>
+  <sub>Tumor dive on Rybrevant: amivantamab drawn at the extracellular domains of EGFR and MET. Illustrative mechanism, not a clinical simulation.</sub>
 </p>
 
 <p align="center">
