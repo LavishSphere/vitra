@@ -107,7 +107,7 @@ export function pinAnchor(itemId: string): Vector3 {
 
 function glowMaterial(): ShaderMaterial {
   return new ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uViewportH: { value: 900 }, uSize: { value: 0.95 } },
+    uniforms: { uTime: { value: 0 }, uViewportH: { value: 900 }, uSize: { value: 0.95 }, uDensity: { value: 1 } },
     vertexShader: /* glsl */ `
       attribute vec3 aColor;
       attribute float aBoost;
@@ -115,14 +115,17 @@ function glowMaterial(): ShaderMaterial {
       uniform float uTime;
       uniform float uViewportH;
       uniform float uSize;
+      uniform float uDensity;
       varying vec3 vColor;
       varying float vAlpha;
       void main() {
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         float pulse = 0.85 + 0.15 * sin(uTime * 1.6 + aPhase * 6.2831);
         vColor = aColor;
-        vAlpha = (0.75 + 0.5 * aBoost) * pulse;
-        gl_PointSize = uSize * (1.0 + 0.7 * aBoost) * uViewportH * 0.5 * projectionMatrix[1][1] / -mv.z;
+        vAlpha = (0.75 + 0.5 * aBoost) * pulse * uDensity;
+        // Capped so a close camera can't blow a glow up past the GPU point limit (it pops when clamped).
+        float px = uSize * (1.0 + 0.7 * aBoost) * uViewportH * 0.5 * projectionMatrix[1][1] / max(-mv.z, 0.001);
+        gl_PointSize = min(px, uViewportH * 0.06);
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -260,6 +263,8 @@ export function LungPins({ animate }: { animate: boolean }) {
     const u = res.glowMat.uniforms;
     if (animate) u.uTime.value = state.clock.elapsedTime;
     u.uViewportH.value = state.size.height * state.viewport.dpr;
+    // Many overlapping pins add up to white under bloom; dim each one a little as they multiply.
+    u.uDensity.value = Math.min(1, Math.max(0.45, Math.sqrt(6 / Math.max(1, hits.length))));
     const g = group.current;
     if (!g) return;
     // Keep the DOM anchors on the breathing pins.
