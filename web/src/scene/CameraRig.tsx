@@ -3,11 +3,12 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { PerspectiveCamera, Vector3 } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { useVitra } from "../store/useVitra.ts";
-import { TUMOR_VIEW, stationCamera } from "./layout.ts";
-import { ARRIVAL_START, HERO as OVERVIEW, overviewFit } from "./framing.ts";
+import { OVERVIEW, TUMOR_VIEW, stationCamera } from "./layout.ts";
+import { ARRIVAL_START, overviewFit } from "./framing.ts";
 import { useArrival } from "./arrival.ts";
 
-const ARRIVAL_SECONDS = 2.6;
+/** Push-in from far out to the overview, then station and overview flights. */
+const ARRIVAL_SECONDS = 2.8;
 const FLIGHT_SECONDS = 1.7;
 
 const easeOutCubic = (u: number) => 1 - Math.pow(1 - u, 3);
@@ -17,6 +18,7 @@ interface Flight {
   active: boolean;
   t: number;
   duration: number;
+  /** The push-in: eased out, no lift, not cancelled by a drag. */
   arrival: boolean;
   fromPos: Vector3;
   fromTarget: Vector3;
@@ -26,10 +28,17 @@ interface Flight {
   a0: number; a1: number; r0: number; r1: number;
 }
 
+/** Scales a pose's distance from its target by `k`, writing into the out vectors. */
+function fitPose(pose: { position: Vector3; target: Vector3 }, k: number, outPos: Vector3, outTarget: Vector3) {
+  outTarget.copy(pose.target);
+  outPos.copy(pose.position).sub(pose.target).multiplyScalar(k).add(outTarget);
+}
+
 /**
- * Flies the camera between waypoints: the arrival push, the overview, a station
- * (`cameraFocus.stationId`) and the tumor. Flights swing around the lungs instead of cutting
- * through them. Any user drag cancels a flight; any input during the arrival skips it.
+ * Flies the camera between waypoints: the arrival push-in to the overview, a station
+ * (`cameraFocus.stationId`, posed by layout.ts STATION_POSES), the tumor, and back to the
+ * overview. Flights circle around the lungs instead of cutting through them, so the lungs
+ * stay in shot. A drag cancels a flight; any input during the push-in skips to the overview.
  */
 export function CameraRig({ animate, railPx }: { animate: boolean; railPx: number }) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
@@ -50,12 +59,9 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
   const goalPos = useRef(new Vector3());
   const goalTarget = useRef(new Vector3());
 
-  // Where the overview is for the current viewport.
+  // Poses for the current viewport (the part not covered by the rail).
   const aspect = Math.max(0.3, (size.width - (size.width > 900 ? railPx : 0)) / Math.max(1, size.height));
-  const fit = overviewFit(aspect);
-  // On tall screens, aim lower so the lungs sit in the middle of the frame, not low in it.
-  overviewTarget.current.copy(OVERVIEW.target).setY(OVERVIEW.target.y - (fit - 1) * 2.4);
-  overviewPos.current.copy(OVERVIEW.position).sub(OVERVIEW.target).multiplyScalar(fit).add(overviewTarget.current);
+  fitPose(OVERVIEW, overviewFit(aspect), overviewPos.current, overviewTarget.current);
 
   const begin = (toPos: Vector3, toTarget: Vector3, duration: number, arrival: boolean) => {
     const f = flight.current;
@@ -82,7 +88,10 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
     if (controls) { controls.target.copy(target); controls.update(); }
   };
 
-  // Arrival: start back and up, then push in. Instant when motion is reduced.
+  /** True while the push-in is running. */
+  const inIntro = () => flight.current.active && flight.current.arrival;
+
+  // Arrival: start back and up, then push in. Reduced motion starts at the overview.
   useEffect(() => {
     if (!controls || started.current) return;
     started.current = true;
@@ -97,11 +106,10 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controls, animate]);
 
-  // Skip: any pointer, wheel or key ends the push where it was headed.
+  // Skip: any pointer, wheel or key during the push-in jumps to the overview.
   useEffect(() => {
     if (!arriving) {
-      const f = flight.current;
-      if (f.active && f.arrival) snapTo(f.toPos, f.toTarget);
+      if (inIntro()) snapTo(overviewPos.current, overviewTarget.current);
       return;
     }
     const skip = () => useArrival.getState().skip();
@@ -117,18 +125,20 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arriving]);
 
-  // Station, tumor or overview. Follows the store's camera focus.
+  // Station, tumor or the overview. Follows the store's camera focus.
   useEffect(() => {
     if (!controls || !started.current) return;
     const f = flight.current;
-    if (f.active && f.arrival) {
+    if (inIntro()) {
       if (!cameraStation && !focusTumor) {
-        // Keep pushing in, toward the refitted overview.
+        // Viewport changed mid-push: keep going, toward the refitted overview.
         f.toPos.copy(overviewPos.current);
         f.toTarget.copy(overviewTarget.current);
         f.r1 = Math.hypot(f.toPos.x, f.toPos.z);
         return;
       }
+      // A focus request (a click, a key or an intake) ends the push and flies straight there.
+      f.active = false;
       useArrival.getState().skip();
     }
     if (cameraStation) stationCamera(cameraStation, goalPos.current, goalTarget.current);
@@ -160,7 +170,7 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
     const u = f.t / f.duration;
     const e = f.arrival ? easeOutCubic(u) : easeInOutCubic(u);
     // Swing around the lungs: angle and radius in cylindrical coordinates, height linear,
-    // with a small lift in the middle of a move.
+    // with a small lift in the middle of a station-to-station move.
     const a = f.a0 + (f.a1 - f.a0) * e;
     const r = f.r0 + (f.r1 - f.r0) * e;
     const lift = f.arrival ? 0 : Math.sin(Math.PI * e) * 0.9;

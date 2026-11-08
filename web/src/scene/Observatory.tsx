@@ -1,8 +1,7 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { AdaptiveDpr, Line, OrbitControls, PerformanceMonitor } from "@react-three/drei";
+import { AdaptiveDpr, OrbitControls, PerformanceMonitor } from "@react-three/drei";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
-import { Vector3 } from "three";
 import { Lungs } from "./Lungs.tsx";
 import { Floor } from "./Stage.tsx";
 import { Stations } from "./Stations.tsx";
@@ -10,8 +9,8 @@ import { Evidence } from "./Evidence.tsx";
 import { CameraRig } from "./CameraRig.tsx";
 import { Pulses } from "./Pulses.tsx";
 import { LabelProjector } from "./LabelProjector.tsx";
-import { PANEL, STATION_FRAMES } from "./layout.ts";
-import { ARRIVAL_START, HERO } from "./framing.ts";
+import { ARRIVAL_START } from "./framing.ts";
+import { OVERVIEW } from "./layout.ts";
 import { useVitra } from "../store/useVitra.ts";
 
 /** Reports frames per second to window.__vitraFps (read by the perf check script). */
@@ -30,18 +29,6 @@ function FpsProbe() {
   return null;
 }
 
-/** The journey path: one thin line joining the stations in treatment order. */
-function JourneyPath() {
-  const points = useMemo(() => {
-    const pts: Vector3[] = [];
-    for (const f of STATION_FRAMES) {
-      pts.push(f.position.clone().setY(f.position.y - PANEL.height / 2 - 0.12));
-    }
-    return pts;
-  }, []);
-  return <Line points={points} color="#334155" lineWidth={1} transparent opacity={0.9} />;
-}
-
 export function Observatory({ animate, railPx }: { animate: boolean; railPx: number }) {
   const [dpr, setDpr] = useState(1.5);
   const deselect = useVitra((s) => s.setFocusTumor);
@@ -50,7 +37,7 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
     <Canvas
       dpr={[1, Math.min(2, dpr)]}
       gl={{ antialias: false, powerPreference: "high-performance", alpha: false, stencil: false }}
-      camera={{ fov: 34, near: 0.1, far: 120, position: (animate ? ARRIVAL_START : HERO).position.toArray() }}
+      camera={{ fov: 34, near: 0.1, far: 120, position: (animate ? ARRIVAL_START : OVERVIEW).position.toArray() }}
       frameloop="always"
       onPointerMissed={() => deselect(false)}
       aria-label="Interactive 3D lung observatory"
@@ -64,18 +51,17 @@ export function Observatory({ animate, railPx }: { animate: boolean; railPx: num
         enableDamping
         dampingFactor={0.08}
         minDistance={3.2}
-        maxDistance={34}
+        maxDistance={50}
         minPolarAngle={0.25}
         maxPolarAngle={Math.PI * 0.62}
-        target={HERO.target.toArray()}
+        target={(animate ? ARRIVAL_START : OVERVIEW).target.toArray()}
         rotateSpeed={0.6}
         zoomSpeed={0.8}
       />
       <CameraRig animate={animate} railPx={railPx} />
       <Floor animate={animate} />
       <Lungs animate={animate} />
-      <Stations />
-      <JourneyPath />
+      <Stations animate={animate} />
       <Evidence animate={animate} />
       <Pulses />
       <FpsProbe />

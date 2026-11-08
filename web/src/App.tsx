@@ -101,7 +101,8 @@ function useKeyboardShortcuts() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const s = useVitra.getState();
-      if (s.selection || s.intakeOpen) return;
+      // The intake card is not modal, so station keys keep working while it is open.
+      if (s.selection) return;
       const t = e.target as HTMLElement;
       if (t.closest("input, textarea, [role=listbox], [role=slider]") || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === "0" || e.key === "Escape") { s.setFocusStation(null); s.setFocusTumor(false); }

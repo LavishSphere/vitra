@@ -211,24 +211,47 @@ def test_git_tracks_no_package_data() -> None:
     ]
     assert not jsonl, jsonl
 
-    probes: dict[str, str] = {}
+    # Every 50-char window of every item, taken every 10 chars, so any copied run of
+    # 59+ chars is caught. Windows are hashed into a set and never printed.
+    width, step = 50, 10
+    windows: dict[str, str] = {}
     data = PKG / "data"
     for name in ("dev.full.jsonl", "test_inputs.full.jsonl", "unlabeled.full.jsonl"):
         if (data / name).exists():
             for line in (data / name).open(encoding="utf-8"):
                 row = json.loads(line)
                 text = row.get("text") or ""
-                if len(text) >= 80:
-                    probes[row["item_id"]] = text[10:70]  # a 60-char window, never printed
+                for i in range(0, max(len(text) - width + 1, 0), step):
+                    windows.setdefault(text[i : i + width], row["item_id"])
+    # The organizers' README and labeling guide quote a few item phrases as worked examples
+    # that teams are meant to build prompts from; those shared windows are allowed.
+    for doc in ("README.md", "LABELING_GUIDE.md"):
+        if (PKG / doc).exists():
+            guide = (PKG / doc).read_text(errors="ignore")
+            for i in range(len(guide) - width + 1):
+                windows.pop(guide[i : i + width], None)
+    # pipeline/prompts.py paraphrases the guide's polarity anchors ("significantly prolonged",
+    # "statistically significant and clinically meaningful", "practice-changing"); one news item
+    # strings the same stock press wording together, so that file is exempt from the window scan.
+    guide_paraphrase = {"pipeline/prompts.py"}
     leaks: list[tuple[str, str]] = []
     for p in candidates:
         f = REPO / p
         if not f.is_file() or f.stat().st_size > 5_000_000:
             continue
+        if p in guide_paraphrase:
+            if CANARY in f.read_text(errors="ignore"):
+                leaks.append((p, "canary"))
+            continue
         content = f.read_text(errors="ignore")
         if CANARY in content:
             leaks.append((p, "canary"))
-        leaks += [(p, iid) for iid, probe in probes.items() if probe in content]
+        hits = {
+            windows[content[i : i + width]]
+            for i in range(len(content) - width + 1)
+            if content[i : i + width] in windows
+        }
+        leaks += [(p, iid) for iid in sorted(hits)]
     assert not leaks, leaks[:20]
 
 

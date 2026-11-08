@@ -25,6 +25,12 @@ export function accentFor(product: "A" | "B" | "all", out: Color): Color {
 
 const FLOW_COUNT = 900;
 
+/**
+ * The lungs' root group (origin, breathing scale only). Other layers that sit on the lungs
+ * (surface pins, the ring) can read or parent to it. Its position and rotation stay fixed.
+ */
+export const lungsGroup: { current: Group | null } = { current: null };
+
 interface LungsProps {
   /**
    * Optional replacement for the procedural lung surfaces (for example a licensed GLB).
@@ -36,6 +42,10 @@ interface LungsProps {
 
 export function Lungs({ surface, animate }: LungsProps) {
   const group = useRef<Group>(null);
+  useEffect(() => {
+    lungsGroup.current = group.current;
+    return () => { lungsGroup.current = null; };
+  }, []);
   const product = useVitra((s) => s.filters.product);
   const focusStation = useVitra((s) => s.focusStation);
 
@@ -95,11 +105,11 @@ export function Lungs({ surface, animate }: LungsProps) {
     (airMat.uniforms.uAccent.value as Color).lerp(target.current, k);
     (innerGlow.uniforms.uColor.value as Color).lerp(target.current, k);
     glass.uniforms.uBreath.value = b;
-    innerGlow.uniforms.uStrength.value = (0.13 + 0.05 * b) * (1 - 0.6 * dim.current);
+    innerGlow.uniforms.uStrength.value = (0.13 + 0.05 * b) * (1 - 0.85 * dim.current);
     dim.current += ((focusStation ? 1 : 0) - dim.current) * k;
     glass.uniforms.uFocus.value = dim.current;
-    airMat.uniforms.uOpacity.value = 1 - 0.4 * dim.current;
-    flowMat.uniforms.uOpacity.value = 1 - 0.5 * dim.current;
+    airMat.uniforms.uOpacity.value = 1 - 0.7 * dim.current;
+    flowMat.uniforms.uOpacity.value = 1 - 0.75 * dim.current;
 
     if (animate) {
       const { pos, pathIdx, base, seed } = flow;

@@ -4,7 +4,7 @@ import { Color } from "three";
 import { useVitra } from "../store/useVitra.ts";
 import { floorMaterial } from "./materials.ts";
 import { accentFor, breathAt } from "./Lungs.tsx";
-import { FLOOR_Y } from "./framing.ts";
+import { FLOOR_Y } from "./layout.ts";
 
 /** The observatory floor: a pool of accent light under the lungs that falls off into the dark. */
 export function Floor({ animate }: { animate: boolean }) {

@@ -29,7 +29,7 @@ export function SceneOverlay({ is3d }: { is3d: boolean }) {
             <kbd className="num ml-1 rounded border border-border px-1 text-[10.5px] text-text-muted">0</kbd>
           </button>
         )}
-        {is3d && station && <span className="text-[13px] text-text-muted">{station.rule}</span>}
+        {is3d && station && <span className="rounded-md bg-bg/70 px-2 py-0.5 text-[13px] text-text-2 backdrop-blur-md">{station.rule}</span>}
         <MissingCellNote />
       </div>
       {focusTumor && <TumorCard onClose={() => setFocusTumor(false)} />}

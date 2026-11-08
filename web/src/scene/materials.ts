@@ -65,7 +65,7 @@ export function glassMaterial(accent: Color): ShaderMaterial {
         // Back faces: the far wall of the lung, dimmer and cooler, gives the glass depth.
         if (!gl_FrontFacing) col = mix(col, uDeep * (0.02 + 0.5 * rim), 0.55) * 0.6;
         col *= 0.94 + 0.12 * uBreath;
-        gl_FragColor = vec4(col * uOpacity * (1.0 - 0.45 * uFocus), 1.0);
+        gl_FragColor = vec4(col * uOpacity * (1.0 - 0.72 * uFocus), 1.0);
       }
     `,
     transparent: true,
@@ -222,7 +222,7 @@ export function flowMaterial(color: Color, size: number): ShaderMaterial {
 
 /**
  * The floor of the observatory: a dark disc that falls off to the background, with a soft pool
- * of the accent light under the lungs and two faint rings that ground them.
+ * of the accent light under the lungs.
  */
 export function floorMaterial(accent: Color): ShaderMaterial {
   return new ShaderMaterial({
@@ -246,103 +246,12 @@ export function floorMaterial(accent: Color): ShaderMaterial {
       uniform float uFocus;
       uniform float uBreath;
       varying vec2 vXZ;
-      float ring(float r, float at, float w) {
-        float aa = fwidth(r);
-        return 1.0 - smoothstep(0.0, w + aa, abs(r - at));
-      }
       void main() {
         float r = length(vXZ * vec2(1.0, 1.15));
         float pool = exp(-r * r / 7.5) * (0.16 + 0.04 * uBreath);
         float wide = exp(-r * r / 90.0);
-        float rings = ring(r, 3.05, 0.008) * 0.32 + ring(r, 3.35, 0.004) * 0.16;
-        rings *= smoothstep(9.0, 2.0, r);
-        vec3 col = uAccent * pool + uSlate * wide * 0.045 + uAccent * rings * 0.5;
+        vec3 col = uAccent * pool + uSlate * wide * 0.045;
         gl_FragColor = vec4(col * (1.0 - 0.35 * uFocus), 1.0);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: AdditiveBlending,
-  });
-}
-
-/**
- * The journey path: a thin ribbon on the floor. uv.x runs 0..1 along the path in journey order;
- * a slow light travels along it from the first station to the last.
- */
-export function pathMaterial(color: Color): ShaderMaterial {
-  return new ShaderMaterial({
-    uniforms: { uColor: { value: color.clone() }, uTime: { value: 0 }, uOpacity: { value: 1 } },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
-      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uColor;
-      uniform float uTime;
-      uniform float uOpacity;
-      varying vec2 vUv;
-      void main() {
-        float across = 1.0 - abs(vUv.y - 0.5) * 2.0;
-        float core = smoothstep(0.35, 1.0, across);
-        float ends = smoothstep(0.0, 0.08, vUv.x) * smoothstep(1.0, 0.92, vUv.x);
-        float travel = fract(vUv.x * 3.0 - uTime * 0.07);
-        float pulse = smoothstep(0.86, 0.995, travel) * (1.0 - smoothstep(0.995, 1.0, travel));
-        vec3 col = uColor * (0.22 * core + 0.06 * across + pulse * core * 0.9);
-        gl_FragColor = vec4(col * ends * uOpacity, 1.0);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: AdditiveBlending,
-    toneMapped: false,
-  });
-}
-
-/** A soft vertical light from a station's floor marker up to the bottom of its panel. */
-export function beamMaterial(color: Color): ShaderMaterial {
-  return new ShaderMaterial({
-    uniforms: { uColor: { value: color.clone() }, uStrength: { value: 1 } },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
-      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uColor;
-      uniform float uStrength;
-      varying vec2 vUv;
-      void main() {
-        float across = 1.0 - abs(vUv.x - 0.5) * 2.0;
-        float g = pow(across, 1.6) * pow(1.0 - vUv.y, 1.4);
-        gl_FragColor = vec4(uColor * g * 0.16 * uStrength, 1.0);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: AdditiveBlending,
-    side: DoubleSide,
-  });
-}
-
-/** The floor marker under a station: a thin ring around a faint disc. */
-export function plinthMaterial(color: Color): ShaderMaterial {
-  return new ShaderMaterial({
-    uniforms: { uColor: { value: color.clone() }, uStrength: { value: 1 } },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
-      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uColor;
-      uniform float uStrength;
-      varying vec2 vUv;
-      void main() {
-        float r = length(vUv - 0.5) * 2.0;
-        float aa = fwidth(r);
-        float ring = 1.0 - smoothstep(0.0, 0.02 + aa, abs(r - 0.82));
-        float disc = (1.0 - smoothstep(0.0, 0.82, r)) * 0.18;
-        float glow = exp(-r * r * 3.0) * 0.25;
-        gl_FragColor = vec4(uColor * (ring * 0.7 + disc + glow) * uStrength, 1.0);
       }
     `,
     transparent: true,

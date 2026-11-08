@@ -15,18 +15,20 @@ export interface StationDef {
 }
 
 export const STATIONS: StationDef[] = [
-  { id: "clinical", label: "Clinical evidence", short: "Clinical", rule: "Efficacy and evidence quality from any voice except clinicians" },
-  { id: "decision", label: "Clinician decision", short: "Clinician", rule: "Any aspect voiced by a clinician (hcp), except access" },
-  { id: "administration", label: "Administration", short: "Administration", rule: "Convenience, from anyone except clinicians" },
-  { id: "living", label: "Living with treatment", short: "Living with it", rule: "Safety from non-clinicians, and patient voice on efficacy" },
+  { id: "clinical", label: "Clinical evidence", short: "Clinical", rule: "Efficacy and evidence quality, except clinician and patient voices" },
+  { id: "decision", label: "Clinician decision", short: "Clinician", rule: "Clinicians (hcp) on efficacy and evidence quality" },
+  { id: "administration", label: "Administration", short: "Administration", rule: "Convenience, from any voice" },
+  { id: "living", label: "Living with treatment", short: "Living with it", rule: "Safety from any voice, and patient voice on efficacy" },
   { id: "access", label: "Access", short: "Access", rule: "Access and cost, from any voice" },
 ];
 
+/** Aspect decides first, so a quote always lands where its topic lives. */
 export function stationFor(aspect: AspectKey, speaker: Speaker): StationId {
   if (aspect === "access_cost") return "access";
-  if (speaker === "hcp") return "decision";
   if (aspect === "convenience") return "administration";
-  if (aspect === "safety" || speaker === "patient") return "living";
+  if (aspect === "safety") return "living";
+  if (speaker === "hcp") return "decision";
+  if (speaker === "patient") return "living";
   return "clinical";
 }
 
