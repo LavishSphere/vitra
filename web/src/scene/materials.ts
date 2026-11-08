@@ -15,38 +15,57 @@ const FRESNEL_VERT = /* glsl */ `
 `;
 
 /**
- * Translucent glass tissue: rim-lit fresnel plus fine horizontal contour lines (like imaging
- * slices). Additive, so it needs no sorting.
+ * Translucent glass tissue. Fresnel rim light, a soft key-light sheen, fine horizontal contour
+ * lines (like imaging slices) and darker, cooler back faces so the volume reads as deep.
+ * Additive, so it needs no sorting.
  */
 export function glassMaterial(accent: Color): ShaderMaterial {
   return new ShaderMaterial({
     uniforms: {
       uAccent: { value: accent.clone() },
       uIvory: { value: new Color("#F2F7FA") },
+      uDeep: { value: new Color("#3b4fd8") },
       uOpacity: { value: 1 },
       uLineFreq: { value: 9.0 },
       uFocus: { value: 0 },
+      uBreath: { value: 0 },
     },
     vertexShader: FRESNEL_VERT,
     fragmentShader: /* glsl */ `
       uniform vec3 uAccent;
       uniform vec3 uIvory;
+      uniform vec3 uDeep;
       uniform float uOpacity;
       uniform float uLineFreq;
       uniform float uFocus;
+      uniform float uBreath;
       varying vec3 vNormalV;
       varying vec3 vViewV;
       varying vec3 vLocal;
       void main() {
-        float ndv = abs(dot(normalize(vNormalV), normalize(vViewV)));
-        float rim = pow(1.0 - ndv, 2.6);
+        vec3 n = normalize(vNormalV);
+        vec3 v = normalize(vViewV);
+        float ndv = abs(dot(n, v));
+        float rim = pow(1.0 - ndv, 2.4);
+        float edge = pow(1.0 - ndv, 6.0);
+        // Key light from the upper left: a soft glassy sheen on the front faces.
+        vec3 L = normalize(vec3(-0.45, 0.75, 0.5));
+        vec3 nf = gl_FrontFacing ? n : -n;
+        float sheen = pow(max(dot(reflect(-v, nf), L), 0.0), 18.0);
+        float top = clamp(nf.y * 0.5 + 0.5, 0.0, 1.0);
+        // Imaging-slice contours, crisper toward the rim.
         float f = vLocal.y * uLineFreq;
         float d = abs(fract(f - 0.5) - 0.5) / max(fwidth(f), 1e-4);
         float line = 1.0 - min(d, 1.0);
-        float lineMask = line * (0.12 + 0.55 * rim);
-        vec3 col = uAccent * (0.035 + 1.05 * rim) + mix(uAccent, uIvory, 0.5) * lineMask * 0.55;
-        col += uIvory * pow(rim, 6.0) * 0.35;
-        gl_FragColor = vec4(col * uOpacity * (1.0 - 0.45 * uFocus), 1.0);
+        float lineMask = line * (0.08 + 0.6 * rim);
+        vec3 body = mix(uDeep, uAccent, 0.55 + 0.45 * top);
+        vec3 col = body * (0.03 + 0.95 * rim) + mix(uAccent, uIvory, 0.5) * lineMask * 0.5;
+        col += uIvory * edge * 0.55;
+        col += mix(uAccent, uIvory, 0.7) * sheen * 0.22;
+        // Back faces: the far wall of the lung, dimmer and cooler, gives the glass depth.
+        if (!gl_FrontFacing) col = mix(col, uDeep * (0.02 + 0.5 * rim), 0.55) * 0.6;
+        col *= 0.94 + 0.12 * uBreath;
+        gl_FragColor = vec4(col * uOpacity * (1.0 - 0.72 * uFocus), 1.0);
       }
     `,
     transparent: true,
@@ -198,5 +217,45 @@ export function flowMaterial(color: Color, size: number): ShaderMaterial {
     depthWrite: false,
     blending: AdditiveBlending,
     toneMapped: false,
+  });
+}
+
+/**
+ * The floor of the observatory: a dark disc that falls off to the background, with a soft pool
+ * of the accent light under the lungs.
+ */
+export function floorMaterial(accent: Color): ShaderMaterial {
+  return new ShaderMaterial({
+    uniforms: {
+      uAccent: { value: accent.clone() },
+      uSlate: { value: new Color("#64748b") },
+      uFocus: { value: 0 },
+      uBreath: { value: 0 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vXZ;
+      void main() {
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vXZ = w.xz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uAccent;
+      uniform vec3 uSlate;
+      uniform float uFocus;
+      uniform float uBreath;
+      varying vec2 vXZ;
+      void main() {
+        float r = length(vXZ * vec2(1.0, 1.15));
+        float pool = exp(-r * r / 7.5) * (0.16 + 0.04 * uBreath);
+        float wide = exp(-r * r / 90.0);
+        vec3 col = uAccent * pool + uSlate * wide * 0.045;
+        gl_FragColor = vec4(col * (1.0 - 0.35 * uFocus), 1.0);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: AdditiveBlending,
   });
 }

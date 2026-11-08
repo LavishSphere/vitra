@@ -8,6 +8,7 @@ import { useVitra, type Mark } from "../store/useVitra.ts";
 import { PANEL, frameOf, weekX } from "./layout.ts";
 import { polarityColor, theme } from "./colors.ts";
 import { haloMaterial } from "./materials.ts";
+import { PULSE_TRAVEL } from "./Pulses.tsx";
 
 const CAPACITY = 1024;
 const BASE = 0.085;
@@ -43,6 +44,7 @@ export function Evidence({ animate }: { animate: boolean }) {
   const selection = useVitra((s) => s.selection);
   const hover = useVitra((s) => s.hover);
   const select = useVitra((s) => s.select);
+  const pulses = useVitra((s) => s.pulses);
 
   const layout = useMemo(() => layoutMarks(marks, weeks), [marks, weeks]);
   useEffect(() => { markPositions.data = layout.positions; }, [layout]);
@@ -83,6 +85,13 @@ export function Evidence({ animate }: { animate: boolean }) {
   );
   const selectedKey = selMark?.key;
 
+  // A new transcript quote stays hidden until its pulse lands, then pops in and settles.
+  const landAt = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of pulses) m.set(`${p.itemId}:${p.aspect}`, p.startedAt + PULSE_TRAVEL * 1000);
+    return m;
+  }, [pulses]);
+
   useFrame((state, dt) => {
     const im = mesh.current;
     if (!im) return;
@@ -90,6 +99,7 @@ export function Evidence({ animate }: { animate: boolean }) {
     const sc = scales.current;
     const pos = layout.positions;
     const t = state.clock.elapsedTime;
+    const now = performance.now();
     let dirty = false;
     for (let i = 0; i < layout.count; i++) {
       const m = byIndex[i];
@@ -98,6 +108,12 @@ export function Evidence({ animate }: { animate: boolean }) {
         target = m.excluded ? 0.75 : 1;
         if (m.key === hovered) target = 1.6;
         if (m.key === selectedKey) target = 1.9;
+        const land = animate ? landAt.get(m.key) : undefined;
+        if (land !== undefined) {
+          const since = now - land;
+          if (since < 0) target = 0;
+          else if (since < 900) target = Math.max(target, 2.2);
+        }
       }
       const prev = sc[i];
       const next = prev + (target - prev) * k;

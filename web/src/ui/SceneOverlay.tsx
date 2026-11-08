@@ -3,6 +3,7 @@ import { useVitra } from "../store/useVitra.ts";
 import { missingCellMessage } from "../lib/gapFocus.ts";
 import { MECHANISM_CAPTION, verifiedFacts } from "../data/biomedical.ts";
 import { STATIONS } from "../data/stations.ts";
+import { useArrival } from "../scene/arrival.ts";
 
 export function SceneOverlay({ is3d }: { is3d: boolean }) {
   const focusStation = useVitra((s) => s.focusStation);
@@ -11,6 +12,8 @@ export function SceneOverlay({ is3d }: { is3d: boolean }) {
   const setFocusTumor = useVitra((s) => s.setFocusTumor);
   const focused = focusStation !== null || focusTumor;
   const station = STATIONS.find((s) => s.id === focusStation);
+  // The 2D view has no arrival: it is the readable view, so show the full chrome at once.
+  useEffect(() => { if (!is3d) useArrival.getState().engage(); }, [is3d]);
 
   return (
     <>
@@ -26,12 +29,18 @@ export function SceneOverlay({ is3d }: { is3d: boolean }) {
             <kbd className="num ml-1 rounded border border-border px-1 text-[10.5px] text-text-muted">0</kbd>
           </button>
         )}
-        {is3d && station && <span className="text-[13px] text-text-muted">{station.rule}</span>}
+        {is3d && station && <span className="rounded-md bg-bg/70 px-2 py-0.5 text-[13px] text-text-2 backdrop-blur-md">{station.rule}</span>}
         <MissingCellNote />
       </div>
       {focusTumor && <TumorCard onClose={() => setFocusTumor(false)} />}
       <Legend is3d={is3d} />
       {is3d && <FirstHint />}
+      {is3d && <SkipArrival />}
+      {is3d && (
+        <p className="pointer-events-none absolute right-4 top-5 text-[11.5px] text-text-muted max-md:hidden">
+          Illustrative anatomy. Not to scale.
+        </p>
+      )}
     </>
   );
 }
@@ -50,21 +59,49 @@ function MissingCellNote() {
   );
 }
 
-/** One quiet line for first-time visitors. Gone after the first drag, click or key press. */
+/** A visible way out of the arrival move. Any key, click or scroll also skips it. */
+function SkipArrival() {
+  const arriving = useArrival((s) => s.arriving);
+  if (!arriving) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => useArrival.getState().skip()}
+      className="pointer-events-auto absolute left-1/2 top-4 flex -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-bg/70 px-3 py-1 text-[12.5px] text-text-2 backdrop-blur-md transition-colors hover:border-border-strong hover:text-text"
+    >
+      Skip intro
+      <span className="text-text-muted">any key</span>
+    </button>
+  );
+}
+
+const HINT_MS = 7000;
+
+/**
+ * One short hint, shown once after the arrival move. Hides itself after a few seconds or on
+ * the first drag, click or key press. The full key lives behind "How to read this".
+ */
 function FirstHint() {
+  const arriving = useArrival((s) => s.arriving);
   const [show, setShow] = useState(true);
   const touched = useVitra((s) => s.selection !== null || s.focusStation !== null || s.focusTumor);
   useEffect(() => {
-    if (!show) return;
+    if (!show || arriving) return;
     const off = () => setShow(false);
+    const timer = window.setTimeout(off, HINT_MS);
     window.addEventListener("pointerdown", off, { once: true });
     window.addEventListener("keydown", off, { once: true });
-    return () => { window.removeEventListener("pointerdown", off); window.removeEventListener("keydown", off); };
-  }, [show]);
-  if (!show || touched) return null;
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pointerdown", off);
+      window.removeEventListener("keydown", off);
+    };
+  }, [show, arriving]);
+  if (!show || touched || arriving) return null;
   return (
-    <p className="pointer-events-none absolute inset-x-0 bottom-[96px] text-center text-[12.5px] text-text-muted max-md:hidden">
-      Drag to turn the scene. Click a chart to focus it, or a dot to read its source. Keys 1 to 5 visit a station, 0 comes back.
+    <p className="hint-in pointer-events-none absolute inset-x-0 top-4 mx-auto w-fit max-w-[92%] rounded-full border border-border bg-bg/70 px-3.5 py-1.5 text-center text-[12.5px] text-text-2 backdrop-blur-md max-md:hidden">
+      Each dot is one quote. Click a station to travel there, or a dot to read its source.
+      <span className="text-text-muted"> Keys 1 to 5 visit, 0 comes back.</span>
     </p>
   );
 }
@@ -96,7 +133,8 @@ function TumorCard({ onClose }: { onClose: () => void }) {
 }
 
 function Legend({ is3d }: { is3d: boolean }) {
-  const [open, setOpen] = useState(true);
+  // Folded to a button so the first look belongs to the scene. The 2D view opens it.
+  const [open, setOpen] = useState(!is3d);
   const focused = useVitra((s) => s.focusStation !== null || s.focusTumor);
   // Collapse once when you fly into a station or the tumor so the view stays clear.
   // Clicking the chip must still reopen it (the old `open && !focused` gate ignored that click).
@@ -115,10 +153,12 @@ function Legend({ is3d }: { is3d: boolean }) {
           <div className="num mb-2 flex justify-between text-[11px] text-text-muted"><span>{"−"}2 negative</span><span>0</span><span>+2 positive</span></div>
           <p>Each dot is one quote from a source. Click empty chart glass to focus that station. Height is polarity; earlier weeks sit on the left.</p>
           {is3d && <p className="mt-1.5">The points moving through the airways show airflow, timed to each breath.</p>}
+          {is3d && <p className="mt-1.5">The path on the floor joins the five stations in treatment order. Click one to travel there.</p>}
           <p className="mt-1.5 text-text-muted">Illustrative anatomy. Not to scale.</p>
         </section>
       ) : (
-        <button type="button" onClick={() => setOpen(true)} className="rounded-lg border border-border bg-bg/80 px-2.5 py-1 text-[12.5px] text-text-2 backdrop-blur-md hover:text-text">
+        <button type="button" onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-full border border-border bg-bg/60 py-1 pl-1.5 pr-2.5 text-[12px] text-text-2 backdrop-blur-md transition-colors hover:border-border-strong hover:text-text">
+          <span aria-hidden className="grid h-4 w-4 place-items-center rounded-full border border-border-strong text-[10px] text-text-muted">?</span>
           How to read this
         </button>
       )}
