@@ -66,22 +66,22 @@ Those labels feed weekly trends, insight cards and evidence gaps. Click any scor
 
 ## Results
 
-Organizer scorer (`score.py`) on the 60-item labeled dev set. The model column is 5-fold on the model calls (policy hybrid-evq). Evidence-quality rules were tuned on dev, so that column is not leak-free. The 240-item hidden test set is scored by the organizers.
+Organizer scorer (`score.py`) on the 60-item labeled dev set. The model column is a fresh 5-fold on the model calls for the shipped policy (`hybrid-evq-eff2`, rules r5). Efficacy and evidence-quality cues were tuned on dev, so that column is optimistic. The 240-item hidden test set is scored by the organizers.
 
-| | Rules only | Rules + model (hybrid-evq) |
+| | Rules only | Rules + model (hybrid-evq-eff2) |
 |---|---|---|
-| Composite | 0.842 | 0.865 |
+| Composite | 0.842 | 0.891 |
 | Signal macro-F1 | 0.806 | 0.806 |
 | Actionable F1 | 0.870 | 0.917 |
-| Aspect F1 | 0.328 | 0.784 |
-| Polarity QWK | 1.000 | 0.928 |
+| Aspect F1 | 0.328 | 0.843 |
+| Polarity QWK | 1.000 | 0.950 |
 | Speaker accuracy | 1.000 | 1.000 |
-| Span F1 | 0.892 | 0.623 |
+| Span F1 | 0.892 | 0.718 |
 | Citation validity | 1.000 | 1.000 |
 
-- Both columns were tuned on dev, so they're optimistic. Counting only the caveat phrases the labeling guide lists, the model column scores 0.859.
-- Rules fill only the few aspects they're sure of, so their quotes are tight. The model finds far more aspects (0.328 to 0.784) with looser quotes.
-- The full 240-item test run took 569 s of wall time on an Apple M5 MacBook Air (16 GB), with 4 requests in parallel (25.3 items per minute).
+- Both columns were tuned on dev, so they're optimistic. Counting only guide-listed efficacy phrases (ruling 8 safety kept), the model column scores 0.882.
+- Rules fill only the few aspects they're sure of, so their quotes are tight. The model finds far more aspects (0.328 to 0.843) with looser quotes.
+- An earlier 240-item hybrid-evq test run took 569 s of wall time on an Apple M5 MacBook Air (16 GB), with 4 requests in parallel (25.3 items per minute).
 
 ## Works with the Wi-Fi off
 
@@ -126,7 +126,7 @@ Both quotes are exact substrings of the note. The model also tried to file the c
 2. **Llama 3.2 3B** (Q4_K_M, via llama.cpp on `127.0.0.1`) labels the rest with a strict JSON schema.
 3. **Quote check:** every quote must be found word for word in its source, or it's dropped.
 4. **Aggregate:** weekly trends, evidence gaps, insight cards, and exclude/restore with a live recount.
-5. **Serve:** the API and the web app run on the same local port; nothing is sent off the machine.
+5. **Serve:** the API and the web app run on the same local port. The captured launcher audit saw only loopback sockets (sampled every 0.3 s).
 
 ```
 pipeline/   rules, model, quote check
