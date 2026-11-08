@@ -105,7 +105,9 @@ function useKeyboardShortcuts() {
       if (s.selection) return;
       const t = e.target as HTMLElement;
       if (t.closest("input, textarea, [role=listbox], [role=slider]") || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === "0" || e.key === "Escape") { s.setFocusStation(null); s.setFocusTumor(false); }
+      // Escape closes the tumor facts card first; key 0 (and Escape with no card) leave the zoom.
+      if (e.key === "Escape" && s.tumorCardOpen) { s.setTumorCardOpen(false); return; }
+      if (e.key === "0" || e.key === "Escape") { s.clearFocus(); }
       const n = Number(e.key);
       if (n >= 1 && n <= STATIONS.length) s.setFocusStation(STATIONS[n - 1].id);
     };

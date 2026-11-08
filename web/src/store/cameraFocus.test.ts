@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { useVitra } from "./useVitra.ts";
 
 afterEach(() => {
-  useVitra.setState({ focusStation: null, cameraFocus: null, focusTumor: false, railTab: "trends" });
+  useVitra.setState({ focusStation: null, cameraFocus: null, focusTumor: false, tumorCardOpen: false, railTab: "trends" });
 });
 
 describe("cameraFocus", () => {

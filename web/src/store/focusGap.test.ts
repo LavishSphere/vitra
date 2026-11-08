@@ -32,6 +32,7 @@ afterEach(() => {
     filters: baseFilters(),
     focusStation: null,
     focusTumor: false,
+    tumorCardOpen: false,
     selection: null,
     railTab: "trends",
   });

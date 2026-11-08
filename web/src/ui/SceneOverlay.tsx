@@ -8,8 +8,9 @@ import { useArrival } from "../scene/arrival.ts";
 export function SceneOverlay({ is3d }: { is3d: boolean }) {
   const focusStation = useVitra((s) => s.focusStation);
   const focusTumor = useVitra((s) => s.focusTumor);
-  const setFocusStation = useVitra((s) => s.setFocusStation);
-  const setFocusTumor = useVitra((s) => s.setFocusTumor);
+  const tumorCardOpen = useVitra((s) => s.tumorCardOpen);
+  const clearFocus = useVitra((s) => s.clearFocus);
+  const setTumorCardOpen = useVitra((s) => s.setTumorCardOpen);
   const focused = focusStation !== null || focusTumor;
   const station = STATIONS.find((s) => s.id === focusStation);
   // The 2D view has no arrival: it is the readable view, so show the full chrome at once.
@@ -21,7 +22,7 @@ export function SceneOverlay({ is3d }: { is3d: boolean }) {
         {is3d && focused && (
           <button
             type="button"
-            onClick={() => { setFocusStation(null); setFocusTumor(false); }}
+            onClick={() => clearFocus()}
             className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-border bg-bg/80 px-2.5 py-1 text-[13px] text-text-2 backdrop-blur-md hover:border-border-strong hover:text-text"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden><path d="M7.5 2.5L4 6l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg>
@@ -32,11 +33,21 @@ export function SceneOverlay({ is3d }: { is3d: boolean }) {
         {is3d && station && <span className="rounded-md bg-bg/70 px-2 py-0.5 text-[13px] text-text-2 backdrop-blur-md">{station.rule}</span>}
         <MissingCellNote />
       </div>
-      {focusTumor && <TumorCard onClose={() => setFocusTumor(false)} />}
+      {tumorCardOpen && <TumorCard onClose={() => setTumorCardOpen(false)} />}
+      {focusTumor && !tumorCardOpen && (
+        <button
+          type="button"
+          onClick={() => setTumorCardOpen(true)}
+          className="pointer-events-auto absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-full border border-border bg-bg/70 py-1 pl-2 pr-2.5 text-[12px] text-text-2 backdrop-blur-md hover:border-border-strong hover:text-text"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-magenta" aria-hidden />
+          Tumor facts
+        </button>
+      )}
       <Legend is3d={is3d} />
       {is3d && <FirstHint />}
       {is3d && <SkipArrival />}
-      {is3d && (
+      {is3d && !focusTumor && (
         <p className="pointer-events-none absolute right-4 top-5 text-[11.5px] text-text-muted max-md:hidden">
           Illustrative anatomy. Not to scale.
         </p>
@@ -110,7 +121,7 @@ function TumorCard({ onClose }: { onClose: () => void }) {
   const product = useVitra((s) => s.filters.product);
   const facts = verifiedFacts(product);
   return (
-    <section aria-label="Tumor hotspot" className="panel scroll-thin pointer-events-auto absolute right-4 top-4 z-10 max-h-[calc(100%-140px)] w-[360px] overflow-y-auto rounded-xl p-4">
+    <section aria-label="Tumor hotspot" className="panel scroll-thin pointer-events-auto absolute right-4 top-4 z-10 max-h-[min(420px,calc(100%-160px))] w-[280px] overflow-y-auto rounded-xl p-3.5">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-[15px] font-medium text-text">Tumor hotspot</h2>
         <button type="button" onClick={onClose} className="text-[12.5px] text-accent hover:text-accent-hover">Close</button>
