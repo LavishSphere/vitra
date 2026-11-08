@@ -11,7 +11,12 @@ export const anchors = new Map<string, Anchor>();
 /** Ref-callback factory: `ref={anchorRef("id", position)}`. */
 export function anchorRef(id: string, pos: Vector3) {
   return (el: HTMLElement | null) => {
-    if (el) anchors.set(id, { el, pos, lastX: NaN, lastY: NaN, hidden: false });
+    if (el) {
+      // A fresh anchor starts visible. Clear any "hidden" the projector left on this element,
+      // or it would stay hidden for good once its anchor is back in front of the camera.
+      el.style.visibility = "";
+      anchors.set(id, { el, pos, lastX: NaN, lastY: NaN, hidden: false });
+    }
     else anchors.delete(id);
   };
 }

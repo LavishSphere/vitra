@@ -127,6 +127,14 @@ mark.span-other {
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
 }
 
+/* Quiet chrome on arrival: hints and the filter row ease in instead of popping. */
+@keyframes vitra-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.hint-in { animation: vitra-rise 600ms var(--ease-out-soft) both; }
+.filters-in { animation: vitra-rise 360ms var(--ease-out-soft) both; }
+
 /* Intake card: rows rise in as each stage lands. */
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(6px); }
@@ -136,4 +144,9 @@ mark.span-other {
 @keyframes tour-bar {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
+}
+
+/* Phones: the orbit is small on screen, so the pinned scene labels shrink with it. */
+@media (max-width: 767px) {
+  [aria-label="Scene labels"] button { zoom: 0.78; }
 }

@@ -3,6 +3,7 @@ import { onInstallReady, promptInstall } from "../pwa.ts";
 import { useVitra } from "../store/useVitra.ts";
 import { IconButton, Segmented, Select } from "./controls.tsx";
 import { PRODUCT_OPTIONS, aspectOptions, signalOptions, sourceOptions, speakerOptions } from "./options.ts";
+import { useArrival } from "../scene/arrival.ts";
 
 export function TopBar() {
   const f = useVitra((s) => s.filters);
@@ -17,6 +18,8 @@ export function TopBar() {
   const sourceKind = useVitra((s) => s.sourceKind);
   const sourceLabel = useVitra((s) => s.sourceLabel);
   const [canInstall, setCanInstall] = useState(false);
+  const engaged = useArrival((s) => s.engaged);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => onInstallReady(setCanInstall), []);
 
@@ -32,7 +35,18 @@ export function TopBar() {
 
       <Segmented label="Product" value={f.product} options={PRODUCT_OPTIONS} onChange={(v) => setFilter("product", v)} />
 
-      <nav aria-label="Filters" className="scroll-thin order-last -mx-1 flex w-full items-center gap-1.5 overflow-x-auto px-1 md:order-none md:w-auto md:overflow-visible">
+      {!(engaged || filtersOpen || filtered) ? (
+        <button
+          type="button"
+          onClick={() => { setFiltersOpen(true); useArrival.getState().engage(); }}
+          aria-expanded={false}
+          className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-border px-2.5 py-1.5 text-[13px] text-text-2 transition-colors hover:border-border-strong hover:text-text"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="M2 3.5h10M4 7h6M6 10.5h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+          Filters
+        </button>
+      ) : (
+      <nav aria-label="Filters" className="filters-in scroll-thin order-last -mx-1 flex w-full items-center gap-1.5 overflow-x-auto px-1 md:order-none md:w-auto md:overflow-visible">
         <Select label="Speaker" value={f.speaker} options={speakerOptions()} onChange={(v) => setFilter("speaker", v)} />
         <Select label="Aspect" value={f.aspect} options={aspectOptions()} onChange={(v) => setFilter("aspect", v)} />
         <Select label="Source" value={f.source} options={sourceOptions()} onChange={(v) => setFilter("source", v)} />
@@ -43,6 +57,7 @@ export function TopBar() {
           </button>
         )}
       </nav>
+      )}
 
       <div className="ml-auto flex items-center gap-2">
         <span

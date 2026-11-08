@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PerspectiveCamera, Vector3 } from "three";
 import { STATIONS } from "../data/stations.ts";
 import {
-  JOURNEY_CURVE, OVERVIEW, PANEL, STATION_FRAMES, STATION_POSES,
+  JOURNEY_CURVE, ORBIT, OVERVIEW, PANEL, STATION_FRAMES, STATION_POSES,
   markWorldPosition, stationLabelAnchor, weekX,
 } from "./layout.ts";
 
@@ -29,7 +29,7 @@ function panelRect(i: number, cam: PerspectiveCamera): Rect {
 }
 
 describe("station layout", () => {
-  it("has a camera pose for every station that looks at the panel from its front", () => {
+  it("has a camera pose for every station that looks at the panel from its front, swung out at most 35 degrees", () => {
     for (const s of STATIONS) {
       const pose = STATION_POSES[s.id];
       expect(pose).toBeDefined();
@@ -38,14 +38,24 @@ describe("station layout", () => {
       const view = new Vector3(...pose.position).sub(new Vector3(...pose.target));
       expect(view.length()).toBeGreaterThan(4);
       expect(view.length()).toBeLessThan(9);
-      expect(view.normalize().dot(f.outward)).toBeGreaterThan(0.9);
+      expect(view.normalize().dot(f.outward)).toBeGreaterThan(Math.cos((35 * Math.PI) / 180));
     }
   });
 
-  it("orders the stations from the lungs toward the viewer", () => {
-    for (let i = 1; i < STATION_FRAMES.length; i++) {
-      expect(STATION_FRAMES[i].base.z).toBeGreaterThan(STATION_FRAMES[i - 1].base.z);
+  it("orbits the lungs: every plinth on the ring, none behind or in front of the lungs", () => {
+    const cam = overviewCamera();
+    const lungs: Rect = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
+    for (const x of [-2.2, 2.2]) for (const y of [-1.95, 2.75]) for (const z of [-1, 1]) {
+      const v = new Vector3(x, y, z).project(cam);
+      lungs.x0 = Math.min(lungs.x0, v.x); lungs.x1 = Math.max(lungs.x1, v.x);
+      lungs.y0 = Math.min(lungs.y0, v.y); lungs.y1 = Math.max(lungs.y1, v.y);
     }
+    // The lungs fill about half the frame height in the overview.
+    expect((lungs.y1 - lungs.y0) / 2).toBeGreaterThan(0.45);
+    STATION_FRAMES.forEach((f, i) => {
+      expect(Math.hypot(f.base.x, f.base.z)).toBeCloseTo(ORBIT.radius, 5);
+      expect(overlaps(panelRect(i, cam), lungs)).toBe(false);
+    });
   });
 
   it("runs the journey path through every plinth", () => {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { STATIONS, type StationId } from "../data/stations.ts";
 import { useVitra } from "../store/useVitra.ts";
-import { FLOOR_Y, JOURNEY_CURVE, PANEL, PLINTH, STATION_FRAMES, weekX } from "./layout.ts";
+import { JOURNEY_CURVE, PANEL, PLINTH, STATION_FRAMES, weekX } from "./layout.ts";
 import { panelMaterial, pathMaterial, plinthMaterial, poolMaterial, ringMaterial } from "./stations/materials.ts";
 import { arcLengthTo, buildRibbon } from "./stations/pathGeometry.ts";
 
@@ -89,11 +89,11 @@ function Station({ id, index, animate }: { id: StationId; index: number; animate
   const base = frame.base;
   return (
     <group>
-      <mesh position={[base.x, FLOOR_Y + 0.004, base.z]} rotation={FLAT} material={mats.pool} renderOrder={-2}>
+      <mesh position={[base.x, base.y + 0.004, base.z]} rotation={FLAT} material={mats.pool} renderOrder={-2}>
         <planeGeometry args={[POOL_SIZE, POOL_SIZE]} />
       </mesh>
       <mesh
-        position={[base.x, FLOOR_Y + PLINTH.height / 2, base.z]}
+        position={[base.x, base.y + PLINTH.height / 2, base.z]}
         material={mats.plinth}
         renderOrder={-1}
         onClick={onClick}
@@ -102,7 +102,7 @@ function Station({ id, index, animate }: { id: StationId; index: number; animate
       >
         <cylinderGeometry args={[PLINTH.radius, PLINTH.radius * 1.04, PLINTH.height, 72, 1]} />
       </mesh>
-      <mesh position={[base.x, FLOOR_Y + PLINTH.height + 0.003, base.z]} rotation={FLAT} material={mats.ring} renderOrder={-1}>
+      <mesh position={[base.x, base.y + PLINTH.height + 0.003, base.z]} rotation={FLAT} material={mats.ring} renderOrder={-1}>
         <ringGeometry args={[PLINTH.radius - 0.022, PLINTH.radius, 96]} />
       </mesh>
       <group position={frame.position} quaternion={frame.quaternion}>
@@ -114,7 +114,7 @@ function Station({ id, index, animate }: { id: StationId; index: number; animate
   );
 }
 
-/** The path the stations stand on, from under the lungs toward the viewer. */
+/** The ring the stations stand on, all the way around the lungs. */
 function JourneyRibbon({ animate }: { animate: boolean }) {
   const { geometry, material, reach } = useMemo(() => {
     const { geometry, length } = buildRibbon(JOURNEY_CURVE, 0.42, 480);

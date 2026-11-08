@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Billboard } from "@react-three/drei";
 import { AdditiveBlending, Color, Group, Mesh, QuadraticBezierCurve3, ShaderMaterial, Vector3 } from "three";
+import { TUMOR_POSITION } from "./anatomy.ts";
 import { useVitra } from "../store/useVitra.ts";
 import { haloMaterial } from "./materials.ts";
 import { PANEL, frameOf, markWorldPosition } from "./layout.ts";
@@ -13,7 +14,8 @@ const TRAIL = 10;
 export const PULSE_TRAVEL = 1.6;
 const RIPPLE = 1.3;
 const FLASH = 1.6;
-const START = new Vector3(0, 0.4, 0.2);
+/** Evidence flows out from the lungs: every pulse starts at the tumor hotspot. */
+const START = TUMOR_POSITION.clone();
 const WHITE = new Color("#ffffff");
 
 /** Rounded-rectangle edge glow that sits on a station panel for a moment when evidence lands. */
