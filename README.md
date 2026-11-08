@@ -25,10 +25,31 @@
 </p>
 
 <p align="center">
-  <img src="web/screenshots/xray-click.gif" alt="Lung observatory into Evidence X-Ray" width="780" />
+  <img src="web/screenshots/xray-click.gif" alt="Lung observatory, tumor dive, and Evidence X-Ray" width="780" />
 </p>
 <p align="center">
-  <sub>Synthetic data. Click a quote to open Evidence X-Ray. The lungs are illustrative; every quote is copied word for word from its source.</sub>
+  <sub>Synthetic data. From the lung observatory into the tumor hotspot, then Evidence X-Ray. The anatomy is illustrative; every quote is copied word for word from its source.</sub>
+</p>
+
+<p align="center">
+  <img src="web/screenshots/01-observatory-1440.png" alt="Lung observatory with orbiting evidence stations" width="780" />
+</p>
+<p align="center">
+  <sub>Hero view: illustrative lungs, five evidence stations in orbit, and lung-safety pins for ILD or pneumonitis quotes.</sub>
+</p>
+
+<p align="center">
+  <img src="web/screenshots/lungs-dive-tagrisso.png" alt="Inside the tumor hotspot, EGFR and MET on the cell surface" width="780" />
+</p>
+<p align="center">
+  <sub>Tumor dive: EGFR and MET on the cell surface, with label-only captions. Illustrative mechanism, not a clinical simulation.</sub>
+</p>
+
+<p align="center">
+  <img src="web/screenshots/02-xray-1440.png" alt="Evidence X-Ray open on a lung-safety quote" width="780" />
+</p>
+<p align="center">
+  <sub>Evidence X-Ray: the exact span highlighted in the source, with speaker, polarity, and confidence for that item.</sub>
 </p>
 
 ## What it does
