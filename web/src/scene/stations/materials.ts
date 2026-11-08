@@ -91,6 +91,7 @@ export function panelMaterial(): ShaderMaterial {
         float a = mix(0.84, 0.9, uFocus) * (1.0 - 0.55 * uDim);
         col *= 1.0 - 0.5 * uDim;
         gl_FragColor = vec4(col, a);
+        #include <colorspace_fragment>
       }
     `,
     transparent: true,
@@ -140,6 +141,7 @@ export function plinthMaterial(): ShaderMaterial {
         float a = mix(0.62, 0.9, side) * (1.0 - 0.5 * uDim);
         col *= 1.0 - 0.45 * uDim;
         gl_FragColor = vec4(col, a);
+        #include <colorspace_fragment>
       }
     `,
     transparent: true,
