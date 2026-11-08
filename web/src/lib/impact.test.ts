@@ -29,12 +29,13 @@ describe("diffImpact", () => {
     expect(cells).toEqual([
       "B hcp convenience 2025-W43 null->1 N0->1",
       "B hcp safety 2025-W43 null->-1 N0->1",
+      "B payer access_cost 2025-W43 null->-1 N0->1",
     ]);
     for (const c of i.cells) expect(c.added).toEqual(["SYN-T002"]);
-    // B clinicians on safety were last heard in 2025-W33, outside the 8-week window.
-    expect(i.gapsClosed.map((g) => `${g.product} ${g.speaker} ${g.aspect}`)).toEqual(["B hcp safety"]);
+    // Payers on access and clinicians on safety were last heard outside the 8-week window.
+    expect(i.gapsClosed.map((g) => `${g.product} ${g.speaker} ${g.aspect}`)).toEqual(["B payer access_cost", "B hcp safety"]);
     expect(i.gapsOpened).toEqual([]);
-    expect(impactSummary(i)).toBe("2 trend cells changed, 1 evidence gap closed.");
+    expect(impactSummary(i)).toBe("3 trend cells changed, 2 evidence gaps closed.");
   });
 
   it("averages into an existing cell instead of replacing it", () => {
