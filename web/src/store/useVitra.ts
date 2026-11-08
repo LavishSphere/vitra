@@ -90,6 +90,8 @@ interface VitraState {
   /** Camera target. Kept in step with focusStation; the rig flies here. */
   cameraFocus: CameraFocus | null;
   focusTumor: boolean;
+  /** Text panel for the tumor hotspot. Independent of focusTumor so Close can dismiss facts without leaving the zoom. */
+  tumorCardOpen: boolean;
   view: ViewMode;
   railOpen: boolean;
   railTab: RailTab;
@@ -114,6 +116,8 @@ interface VitraState {
   /** Back to the overview. */
   clearFocus(): void;
   setFocusTumor(on: boolean): void;
+  /** Show or hide the tumor facts card without changing the camera. */
+  setTumorCardOpen(open: boolean): void;
   setView(v: ViewMode): void;
   setRail(open: boolean, tab?: RailTab): void;
   setIntakeOpen(open: boolean): void;
@@ -197,6 +201,7 @@ export const useVitra = create<VitraState>((set, get) => ({
   focusStation: null,
   cameraFocus: null,
   focusTumor: false,
+  tumorCardOpen: false,
   view: "3d",
   railOpen: false,
   railTab: "trends",
@@ -232,6 +237,7 @@ export const useVitra = create<VitraState>((set, get) => ({
       focusStation: stationFor(gap.aspect, gap.speaker),
       cameraFocus: { stationId: stationFor(gap.aspect, gap.speaker), reason: "user" },
       focusTumor: false,
+      tumorCardOpen: false,
       selection: null,
     });
   },
@@ -250,15 +256,37 @@ export const useVitra = create<VitraState>((set, get) => ({
   select(sel) { set({ selection: sel }); },
   hover(key) { if (get().hovered !== key) set({ hovered: key }); },
   setFocusStation(s) {
-    set({ focusStation: s, cameraFocus: s ? { stationId: s, reason: "user" } : null, focusTumor: false, ...(s ? { railTab: "evidence" as RailTab } : {}) });
+    set({
+      focusStation: s,
+      cameraFocus: s ? { stationId: s, reason: "user" } : null,
+      focusTumor: false,
+      tumorCardOpen: false,
+      ...(s ? { railTab: "evidence" as RailTab } : {}),
+    });
   },
   focusCameraOn(id, reason = "user") {
-    set({ focusStation: id, cameraFocus: { stationId: id, reason }, focusTumor: false, ...(reason === "user" ? { railTab: "evidence" as RailTab } : {}) });
+    set({
+      focusStation: id,
+      cameraFocus: { stationId: id, reason },
+      focusTumor: false,
+      tumorCardOpen: false,
+      ...(reason === "user" ? { railTab: "evidence" as RailTab } : {}),
+    });
   },
-  clearFocus() { set({ focusStation: null, cameraFocus: null, focusTumor: false }); },
+  clearFocus() { set({ focusStation: null, cameraFocus: null, focusTumor: false, tumorCardOpen: false }); },
   setFocusTumor(on) {
     const keep = on ? null : get().focusStation;
-    set({ focusTumor: on, focusStation: keep, cameraFocus: keep ? get().cameraFocus : null });
+    set({
+      focusTumor: on,
+      // Entering the tumor opens the facts card; leaving the zoom dismisses it.
+      tumorCardOpen: on,
+      focusStation: keep,
+      cameraFocus: keep ? get().cameraFocus : null,
+    });
+  },
+  setTumorCardOpen(open) {
+    if (!get().focusTumor && open) return;
+    set({ tumorCardOpen: open });
   },
   setView(v) { set({ view: v }); },
   setRail(open, tab) { set({ railOpen: open, railTab: tab ?? get().railTab }); },
