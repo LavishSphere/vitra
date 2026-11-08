@@ -44,7 +44,8 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null;
   const size = useThree((s) => s.size);
-  const cameraStation = useVitra((s) => s.cameraFocus?.stationId ?? null);
+  // Evidence dives own the camera; only station focus flies the rig.
+  const cameraStation = useVitra((s) => (s.cameraFocus?.kind === "station" ? s.cameraFocus.stationId : null));
   const focusTumor = useVitra((s) => s.focusTumor);
   const arriving = useArrival((s) => s.arriving);
 
@@ -127,6 +128,11 @@ export function CameraRig({ animate, railPx }: { animate: boolean; railPx: numbe
 
   // Station, tumor or the overview. Follows the store's camera focus.
   useEffect(() => {
+    // EvidenceDive drives the camera while a dive is active.
+    if (useVitra.getState().cameraFocus?.kind === "evidence") {
+      flight.current.active = false;
+      return;
+    }
     if (!controls || !started.current) return;
     const f = flight.current;
     if (inIntro()) {

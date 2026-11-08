@@ -101,8 +101,8 @@ function useKeyboardShortcuts() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const s = useVitra.getState();
-      // The intake card is not modal, so station keys keep working while it is open.
-      if (s.selection) return;
+      // A dialog that handled the key (X-Ray or dive Esc) keeps the scene where it is.
+      if (e.defaultPrevented || s.selection) return;
       const t = e.target as HTMLElement;
       if (t.closest("input, textarea, [role=listbox], [role=slider]") || e.metaKey || e.ctrlKey || e.altKey) return;
       // Escape closes the tumor facts card first; key 0 (and Escape with no card) leave the zoom.

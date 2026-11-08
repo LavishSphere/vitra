@@ -43,7 +43,6 @@ export function Evidence({ animate }: { animate: boolean }) {
   const hovered = useVitra((s) => s.hovered);
   const selection = useVitra((s) => s.selection);
   const hover = useVitra((s) => s.hover);
-  const select = useVitra((s) => s.select);
   const pulses = useVitra((s) => s.pulses);
 
   const layout = useMemo(() => layoutMarks(marks, weeks), [marks, weeks]);
@@ -149,7 +148,7 @@ export function Evidence({ animate }: { animate: boolean }) {
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     const m = e.instanceId !== undefined ? byIndex[e.instanceId] : undefined;
-    if (m && m.visible) select({ itemId: m.item.item_id, aspect: m.aspect.aspect });
+    if (m && m.visible) useVitra.getState().diveTo(m.item.item_id, m.aspect.aspect);
   };
 
   return (
