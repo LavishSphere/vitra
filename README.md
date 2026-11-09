@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  🥈 <a href="https://devpost.com/software/vitra-4ez3r5"><strong>2nd place, Within3 Signal-to-Dose track, HACK1984</strong></a>
+</p>
+
+<p align="center">
   Reads public evidence on Tagrisso and Rybrevant, labels the launch signal, and ties every score to an exact quote. A 3B model does the reading on your own computer, with the Wi-Fi off.
 </p>
 
